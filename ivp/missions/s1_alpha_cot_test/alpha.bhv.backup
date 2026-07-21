@@ -1,0 +1,74 @@
+//--------    FILE: alpha.bhv   -------------
+
+initialize   DEPLOY      = false
+initialize   RETURN      = false
+initialize   ATAK_ACTIVE = false
+
+//----------------------------------------------
+// waypt_atak — primary behavior for ATAK-commanded navigation.
+// Activated when pCoTBridge receives a "Go To" waypoint from ATAK
+// and posts ATAK_ACTIVE=true + ATAK_WPT_UPDATE=points=x,y.
+// Idles in place after reaching the waypoint, waiting for the next
+// command. Does not trigger return-home on completion.
+//
+Behavior=BHV_Waypoint
+{
+  name      = waypt_atak
+  pwt       = 150
+  condition = DEPLOY = true
+  condition = RETURN = false
+  condition = ATAK_ACTIVE = true
+  perpetual = true
+  updates   = ATAK_WPT_UPDATE
+
+           speed = 3.0
+  capture_radius = 5.0
+     slip_radius = 15.0
+          points = 0,0        // placeholder — overridden by ATAK_WPT_UPDATE
+
+    visual_hints = nextpt_color=yellow
+    visual_hints = nextpt_vertex_size=8
+    visual_hints = nextpt_lcolor=gray70
+    visual_hints = vertex_color=dodger_blue, edge_color=white
+    visual_hints = vertex_size=5, edge_size=1
+}
+
+//----------------------------------------------
+// waypt_return — brings the robot home when RETURN=true.
+// Triggered manually (e.g. uPokeDB RETURN=true) or by mission logic.
+//
+Behavior=BHV_Waypoint
+{
+  name      = waypt_return
+  pwt       = 100
+  condition = RETURN = true
+  condition = DEPLOY = true
+  perpetual = true
+  updates   = RETURN_UPDATE
+  endflag   = RETURN = false
+  endflag   = DEPLOY = false
+  endflag   = MISSION = complete
+
+           speed = 2.0
+  capture_radius = 2.0
+     slip_radius = 8.0
+          points = 0,-20
+}
+
+//----------------------------------------------
+// const_speed — optional speed override, activated by SPD=true.
+//
+Behavior=BHV_ConstantSpeed
+{
+  name      = const_speed
+  pwt       = 200
+  condition = SPD=true
+  condition = DEPLOY = true
+  perpetual = true
+  updates   = SPEED_UPDATE
+  endflag   = SPD = false
+
+           speed = 0.5
+        duration = 10
+  duration_reset = CONST_SPD_RESET=true
+}

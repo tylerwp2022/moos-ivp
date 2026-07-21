@@ -156,6 +156,7 @@ SET(IVP_NON_GUI_LIBS
   lib_ufield         lib_logutils        lib_mbutil
   lib_manifest       lib_marine_pid      lib_turngeo
   lib_geodaid        lib_survey          lib_dep_behaviors
+  moos-ivp-tak/lib_cot_geodesy
 )
 SET(IVP_GUI_LIBS
   lib_ipfview        lib_marineview
@@ -180,7 +181,10 @@ SET(ROBOT_APPS
   pMarinePIDV22      uSimMarineV22       uSimMarineV23
   pMissionHash       pMissionEval        iBlinkStick
   pAutoPoke          uMayFinish          app_pluck
-  app_nspatch
+  app_nspatch        moos-ivp-tak/pCoTBridge          moos-ivp-tak/pCoTCommander
+  moos-ivp-tak/pCoTGraphics      moos-ivp-tak/pCoTChat
+  moos-ivp-tak/pCoTContact       moos-ivp-tak/pCoTShoreContact       pRedirectWaypoint
+  uXboxJoystick      uGfxMask
 )
 SET(IVP_NON_GUI_APPS
   app_alogsplit      app_alogsort        app_alogcheck

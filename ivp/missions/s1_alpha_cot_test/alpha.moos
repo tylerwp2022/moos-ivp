@@ -1,0 +1,417 @@
+//-------------------------------------------------
+// NAME: M. Benjamin, MIT CSAIL
+// FILE: alpha.moos
+//-------------------------------------------------
+
+ServerHost   = localhost
+ServerPort   = 9000
+Community    = alpha
+MOOSTimeWarp = 1
+
+// Forest Lake
+LatOrigin  = 43.825300 
+LongOrigin = -70.330400 
+
+// MIT Sailing Pavilion (use this one)
+// LatOrigin  = 42.358456 
+// LongOrigin = -71.087589
+
+//------------------------------------------
+// Antler configuration  block
+ProcessConfig = ANTLER
+{
+  MSBetweenLaunches = 200
+
+  Run = MOOSDB        	@ NewConsole = false
+  Run = pLogger       	@ NewConsole = false
+  Run = uSimMarineV22 	@ NewConsole = false
+  Run = pMarinePIDV22 	@ NewConsole = false
+  Run = pHelmIvP      	@ NewConsole = false
+  Run = pMarineViewer	@ NewConsole = false
+  Run = uProcessWatch	@ NewConsole = false
+  Run = pNodeReporter	@ NewConsole = false
+  Run = pRealm	      	@ NewConsole = false
+  Run = pCoTBridge	@ NewConsole = false
+  Run = pCoTCommander 	@ NewConsole = false
+  Run = pCoTGraphics	@ NewConsole = false
+  Run = pCoTChat	@ NewConsole = false
+}
+
+//------------------------------------------
+// pLogger config block
+
+ProcessConfig = pLogger
+{
+  AppTick   = 8
+  CommsTick = 8
+
+  AsyncLog = true
+
+  // For variables that are published in a bundle on their 
+  // first post, explicitly declare their logging request
+  Log = IVPHELM_LIFE_EVENT @ 0 NOSYNC
+  Log = REPORT @ 0 NOSYNC
+  Log = BHV_SETTINGS @ 0 NOSYNC
+  Log = SUMMARY @ 0 NOSYNC
+
+  LogAuxSrc = true
+  WildCardLogging = true
+  WildCardOmitPattern = *_STATUS
+  WildCardOmitPattern = DB_VARSUMMARY
+  WildCardOmitPattern = DB_RWSUMMARY
+  WildCardExclusionLog = true
+}
+
+//------------------------------------------
+// uProcessWatch config block
+
+ProcessConfig = uProcessWatch
+{
+  AppTick   = 4
+  CommsTick = 4
+
+  watch_all = true
+	nowatch   = uPokeDB*
+	nowatch   = uQueryDB*
+	nowatch   = uXMS*
+	nowatch   = uMAC*
+}
+
+//------------------------------------------
+// uSimMarineV22 config block
+
+ProcessConfig = uSimMarineV22
+{
+  AppTick	= 4
+  CommsTick	= 4
+
+  start_pos     = x=0, y=-20, heading=180, speed=0
+  prefix        = NAV
+  turn_rate     = 95
+  thrust_map    = 0:0, 20:1, 40:2, 60:3, 80:4, 100:5
+	turn_spd_loss = 0.4
+}
+
+//------------------------------------------
+// pHelmIvP config block
+
+ProcessConfig = pHelmIvP
+{
+  AppTick    = 4
+  CommsTick  = 4
+
+  behaviors  = alpha.bhv
+  domain     = course:0:359:360
+  domain     = speed:0:4:41
+}
+
+//------------------------------------------
+// pMarinePID config block
+
+ProcessConfig = pMarinePIDV22
+{
+  AppTick    = 20
+  CommsTick  = 20
+
+  verbose       = true
+  depth_control = false
+
+  // SIM_INSTABILITY = 20
+
+  // Yaw PID controller
+  yaw_pid_kp		 = 0.9
+  yaw_pid_kd		 = 0.3
+  yaw_pid_ki		 = 0.3
+  yaw_pid_integral_limit = 0.07
+
+  // Speed PID controller
+  speed_pid_kp		 = 1.0
+  speed_pid_kd		 = 0.0
+  speed_pid_ki		 = 0.0
+  speed_pid_integral_limit = 0.07
+
+  //MAXIMUMS
+  maxrudder    = 100
+  maxthrust    = 100
+
+  // A non-zero SPEED_FACTOR overrides use of SPEED_PID
+  // Will set DESIRED_THRUST = DESIRED_SPEED * SPEED_FACTOR
+  speed_factor = 20
+}
+
+//------------------------------------------
+// pMarineViewer config block
+
+ProcessConfig = pMarineViewer
+{
+  AppTick    = 4
+  CommsTick  = 4
+
+  tiff_file            = forrest19.tif
+	//tiff_file            = MIT_SP.tif
+
+  set_pan_x            = -90
+  set_pan_y            = -280
+  zoom                 = 0.65
+// Uncomment for TLS (port 8089):
+//   // tls_cert_file = /path/to/certs/shoreside.pem
+//   // tls_key_file  = /path/to/certs/shoreside.key
+//   // tls_ca_file   = /path/to/certs/shoreside-trusted.pem  vehicle_shape_scale  = 1.5
+  hash_delta           = 50
+  hash_shade           = 0.22
+  hash_viewable        = true
+
+  trails_point_size   = 1
+
+	//op_vertex = x=-83, y=-47,    lwidth=1,lcolor=yellow,looped=true,group=moa
+  //op_vertex = x=-46.4, y=-129.2, lwidth=1,lcolor=yellow,looped=true,group=moa
+  //op_vertex = x=94.6, y=-62.2,   lwidth=1,lcolor=yellow,looped=true,group=moa
+  //op_vertex = x=58,   y=20,    lwidth=1,lcolor=yellow,looped=true,group=moa
+
+  // Appcast configuration
+  appcast_height       = 75
+  appcast_width        = 30
+  appcast_viewable     = true
+  appcast_color_scheme = indigo
+  nodes_font_size      = xlarge
+  procs_font_size      = xlarge
+  appcast_font_size    = large
+  
+  // datum_viewable = true
+  // datum_size     = 18
+  // gui_size = small
+
+  // left_context[survey-point] = DEPLOY=true
+  // left_context[survey-point] = MOOS_MANUAL_OVERRIDE=false
+  // left_context[survey-point] = RETURN=false
+
+  right_context[return] = DEPLOY=true
+  right_context[return] = MOOS_MANUAL_OVERRIDE=false
+  right_context[return] = RETURN=false
+
+  scope  = SUMMARY
+  scope  = RETURN
+  scope  = WPT_STAT
+  scope  = VIEW_SEGLIST
+  scope  = VIEW_POINT
+  scope  = VIEW_POLYGON
+  scope  = MVIEWER_LCLICK
+  scope  = MVIEWER_RCLICK
+
+  button_one = DEPLOY # DEPLOY=true
+  button_one = MOOS_MANUAL_OVERRIDE=false # RETURN=false # ATAK_ACTIVE=false
+  button_two = RETURN # RETURN=true
+  button_three = SLOWER # ATAK_WPT_UPDATE=speed=1.5
+  button_four = FASTER # ATAK_WPT_UPDATE=speed=3.5
+
+  action  = MENU_KEY=deploy # DEPLOY = true # RETURN = false
+  action+ = MENU_KEY=deploy # MOOS_MANUAL_OVERRIDE=false
+  action  = RETURN=true
+  action  = UPDATES_RETURN=speed=1.4
+}
+
+//------------------------------------------
+// pNodeReporter config block
+
+ProcessConfig = pNodeReporter
+{
+  AppTick    = 2
+  CommsTick	 = 2
+
+  platform_type   = kayak
+  platform_color  = yellow
+  platform_length = 4
+}
+
+//------------------------------------------
+// MODE 2: Multi-vehicle (shoreside sim)
+
+ProcessConfig = pCoTBridge
+{
+  AppTick   = 10
+  CommsTick = 10
+
+  tak_host = 192.168.0.38
+  tak_port = 8089
+
+  // TLS certificates — required when tak_port = 8089.
+  // TLS is enabled automatically when port 8089 is set.
+  // Cert files are in the pCoTBridge/certs/ directory.
+  tls_cert_file = /home/tyler/moos-ivp/ivp/src/pCoTBridge/certs/shoreside.pem
+  tls_key_file  = /home/tyler/moos-ivp/ivp/src/pCoTBridge/certs/shoreside.key
+  tls_ca_file   = /home/tyler/moos-ivp/ivp/src/pCoTBridge/certs/shoreside-trusted.pem
+  
+  // If the private key is passphrase-protected (BEGIN ENCRYPTED PRIVATE KEY),
+  // provide the passphrase here. OpenSSL decrypts the key in memory —
+  // no plaintext key file is written to disk.
+  tls_key_pass  = atakatak
+
+
+  own_vehicles     = alpha
+
+  moving_send_interval     = 1.0
+  stationary_send_interval = 3.0
+  speed_threshold          = 0.5
+  cot_stale_offset         = 10.0
+  reconnect_interval       = 5.0
+
+  cot_delimiter = newline
+
+  debug = false
+}
+
+
+//------------------------------------------
+// pCoTCommander config block
+//
+// pCoTCommander subscribes to COT_INBOUND (raw CoT XML
+// published by pCoTBridge) and translates operator commands
+// from ATAK into MOOS variable publications for pHelmIvP.
+//
+// REQUIRES pCoTBridge to be running — pCoTCommander has no
+// TAK server connection of its own. It only reads COT_INBOUND.
+//
+// ANTLER block entry:
+//   Run = pCoTCommander @ NewConsole = false
+//------------------------------------------
+
+ProcessConfig = pCoTCommander
+{
+  AppTick   = 10
+  CommsTick = 10
+
+  // ---- Waypoint control ----
+  // "Go To" command (b-m-p-w-GOTO) sent from ATAK:
+  //   1. Posts ATAK_ACTIVE = true
+  //   2. Posts ATAK_WPT_UPDATE = "points=x,y # capture_radius=r"
+  //
+  // Requires waypt_atak behavior in .bhv file:
+  //   Behavior = BHV_Waypoint
+  //   {
+  //     name      = waypt_atak
+  //     pwt       = 150
+  //     condition = DEPLOY = true
+  //     condition = ATAK_ACTIVE = true
+  //     perpetual = true
+  //     updates   = ATAK_WPT_UPDATE
+  //     ...
+  //   }
+  enable_waypoint_control = true
+
+  // MOOS variable name for the waypoint update string.
+  // Must match 'updates = ATAK_WPT_UPDATE' in the .bhv block.
+  waypoint_update_var = ATAK_WPT_UPDATE
+
+  // How close (meters) the robot must get before the waypoint
+  // is considered captured by BHV_Waypoint. Tune based on the
+  // robot's turning radius and typical approach speed.
+  // At 3 m/s a Surveyor needs ~15-20m to turn around cleanly.
+  capture_radius = 15.0
+
+  // ---- Security ----
+  // Optional: restrict commands to one specific ATAK device.
+  // Find your device UID in ATAK: Settings → About.
+  // Leave commented to accept commands from any connected device.
+  // operator_uid_filter = ANDROID-abc123def456
+
+  // ---- Geodesy ----
+  // Converts incoming ATAK lat/lon to MOOS-IvP local XY.
+  // Uses lib_cot_geodesy (same as pCoTBridge).
+  //   false (default): MOOSGeodesy UTM projection if available,
+  //                    falls back to NAV flat-earth automatically
+  //   true:            always use NAV flat-earth anchor
+  use_nav_fallback = false
+
+  // ---- Debug output ----
+  // false (default): AppCast shows counters and last command only.
+  // true:            verbose — every COT_INBOUND logged with type,
+  //                  uid, lat/lon, and dispatch decision.
+  //                  Useful for discovering new ATAK command types
+  //                  (unhandled types appear in ignored count).
+  debug = false
+}
+
+//------------------------------------------
+// pCoTGraphics config block
+//
+// Converts MOOS VIEW_* graphics variables to CoT XML and
+// publishes to COT_OUTBOUND for pCoTBridge to forward to TAK.
+//
+// REQUIRES pCoTBridge to be running — pCoTGraphics publishes
+// to COT_OUTBOUND which pCoTBridge reads and forwards.
+//
+// ANTLER block entry:
+//   Run = pCoTGraphics @ NewConsole = false
+//------------------------------------------
+
+ProcessConfig = pCoTGraphics
+{
+  AppTick   = 10
+  CommsTick = 10
+
+  // ---- VIEW_POINT → CoT spot marker (b-m-p-s-m) ----
+  // Converts VIEW_POINT published by pMarineViewer/pHelmIvP
+  // to CoT spot markers visible on the ATAK map.
+  // active=false sends a delete CoT (t-x-d-d) to remove the icon.
+  publish_view_points = true
+
+  // Send VIEW_POINTs immediately on every OnNewMail update.
+  // Required for the vehicle trackpt marker to stay in sync
+  // with pMarineViewer. Set false to throttle at
+  // stationary_send_interval instead.
+  immediate_view_points = true
+
+  // ---- VIEW_SEGLIST → CoT polyline (u-d-f) ----
+  // Converts VIEW_SEGLIST (waypoint paths, survey polygons, etc.)
+  // to CoT polylines visible on the ATAK map.
+  // active=false sends a delete CoT to remove the line.
+  publish_view_seglists = true
+
+  // ---- Send throttle ----
+  // Seconds between re-sends for throttled graphics.
+  // Applies to VIEW_SEGLISTs and throttled VIEW_POINTs.
+  // CoT icons persist on ATAK until stale (24h default) so
+  // re-sending every few seconds is sufficient to keep them alive.
+  stationary_send_interval = 3.0
+
+  // ---- Geodesy ----
+  // Converts MOOS local XY to WGS84 lat/lon for CoT.
+  // Uses lib_cot_geodesy — reads LatOrigin/LongOrigin from .moos.
+  //   false (default): MOOSGeodesy UTM projection if available,
+  //                    falls back to NAV flat-earth automatically
+  //   true:            always use NAV flat-earth anchor
+  use_nav_fallback = false
+
+  // ---- Debug output ----
+  // false (default): AppCast shows counts and tracked label lists.
+  // true:            verbose — every VIEW_* parse logged with
+  //                  label, coordinates, and CoT type sent.
+  debug = false
+}
+
+//------------------------------------------
+// pCoTChat config block
+//
+// Bridges ATAK GeoChat messages to/from MOOS variables.
+// Requires pCoTBridge to be running.
+//
+// ANTLER block entry:
+//   Run = pCoTChat @ NewConsole = false
+//------------------------------------------
+
+ProcessConfig = pCoTChat
+{
+  AppTick   = 4     // event-driven via COMMS_DRIVEN_ITERATE_AND_MAIL
+  CommsTick = 10
+
+  // Own vehicle identity — must match pCoTBridge own_vehicle
+  own_callsign = alpha
+  // own_uid = surveyor-alpha  // default: surveyor-{own_callsign}
+
+  // Echo filter — suppress own messages echoed back by TAK server
+  echo_filter = true
+
+  // ---- Debug output ----
+  // true: every inbound/outbound message logged with full detail
+  debug = false
+}

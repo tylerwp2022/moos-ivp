@@ -1,0 +1,12 @@
+[submodule "ivp/src/moos-ivp-tak"]
+	path = ivp/src/moos-ivp-tak
+	url = git@github.com:tylerwp2022/moos-ivp-tak.git
+[submodule "ivp/src/pRedirectWaypoint"]
+	path = ivp/src/pRedirectWaypoint
+	url = git@github.com:tylerwp2022/pRedirectWaypoint.git
+[submodule "ivp/src/uGfxMask"]
+	path = ivp/src/uGfxMask
+	url = git@github.com:tylerwp2022/uGfxMask.git
+[submodule "ivp/src/uXboxJoystick"]
+	path = ivp/src/uXboxJoystick
+	url = git@github.com:tylerwp2022/uXboxJoystick.git
