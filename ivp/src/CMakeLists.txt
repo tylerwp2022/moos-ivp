@@ -183,7 +183,8 @@ SET(ROBOT_APPS
   pAutoPoke          uMayFinish          app_pluck
   app_nspatch        moos-ivp-tak/pCoTBridge          moos-ivp-tak/pCoTCommander
   moos-ivp-tak/pCoTGraphics      moos-ivp-tak/pCoTChat
-  moos-ivp-tak/pCoTContact       moos-ivp-tak/pCoTShoreContact       pRedirectWaypoint
+  moos-ivp-tak/pCoTContact       moos-ivp-tak/pCoTShoreContact
+  moos-ivp-tak/pCoTTrack         pRedirectWaypoint
   uXboxJoystick      uGfxMask
 )
 SET(IVP_NON_GUI_APPS
