@@ -14,6 +14,8 @@ J_ARGS="-j$(getconf _NPROCESSORS_ONLN)"
 
 BUILD_BOT_CODE_ONLY="OFF"
 FORCE_FULL_RASPI_BUILD=""
+MOOSGEODESY_USE_PROJ="${MOOSGEODESY_USE_PROJ:-ON}"
+MOOSGEODESY_FETCH_PROJ="${MOOSGEODESY_FETCH_PROJ:-auto}"
 
 #-------------------------------------------------------------------
 #  Check for and handle command-line arguments
@@ -30,6 +32,8 @@ for ARGI; do
         printf " -k     Keep building after failed component.    \n"
 	printf " -m,    Only build minimal robot apps            \n"
 	printf " -mx,   Turn off build minimal robot apps        \n"
+        printf " --with-proj=MODE  Use Proj: on (default) or off \n"
+        printf " --fetch-proj=MODE  Fetch Proj: auto (default), on, or off\n"
         printf " clean  Clean/remove any previous build.         \n"
         exit 0;
     elif [ "${ARGI}" = "--debug" -o "${ARGI}" = "-d" ] ; then
@@ -40,12 +44,25 @@ for ARGI; do
         BUILD_BOT_CODE_ONLY="ON"
     elif [ "${ARGI}" = "--minrobotx" -o "${ARGI}" = "-mx" ] ; then
         FORCE_FULL_RASPI_BUILD="yes"
-   elif [ "${ARGI}" = "--j1" -o "${ARGI}" = "-j1" ] ; then
+    elif [[ "${ARGI}" == --with-proj=* ]] ; then
+        MOOSGEODESY_USE_PROJ="${ARGI#*=}"
+        if [[ ! "${MOOSGEODESY_USE_PROJ}" =~ ^(on|off)$ ]]; then
+            echo "ERROR! --with-proj must be on or off"
+            exit 1
+        fi
+    elif [[ "${ARGI}" == --fetch-proj=* ]] ; then
+        MOOSGEODESY_FETCH_PROJ="${ARGI#*=}"
+        if [[ ! "${MOOSGEODESY_FETCH_PROJ}" =~ ^(auto|on|off)$ ]]; then
+            echo "ERROR! --fetch-proj must be auto, on, or off"
+            exit 1
+        fi
+    elif [ "${ARGI}" = "--j1" -o "${ARGI}" = "-j1" ] ; then
         J_ARGS="-j1"
     else
 	CMD_ARGS=$CMD_ARGS" "$ARGI
     fi
 done
+
 CMD_ARGS+=" "$J_ARGS
 
 #-------------------------------------------------------------- 
@@ -161,6 +178,7 @@ if [ "${BUILD_BOT_CODE_ONLY}" = "OFF" ] ; then
 	-DBUILD_UPB=ON                                           \
 	-DCMAKE_BUILD_TYPE=${BUILD_TYPE}                         \
 	-DCMAKE_RUNTIME_OUTPUT_DIRECTORY="${SCRIPT_ABS_DIR}/bin" \
+	-DMOOSTOOLSUI_BUILD_MACOS_BUNDLES=OFF \
 	-DCMAKE_CXX_FLAGS="${MOOS_CXX_FLAGS}"                    \
         "${MOOS_SRC_DIR}/MOOSToolsUI"                            \
       && echo "" && echo "Invoking make..." `pwd` && echo ""     \
@@ -174,55 +192,16 @@ if [ "${BUILD_BOT_CODE_ONLY}" = "OFF" ] ; then
 fi
 
 #===================================================================
-# Part #4:  BUILD PROJ4
-#===================================================================
-mkdir -p "${BUILD_ABS_DIR}/proj-5.2.0"
-cd "${BUILD_ABS_DIR}/proj-5.2.0"
-
-# TODO: This will always build PROJ4, even if local OS install performed.
-if [ ! -e lib/libproj.a ]; then
-    echo "Building Proj4. MOOSGeodesy now uses Proj4 with MOOSGeodesy wrapper"
-
-    cmake -DCMAKE_INSTALL_PREFIX:PATH=$PWD       \
-	  -DBUILD_LIBPROJ_SHARED=OFF             \
-	  -DCMAKE_POSITION_INDEPENDENT_CODE=ON   \
-	  -DPROJ_TESTS=OFF                       \
-	  -DBUILD_CCT=OFF                        \
-	  -DBUILD_CS2CS=OFF                      \
-	  -DBUILD_GEOD=OFF                       \
-	  -DBUILD_GIE=OFF                        \
-	  -DBUILD_NAD2BIN=OFF                    \
-	  -DBUILD_PROJ=OFF                       \
-	  "${MOOS_SRC_DIR}/proj-5.2.0"           \
-	&& make -j$(getconf _NPROCESSORS_ONLN)           \
-	&& make install                                  \
-	&& echo "Done Building Proj4."
-    if [ $? -ne 0 ] ; then
-	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-	echo "ERROR! Failed to build PROJ4"
-	echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-	exit 4
-    fi
-fi
-
-
-#===================================================================
-# Part #5:  BUILD MOOS GEODESY
+# Part #4:  BUILD MOOS GEODESY
 #===================================================================
 mkdir -p "${BUILD_ABS_DIR}/MOOSGeodesy"
 cd "${BUILD_ABS_DIR}/MOOSGeodesy"
 
-PROJ4_INCLUDE_DIR="${BUILD_ABS_DIR}/proj-5.2.0/include"
-PROJ4_LIB_DIR="${BUILD_ABS_DIR}/proj-5.2.0/lib"
-
-echo "PROJ4 LIB DIR: " $PROJ4_LIB_DIR
-
-
 echo "Invoking cmake..." `pwd`
 cmake -DCMAKE_CXX_FLAGS="${MOOS_CXX_FLAGS}"                 \
       -DMOOS_DIR="${MOOS_CORE_BUILD_DIR}"                   \
-      -DPROJ4_INCLUDE_DIRS=${PROJ4_INCLUDE_DIR}             \
-      -DPROJ4_LIB_PATH=${PROJ4_LIB_DIR}                     \
+      -DMOOSGEODESY_USE_PROJ=${MOOSGEODESY_USE_PROJ}        \
+      -DMOOSGEODESY_FETCH_PROJ=${MOOSGEODESY_FETCH_PROJ}    \
       "${MOOS_SRC_DIR}/MOOSGeodesy"                         \
   && echo "" && echo "Invoking make..." `pwd` && echo ""    \
   && make ${CMD_ARGS}
@@ -233,7 +212,7 @@ if [ $RESULT -ne 0 ] ; then
     echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
     echo "ERROR! Failed to build MOOSGeodesy"
     echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-    exit 5
+    exit 4
 fi
 
 cd ${INVOC_ABS_DIR}
