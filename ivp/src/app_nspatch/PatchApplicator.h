@@ -43,6 +43,9 @@ class PatchApplicator
   
   bool applyPatch();
   void setVerbose() {m_verbose=true;}
+
+  bool hasStemMoos() {return(m_file_stem_moos != "");}
+  bool hasStemBhv()  {return(m_file_stem_bhv != "");}
   
  protected:
   bool applyPatchMoos();

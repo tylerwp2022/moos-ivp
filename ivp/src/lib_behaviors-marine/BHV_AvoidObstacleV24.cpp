@@ -64,6 +64,8 @@ BHV_AvoidObstacleV24::BHV_AvoidObstacleV24(IvPDomain gdomain) :
   m_draw_buff_min_poly = true;
   m_draw_buff_max_poly = true;
   
+  m_side_lock_allowed = false;
+
   // Initialize state vars
   m_obstacle_relevance = 0;
 
@@ -134,6 +136,10 @@ bool BHV_AvoidObstacleV24::setParam(string param, string val)
   }
   else if(param == "allowable_ttc")
     config_result = m_obship_model.setAllowableTTC(dval);
+  else if(param == "allstop_ttc")
+    config_result = m_obship_model.setAllStopTTC(dval);
+  else if(param == "allstop_range")
+    config_result = m_obship_model.setAllStopRange(dval);
   else if((param == "min_util_cpa_dist") && non_neg_number)
     config_result = m_obship_model.setMinUtilCPA(dval);
   else if((param == "max_util_cpa_dist") && non_neg_number)
@@ -147,6 +153,8 @@ bool BHV_AvoidObstacleV24::setParam(string param, string val)
 
   else if(param == "holonomic_ok") 
     return(setBooleanOnString(m_holonomic_ok, val));
+  else if(param == "sidelock_allowed") 
+    return(setBooleanOnString(m_side_lock_allowed, val));
   else if(param == "draw_buff_min_poly") 
     return(setBooleanOnString(m_draw_buff_min_poly, val));
   else if(param == "draw_buff_max_poly") 
@@ -162,6 +170,8 @@ bool BHV_AvoidObstacleV24::setParam(string param, string val)
 
   else if(param == "rng_flag")
     return(handleParamRangeFlag(val));
+  else if(param == "spd_regulate")
+    return(handleParamSpdRegulate(val));
   else if(param == "cpa_flag")
     return(addFlagOnString(m_cpa_flags, val));
   else if(param == "visual_hints")
@@ -221,6 +231,33 @@ bool BHV_AvoidObstacleV24::handleParamRangeFlag(string str)
     m_rng_thresh.push_back(thresh);
 
   return(true);
+}
+
+//-----------------------------------------------------------
+// Procedure: handleParamSpdRegulate()
+//   Example: min_spd=1, max_spd=11, max_discount=60
+
+bool BHV_AvoidObstacleV24::handleParamSpdRegulate(string str)
+{
+  double min_spd = -1;
+  double max_spd = -1;
+  double max_discount = -1;
+  
+  vector<string> svector = parseString(str, ',');
+  for(unsigned int i=0; i<svector.size(); i++) {
+    string param = biteStringX(svector[i],'=');
+    string value = svector[i];
+    if(param == "min_spd")
+      min_spd = atof(value.c_str());
+    else if(param == "max_spd")
+      max_spd = atof(value.c_str());
+    else if(param == "max_discount")
+      max_discount = atof(value.c_str());
+  }
+  bool ok = m_obship_model.setSpdRegulation(min_spd, max_spd,
+					    max_discount);
+
+  return(ok);
 }
 
 //-----------------------------------------------------------
@@ -389,10 +426,53 @@ void BHV_AvoidObstacleV24::onIdleToRunState()
 }
 
 //-----------------------------------------------------------
+// Procedure: checkForAllStop()
+
+bool BHV_AvoidObstacleV24::checkForAllStop()
+{
+  double allstop_ttc = m_obship_model.getAllStopTTC();
+  // Note allstop_ttc=-1 if this feature is not enabled (default)  
+  if(allstop_ttc > 0) {
+    // Note ttc=-1 if osh is not on a course to intercept
+    double ttc = m_obship_model.getGutTTC();
+    if((ttc >= 0) && (ttc < allstop_ttc)) {
+      string msg = "Allstop: allstop ttc breached.";
+      msg += " ttc=" + doubleToStringX(ttc,2);
+      postEMessage(msg);      
+      return(true);
+    }
+  }
+
+  double allstop_range = m_obship_model.getAllStopRange();
+  // Note allstop_rng=-1 if this feature is not enabled (default)  
+  if(allstop_range > 0) {
+    // Note rng=-1 if osh is not on a course to intercept
+    //double rng = m_obship_model.getRangeToMidPoly(); // Change to gut mikerb
+    double rng = m_obship_model.getRangeToGutPoly();
+    if((rng >= 0) && (rng < allstop_range)) {
+      string msg = "Allstop: allstop range breached.";
+      msg += " range=" + doubleToStringX(rng,2);
+      postEMessage(msg);      
+      return(true);
+    }
+  }
+
+  
+  return(false);
+    
+}
+
+
+//-----------------------------------------------------------
 // Procedure: onRunState()
 
 IvPFunction *BHV_AvoidObstacleV24::onRunState() 
-{  
+{
+  // Part 0: Check for all-stop conditions
+  bool allstop = checkForAllStop();
+  if(allstop) 
+    return(0);
+  
   // Part 1: Handle if obstacle has been resolved
   if(m_resolved_pending) {
     setComplete();
@@ -511,7 +591,8 @@ double BHV_AvoidObstacleV24::getRelevance()
     return(0);
 
   if(range_relevance > 0.6) {
-    if(m_side_lock == "") {
+    // NOTE: m_side_lock can be set only if m_side_lock_allowed is true
+    if(m_side_lock_allowed && (m_side_lock == "")) {
       if(m_obship_model.getPassingSide() == "star")
 	m_side_lock = "port";
       else if(m_obship_model.getPassingSide() == "port")
@@ -530,9 +611,6 @@ double BHV_AvoidObstacleV24::getRelevance()
   else
     m_obship_model.setSideLock(true);
 
-  cout << "BHV_AvoidObstacleV24::getRelevance() side_lock: " << m_side_lock << endl;
-  cout << "BHV_AvoidObstacleV24::getRelevance() " << doubleToString(range_relevance,2) << endl;
-  
   // Part 2: Possibly apply the grade scale to the raw distance
   double relevance = range_relevance;
   if(m_pwt_grade == "quadratic")
@@ -657,6 +735,7 @@ void BHV_AvoidObstacleV24::postConfigStatus()
   double min_util_cpa   = m_obship_model.getMinUtilCPA();
   double max_util_cpa   = m_obship_model.getMaxUtilCPA();
   double allowable_ttc  = m_obship_model.getAllowableTTC();
+  double allstop_ttc    = m_obship_model.getAllStopTTC();
   
   str += ",allowable_ttc="  + doubleToString(allowable_ttc,2);
   str += ",min_util_cpa="   + doubleToString(min_util_cpa,2);
@@ -664,6 +743,7 @@ void BHV_AvoidObstacleV24::postConfigStatus()
   str += ",pwt_outer_dist=" + doubleToString(pwt_outer_dist,2);
   str += ",pwt_inner_dist=" + doubleToString(pwt_inner_dist,2);
   str += ",completed_dist=" + doubleToString(completed_dist,2);
+  str += ",allstop_ttc="    + doubleToString(allstop_ttc,2);
 
   postRepeatableMessage("BHV_SETTINGS", str);
 }
@@ -681,6 +761,8 @@ double BHV_AvoidObstacleV24::getDoubleInfo(string str)
     return(m_obship_model.getOSH());
   else if(str == "allowable_ttc")
     return(m_obship_model.getAllowableTTC());
+  else if(str == "allstop_ttc")
+    return(m_obship_model.getAllStopTTC());
   else if(str == "pwt_outer_dist")
     return(m_obship_model.getPwtOuterDist());
   else if(str == "pwt_inner_dist")
@@ -708,8 +790,17 @@ string BHV_AvoidObstacleV24::expandMacros(string sdata)
   // =======================================================
   // Then expand the macros unique to this behavior
   // =======================================================
+  if(strContains(sdata, "$[GUT_TTC]"))
+    sdata = macroExpand(sdata, "GUT_TTC", m_obship_model.getGutTTC());
+    
+  if(strContains(sdata, "$[MID_TTC]"))
+    sdata = macroExpand(sdata, "GUT_TTC", m_obship_model.getMidTTC());
+
   if(strContains(sdata, "$[RNG]"))
     sdata = macroExpand(sdata, "RNG", m_obship_model.getRange());
+    
+  if(strContains(sdata, "$[MID_RNG]"))
+    sdata = macroExpand(sdata, "MID_RNG", m_obship_model.getRangeToMidPoly());
     
   if(strContains(sdata, "$[BNG]"))
     sdata = macroExpand(sdata, "BNG", m_obship_model.getObcentBng());
@@ -813,9 +904,9 @@ bool BHV_AvoidObstacleV24::applyAbleFilter(string str)
   // Check 4: If obstacle vsource has been set then MUST 
   // match, regardless of other filter factors
   else if(vsource != "") {
-    cout << "vsource:" << vsource << endl;
+    //cout << "vsource:" << vsource << endl;
     string poly_vsource = m_obship_model.getVSource();
-    cout << "poly_vsource" << poly_vsource << endl;
+    //cout << "poly_vsource" << poly_vsource << endl;
     if(tolower(vsource) != tolower(poly_vsource))
       return(true); // Return true since syntax if fine
   }

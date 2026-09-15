@@ -56,15 +56,22 @@ class XYGenPolygon {
   unsigned int getPolyCount() const {return(m_cover_polys.size());}
 
 public:
+  double   distPtToExitGP(double px, double py) const;
   double   distSegToExitGP(double x1, double y1, double x2, double y2,
-			   bool& exited);
-  double   distSeglToExitGP(const XYSegList&, bool& exited);
-  double   distRayToExitGP(double rx, double ry, double ray_angle);
+			   bool& exited) const;
+  double   distSeglToExitGP(const XYSegList&, bool& exited) const;
+  double   distRayToExitGP(double rx, double ry, double ray_angle) const;
 
-  double   distSeglrToExitGP(const XYSeglr& seglr);  
+  double   distSeglrToExitGP(const XYSeglr& seglr) const;  
+  
+  double   distPtToEnterGP(double px, double py) const;
+  double   distRayToEnterGP(double px, double py, double ray_angle) const;
 
-  double   distPtToEnterGP(double x1, double x2);
-  double   distRayToEnterGP(double px, double py, double ray_angle);
+  double   cpaSegToGP(double x1, double y1, double x2, double y2) const;
+  double   cpaSeglToGP(const XYSegList&, bool verbose=false) const;
+  double   cpaSeglrToGP(const XYSeglr&, double dist, bool verbose=false) const;
+
+  double   distPtToGP(double px, double py) const;
   
 protected:
   XYSegList m_segl_border; 

@@ -221,8 +221,6 @@ XYGenPolygon stringToGenPoly(string full_str)
   XYGenPolygon null_gpoly;
   XYGenPolygon gpoly;
 
-  cout << "full_str: [" << full_str << "]" << endl;
-  
   // Sanity check 1: Must begin with border={
   string part1 = biteStringX(full_str, '#');
   if(!strBegins(part1, "border={"))
@@ -265,7 +263,6 @@ XYGenPolygon stringToGenPoly(string full_str)
   for(unsigned int i=0; i<svector.size(); i++) {
     string poly_str = stripBlankEnds(svector[i]);
     poly_str = findReplace(poly_str, "poly=", "pts=");
-    cout << "poly_str:[" << poly_str << "]" << endl;
     if(poly_str != "") {
       XYPolygon poly = string2Poly(poly_str);
       if(poly.size() == 0)
@@ -283,6 +280,19 @@ XYGenPolygon stringToGenPoly(string full_str)
 }
 
 //---------------------------------------------------------------
+// Procedure: distPtToExitGP()
+
+double XYGenPolygon::distPtToExitGP(double px, double py) const
+{
+  // Assumption test
+  if(!contains(px,py))
+    return(0);  
+
+
+  return(distPtToGP(px, py));
+}
+
+//---------------------------------------------------------------
 // Procedure: distSegToExitGP()
 //   Purpose: Calculate the length of the line segment x1,y1,x2,y2
 //            that is in the genpoly, starting from x1,y1.
@@ -290,13 +300,13 @@ XYGenPolygon stringToGenPoly(string full_str)
 
 double XYGenPolygon::distSegToExitGP(double x1, double y1,
 				     double x2, double y2,
-				     bool& exited)
+				     bool& exited) const
 {
   // We set exited=true unless both vertices are within the genpoly
   exited = true;
 
   // Assumption test
-  if(!contains(x1,y2))
+  if(!contains(x1,y1))
     return(0);  
 
   if(m_segl_border.size() < 3)
@@ -335,13 +345,41 @@ double XYGenPolygon::distSegToExitGP(double x1, double y1,
 }
 
 //---------------------------------------------------------------
-// Procedure: distSegToExitGP()
+// Procedure: distSeglToExitGP()
+//   Purpose: Calculate the length of the segl that is in the
+//            genpoly, starting from the first vertex of the segl.
+
+double XYGenPolygon::distSeglToExitGP(const XYSegList& segl,
+				      bool& exited) const
+{
+  // Sanity check proper segl
+  if(!segl.valid()) 
+    return(-3);
+
+  double total_dist = 0;
+
+  // Part 1: Calculate base seglist distance
+  for(unsigned int i=0; (i<segl.size() && !exited); i++) {
+    double x1 = segl.get_vx(i);
+    double y1 = segl.get_vy(i);
+    if((i+1) < segl.size()) {
+      double x2 = segl.get_vx(i+1);
+      double y2 = segl.get_vy(i+1);
+      double dist = distSegToExitGP(x1,y1,x2,y2, exited);
+      total_dist += dist;
+    }
+  }
+  return(total_dist);
+}
+
+//---------------------------------------------------------------
+// Procedure: distRayToExitGP()
 //   Purpose: Calculate the length of the ray, rx,ry,ray_angle
 //            that is in the genpoly, starting from rx,ry.
 //      Note: Assumes first ray base (rx,ry) is in the genpoly. 
 
 double XYGenPolygon::distRayToExitGP(double rx, double ry,
-				     double ray_angle)
+				     double ray_angle) const
 {
   // Assumptions test
   if(!contains(rx,ry))
@@ -375,39 +413,11 @@ double XYGenPolygon::distRayToExitGP(double rx, double ry,
 
 
 //---------------------------------------------------------------
-// Procedure: distSeglToExitGP()
-//   Purpose: Calculate the length of the segl that is in the
-//            genpoly, starting from the first vertex of the segl.
-
-double XYGenPolygon::distSeglToExitGP(const XYSegList& segl,
-				      bool& exited)
-{
-  // Sanity check proper segl
-  if(!segl.valid()) 
-    return(-3);
-
-  double total_dist = 0;
-
-  // Part 1: Calculate base seglist distance
-  for(unsigned int i=0; (i<segl.size() && !exited); i++) {
-    double x1 = segl.get_vx(i);
-    double y1 = segl.get_vy(i);
-    if((i+1) < segl.size()) {
-      double x2 = segl.get_vx(i+1);
-      double y2 = segl.get_vy(i+1);
-      double dist = distSegToExitGP(x1,y1,x2,y2, exited);
-      total_dist += dist;
-    }
-  }
-  return(total_dist);
-}
-
-//---------------------------------------------------------------
 // Procedure: distSeglrToExitGP()
 //   Purpose: Calculate the length of the seglr that is in the
 //            genpoly, starting from the first vertex of the seglr.
 
-double XYGenPolygon::distSeglrToExitGP(const XYSeglr& seglr)
+double XYGenPolygon::distSeglrToExitGP(const XYSeglr& seglr) const
 {
   // Sanity check proper seglr
   if(!seglr.valid()) 
@@ -439,42 +449,13 @@ double XYGenPolygon::distSeglrToExitGP(const XYSeglr& seglr)
 //   Purpose: Calculate the distance of the given point to the
 //            closest line segment.
 
-double XYGenPolygon::distPtToEnterGP(double px, double py)
+double XYGenPolygon::distPtToEnterGP(double px, double py) const
 {
-  // Edge cases
+  // Edge case
   if(contains(px,py))
-    return(0);  
-  if(m_segl_border.size() == 0)
     return(0);
-  if(m_segl_border.size() == 1) {
-    double sx = m_segl_border.get_vx(0);
-    double sy = m_segl_border.get_vy(0);
-    double dist = distPointToPoint(px,py, sx,sy); 
-    return(dist);
-  }
-  
-  double min_dist = -1;
-  for(unsigned int i=0; i<m_segl_border.size(); i++) {
-    // get first vertex of the ith edge
-    double x1 = m_segl_border.get_vx(i);
-    double y1 = m_segl_border.get_vy(i);
-    // get second vertex of the ith edge
-    double x2 = m_segl_border.get_vx(0);
-    double y2 = m_segl_border.get_vy(0);
-    if((i+1) < m_segl_border.size()) {
-      x2 = m_segl_border.get_vx(i+1);
-      y2 = m_segl_border.get_vy(i+1);
-    }
 
-    // determine if it crosses that edge
-    double dist = distPointToSeg(x1,y1,x2,y2, px,py);
-    if(dist > 0) {
-      if((min_dist < 0) || (dist < min_dist))
-	min_dist = dist;
-    }
-  }
-  
-  return(min_dist);
+  return(distPtToGP(px, py));
 }
 
 //---------------------------------------------------------------
@@ -486,7 +467,7 @@ double XYGenPolygon::distPtToEnterGP(double px, double py)
 //            ray does intersect the gpoly anywhere.
 
 double XYGenPolygon::distRayToEnterGP(double px, double py,
-				      double ray_angle)
+				      double ray_angle) const
 {
   // Edge cases
   if(contains(px,py))
@@ -518,3 +499,151 @@ double XYGenPolygon::distRayToEnterGP(double px, double py,
   return(min_dist);
 }
 
+
+//---------------------------------------------------------------
+// Procedure: cpaSegToGP()
+//   Purpose: Calculate the closest point of approach (CPA) from 
+//            the given line segment to the border of the GP,
+//            by calculating the CPA to each edge on the GP and
+//            taking the min
+
+
+double XYGenPolygon::cpaSegToGP(double x1, double y1,
+				double x2, double y2) const
+{
+  if(m_segl_border.size() < 2)
+    return(-1);
+  
+  double min_dist = -1;
+  for(unsigned int i=0; i<m_segl_border.size(); i++) {
+
+    // get first vertex of the ith edge
+    double x3 = m_segl_border.get_vx(i);
+    double y3 = m_segl_border.get_vy(i);
+
+    // get second vertex of the ith edge
+    double x4 = m_segl_border.get_vx(0);
+    double y4 = m_segl_border.get_vy(0);
+    if((i+1) < m_segl_border.size()) {
+      x4 = m_segl_border.get_vx(i+1);
+      y4 = m_segl_border.get_vy(i+1);
+    }
+
+    // determine if it crosses that edge
+    double dist = distSegToSeg(x1,y1,x2,y2, x3,y3,x4,y4);
+    if((min_dist < 0) || (dist < min_dist))
+      min_dist = dist;
+  }
+  
+  return(min_dist);
+}
+
+
+//---------------------------------------------------------------
+// Procedure: cpaSeglToGP()
+//   Purpose: Calculate the closest point of approach (CPA) from 
+//            the given SegList to the border of the GP, by
+//            calculating the CPA to each edge on the GP from and
+//            each edge in the SegList and then taking the min.
+
+
+double XYGenPolygon::cpaSeglToGP(const XYSegList& segl,
+				 bool verbose) const
+{
+  if(m_segl_border.size() < 2)
+    return(-1);
+
+  // Sanity check
+  if(segl.size() == 0)
+    return(-1);
+
+  // Edge case
+  if(segl.size() == 1) {
+    double x1 = segl.get_vx(0);
+    double y1 = segl.get_vy(0);
+    double x2 = segl.get_vx(0);
+    double y2 = segl.get_vy(0);
+    double dist = cpaSegToGP(x1,y1,x2,y2);
+    return(dist);
+  }
+  
+  double min_dist = -1;
+  for(unsigned int i=0; i<segl.size()-1; i++) {
+    // get segment
+    double x1 = segl.get_vx(i);
+    double y1 = segl.get_vy(i);
+    double x2 = segl.get_vx(i+1);
+    double y2 = segl.get_vy(i+1);
+
+    // determine dist of seg to (all edges of) GenPoly
+    double dist = cpaSegToGP(x1,y1,x2,y2);
+    if((min_dist < 0) || (dist < min_dist))
+      min_dist = dist;
+  }
+  
+  return(min_dist);
+}
+
+//---------------------------------------------------------------
+// Procedure: cpaSeglrToGP()
+//   Purpose: Calculate the closest point of approach (CPA) from 
+//            the given Seglr to the border of the GP, for a given
+//            seglr length/distance. By setting the distance, this
+//            defines seglist portion of the seglr.
+//            Calculate CPA for each edge of the seglist to each
+//            edge on the GP, and then taking the min.
+
+
+double XYGenPolygon::cpaSeglrToGP(const XYSeglr& seglr,
+				  double dist,
+				  bool verbose) const
+{
+  if(m_segl_border.size() < 2)
+    return(-1);
+
+  // Get the portion of the seglr out to length=dist
+  XYSegList segl = getDistSegList(seglr, dist);
+
+  if(verbose)
+    cout << " gp: segl: " << segl.get_spec() << endl;
+
+  return(cpaSeglToGP(segl));
+}
+
+//---------------------------------------------------------------
+// Procedure: distPtToGP()
+//   Purpose: Calculate the distance of the given point to the
+//            closest line segment.
+
+double XYGenPolygon::distPtToGP(double px, double py) const
+{
+  if(m_segl_border.size() == 0)
+    return(0);
+  if(m_segl_border.size() == 1) {
+    double sx = m_segl_border.get_vx(0);
+    double sy = m_segl_border.get_vy(0);
+    double dist = distPointToPoint(px,py, sx,sy); 
+    return(dist);
+  }
+  
+  double min_dist = -1;
+  for(unsigned int i=0; i<m_segl_border.size(); i++) {
+    // get first vertex of the ith edge
+    double x1 = m_segl_border.get_vx(i);
+    double y1 = m_segl_border.get_vy(i);
+    // get second vertex of the ith edge
+    double x2 = m_segl_border.get_vx(0);
+    double y2 = m_segl_border.get_vy(0);
+    if((i+1) < m_segl_border.size()) {
+      x2 = m_segl_border.get_vx(i+1);
+      y2 = m_segl_border.get_vy(i+1);
+    }
+
+    // determine if it crosses that edge
+    double dist = distPointToSeg(x1,y1,x2,y2, px,py);
+    if((min_dist < 0) || (dist < min_dist))
+      min_dist = dist;
+  }
+  
+  return(min_dist);
+}

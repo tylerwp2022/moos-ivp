@@ -14,6 +14,7 @@ SET(SRC
   AOF_CutRangeCPA.cpp
   AOF_Shadow.cpp
   AOF_Waypoint.cpp
+  AOF_OpRegion.cpp
   LoiterEngine.cpp
   ObShipModelV24.cpp
   ExFilterSet.cpp
@@ -52,5 +53,7 @@ SET(HEADERS
 )
 
 # Build Library
-ADD_LIBRARY(bhvutil ${SRC})
-
+IVP_ADD_LIBRARY(bhvutil ${SRC})
+TARGET_LINK_LIBRARIES(bhvutil
+  PUBLIC contacts geometry ivpbuild ivpcore mbutil
+  PRIVATE turngeo)

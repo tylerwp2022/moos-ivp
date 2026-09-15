@@ -56,12 +56,14 @@ public:
   
  protected: 
   bool   handleParamRangeFlag(std::string);
-
+  bool   handleParamSpdRegulate(std::string);
+  
   double getRelevance();
   bool   updatePlatformInfo();
   void   postViewablePolygons();
   void   postErasablePolygons();
   void   initVisualHints();
+  bool   checkForAllStop();
   
   bool   applyBuffer();
   IvPFunction* buildOF();
@@ -84,6 +86,8 @@ public:
   bool m_draw_buff_max_poly;
 
   bool m_holonomic_ok;
+
+  bool m_side_lock_allowed;
   
  protected: // State variables
 

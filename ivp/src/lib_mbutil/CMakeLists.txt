@@ -30,6 +30,7 @@ SET(SRC
   LatLonFormatUtils.cpp
   OpenURL.cpp
   BundleOut.cpp
+  ProcessUtils.cpp
   )
 
 SET(HEADERS
@@ -58,8 +59,11 @@ SET(HEADERS
   LatLonFormatUtils.h
   OpenURL.h
   BundleOut.h
+  ProcessUtils.h
 )
 
 # Build Library
-ADD_LIBRARY(mbutil ${SRC})
-
+IVP_ADD_LIBRARY(mbutil ${SRC})
+IF(UNIX)
+  TARGET_LINK_LIBRARIES(mbutil PRIVATE m)
+ENDIF()

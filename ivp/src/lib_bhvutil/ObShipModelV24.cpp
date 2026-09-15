@@ -53,9 +53,15 @@ ObShipModelV24::ObShipModelV24(double osx, double osy,
   m_pwt_inner_dist = 10;
   m_pwt_outer_dist = 50;
   m_allowable_ttc  = 20;
+  m_allstop_ttc    = -1;
+  m_allstop_range  = -1;
 
   m_completed_dist = 50;
 
+  m_sreg_min_spd = -1;
+  m_sreg_max_spd = -1;
+  m_sreg_max_discount = -1;
+  
   // Set the precision for rounding/expanding the obstacle_buff
   // polygon. Affects the work involved for CPA calculations
   m_obuff_rdegs = 30;
@@ -162,6 +168,32 @@ void ObShipModelV24::setPlatModel(PlatModel plat_model)
 }
 
 // ----------------------------------------------------------
+// Procedure: setSpdRegulation()
+
+bool ObShipModelV24::setSpdRegulation(double min_spd,
+				      double max_spd,
+				      double max_discount)
+{
+  // Ensure min/max spds are both >= 0
+  if((min_spd < 0) || (max_spd < 0))
+    return(false);
+
+  // Ensure the spd range is >= 0
+  if(min_spd >= max_spd)
+    return(false);
+
+  // Ensure the discount percent is between [0,100]
+  if((max_discount < 0) || (max_discount > 100))
+    return(false);
+
+  m_sreg_min_spd = min_spd;
+  m_sreg_max_spd = max_spd;
+  m_sreg_max_discount = max_discount;
+  
+  return(true);
+}
+
+// ----------------------------------------------------------
 // Procedure: setMinUtil()
 
 void ObShipModelV24::setMinUtil(double min_util)
@@ -237,9 +269,7 @@ void ObShipModelV24::setOBuffRDegs(double dval)
 
 string ObShipModelV24::setGutPoly(string polystr)
 {
-  cout << "str1:" << polystr << endl;
   XYPolygon new_poly = string2Poly(polystr);
-  cout << "str2:" << new_poly.get_spec() << endl;
   return(setGutPoly(new_poly));
 }
 
@@ -421,6 +451,82 @@ string ObShipModelV24::setAllowableTTC(double val)
 }
 
 // ----------------------------------------------------------
+// Procedure: setAllStopTTC()
+
+string ObShipModelV24::setAllStopTTC(double val)
+{
+  if(val < 0)
+    return("allstop_ttc cannot be a negative number");
+
+  m_allstop_ttc = val;
+  m_set_params.insert("allstop_ttc");
+
+  return("");
+}
+
+// ----------------------------------------------------------
+// Procedure: setAllStopRange()
+
+string ObShipModelV24::setAllStopRange(double val)
+{
+  if(val < 0)
+    return("allstop_range cannot be a negative number");
+
+  m_allstop_range = val;
+  m_set_params.insert("allstop_range");
+
+  return("");
+}
+
+// ----------------------------------------------------------
+// Procedure: getGutTTC()
+//   Purpose: Get time to collision given the current ownship
+//            position, heading and speed, and the location of
+//            the Gut Poly.
+
+double ObShipModelV24::getGutTTC() const
+{
+  double osv = getOSV();
+  if(osv <= 0)
+    return(-1);
+  
+  double osx = getOSX();
+  double osy = getOSY();
+  double osh = getOSH();
+  double dist_to_poly = m_gut_poly.dist_to_poly(osx, osy, osh);
+  if(dist_to_poly < 0)
+    return(-1);
+  
+  double ttc = osv * dist_to_poly; 
+
+  return(ttc);
+}
+
+// ----------------------------------------------------------
+// Procedure: getMidTTC()
+//   Purpose: Get time to collision given the current ownship
+//            position, heading and speed, and the location of
+//            the Mid Poly.
+
+double ObShipModelV24::getMidTTC() const
+{
+  double osv = getOSV();
+  if(osv <= 0)
+    return(-1);
+  
+  double osx = getOSX();
+  double osy = getOSY();
+  double osh = getOSH();
+  double dist_to_poly = m_mid_poly.dist_to_poly(osx, osy, osh);
+  if(dist_to_poly < 0)
+    return(-1);
+  
+  double ttc = osv * dist_to_poly; 
+
+  return(ttc);
+}
+
+// ----------------------------------------------------------
 // Procedure: paramIsSet()
 
 bool ObShipModelV24::paramIsSet(string param) const
@@ -470,8 +576,6 @@ double ObShipModelV24::getRangeRelevance()
   if(m_pwt_outer_dist < m_pwt_inner_dist)
     return(0);
 
-  //cout << "m_range: " << m_range << endl;
-  
   // Part 2: Now the easy range cases: when the obstacle is outside 
   //         the min or max priority weight ranges
   if(m_range >= m_pwt_outer_dist)
@@ -486,24 +590,25 @@ double ObShipModelV24::getRangeRelevance()
       return(0);
     pct = (m_pwt_outer_dist - m_range) / drange;
   }
-
-  //cout << "initial pct:" << pct << endl;
   
+  return(pct);
+
+  // Disabled below. May return to this minor optimization
+  // in the future.
+#if 0 
   // Part 4: Discount based on bearing to obstacle. Or full
   // weight if gut_poly is dead ahead.
 
-  
   double osx = getOSX();
   double osy = getOSY();
   double osh = getOSH();
 
-  
   // Part 4A: Edge cases: if for some reason the calc of gut
   // bng min/max not completed, or if all headings will hit.
   double bmin, bmax;
   bearingMinMaxToPoly(osx, osy, m_gut_poly, bmin, bmax);
-  //cout << "bng_min: " << doubleToStringX(bmin) << endl;
-  //cout << "bng_max: " << doubleToStringX(bmax) << endl;
+  cout << "bng_min: " << doubleToStringX(bmin) << endl;
+  cout << "bng_max: " << doubleToStringX(bmax) << endl;
 
   // Part 4C: If obstacle is dead ahead (angle wrap)
   if(bmin > bmax)
@@ -522,14 +627,12 @@ double ObShipModelV24::getRangeRelevance()
   if(cos_theta < 0)
     cos_theta = 0;
 
-  //cout << "osh: " << osh << endl;
-  //cout << "angle_diff1:" << angle_diff1 << endl;
-  //cout << "angle_diff2:" << angle_diff2 << endl;
-  //cout << "theta:" << theta << endl;
-  //cout << "theta_rad:" << theta_rad << endl;
-  //cout << "cos_theta:" << cos_theta << endl;
-  
-  
+  cout << "osh: " << osh << endl;
+  cout << "angle_diff1:" << angle_diff1 << endl;
+  cout << "angle_diff2:" << angle_diff2 << endl;
+  cout << "theta:" << theta << endl;
+  cout << "theta_rad:" << theta_rad << endl;
+  cout << "cos_theta:" << cos_theta << endl;
   
   //cout << "pct: " << pct << endl;
   double pct2 = cos_theta * pct;
@@ -539,6 +642,7 @@ double ObShipModelV24::getRangeRelevance()
   //cout << "new_new_pct: " << pct2 << endl;
 
   return(pct2);
+#endif
 }
 
 // ----------------------------------------------------------
@@ -620,6 +724,7 @@ void ObShipModelV24::print(string key) const
   cout << "pwt_inner_dist: " << m_pwt_inner_dist << endl;
   cout << "pwt_outer_dist: " << m_pwt_outer_dist << endl;
   cout << "m_allowable_ttc: " << m_allowable_ttc << endl;
+  cout << "m_allstop_ttc: " << m_allstop_ttc << endl;
   cout << "m_completed_dist: " << m_completed_dist << endl;
   cout << "gut_poly: " << m_gut_poly.get_spec() << endl; 
   cout << "mid_poly: " << m_mid_poly.get_spec() << endl; 
@@ -644,7 +749,7 @@ void ObShipModelV24::printBnds() const
 // Procedure: rayCPA()
 
 double ObShipModelV24::rayCPA(double hdg,
-			    double& rx, double &ry) const
+			      double& rx, double &ry) const
 {
   double osx = getOSX();
   double osy = getOSY();
@@ -703,7 +808,12 @@ double ObShipModelV24::evalHdgSpd(double hdg, double spd,
     if(passing_side != m_passing_side)
       return(0);
   }
-    
+ 
+  // For evaluation of spd regulation use the average of the current
+  // vehicle speed and the candidate maneuver spd.
+  double eval_spd = (getOSV() + spd) / 2;
+  
+  vpct = spdRegulate(eval_spd); // mikerb Aug2526
   
   double min_util_cpa = vpct * m_min_util_cpa;
   double max_util_cpa = vpct * m_max_util_cpa;
@@ -755,6 +865,18 @@ void ObShipModelV24::setCachedVals(bool force)
   
   m_stale_cache = false;
 }
+
+// ----------------------------------------------------------
+// Procedure: getRangeToMidPoly()
+
+double ObShipModelV24::getRangeToMidPoly() const
+{
+  double osx = getOSX();
+  double osy = getOSY();
+  double range = m_mid_poly.dist_to_poly(osx, osy);
+  return(range);
+}
+
 
 // ---------------------------------- PROTECTED -------------
 // Procedure: fillTurnCache()                      
@@ -959,6 +1081,86 @@ bool ObShipModelV24::updateDynamic()
   
   return(true);
 }
+
+//-----------------------------------------------------------
+// Procedure: isSpdRegulated()
+
+bool ObShipModelV24::isSpdRegulated() const
+{
+  // Ensure min/max spds are both >= 0
+  if((m_sreg_min_spd < 0) || (m_sreg_max_spd < 0))
+    return(false);
+
+  // Ensure the spd range is >= 0
+  if(m_sreg_min_spd >= m_sreg_max_spd)
+    return(false);
+
+  // Ensure the discount percent is between [0,100]
+  if((m_sreg_max_discount < 0) || (m_sreg_max_discount > 100))
+    return(false);
+
+  return(true);
+}
+  
+//-----------------------------------------------------------
+// Procedure: spdRegulate()
+//   Returns: A value between [0.0, 1.0] b
+//  Examples: Given sreg_min=1, sreg_max=11, max_discount=50
+//         a: given_spd=6,  rval=0.75  (50%  of 50% = 25%.  1-0.25=0.75)
+//         b: given_spd=1,  rval=0.50  (100% of 50% = 50%.  1-0.50=0.50)
+//         d: given_spd=12, rval=1.00  (0%   of 50% = 0%.   1-0.00=1.00)
+//         d: given_spd=3,  rval=0.90  (80%  of 50% = 40%.  1-0.40=0.60)
+//         e: given_spd=9,  rval=0.90  (20%  of 50% = 10%.  1-0.10=0.90)
+// 
+//      Note: A return value of 1 indicates there is NO speed
+//            regulation.
+
+double ObShipModelV24::spdRegulate(double given_spd) const
+{
+  // Sanity check: Ensure spd regulation is enabled
+  if(!isSpdRegulated())
+    return(1);
+
+  // Sanity check: Recheck the range is >= 0 
+  double spd_range = m_sreg_max_spd - m_sreg_min_spd;
+  if(spd_range <= 0)
+    return(1);
+
+  // ----------------------------------------------------------------
+  // Part 1: Determine the percentage [0,1] of the available discount
+  // ----------------------------------------------------------------
+  double pct_discount = 0;  // Be conservative, no discount
+  // No discount
+  if(given_spd > m_sreg_max_spd)
+    pct_discount = 0;
+
+  // Full discount
+  if(given_spd < m_sreg_min_spd)
+    pct_discount = 1;
+
+  // Stuff in between no and full discount (0,1)
+  // eg sreg_max_spd=11 - given_spd=3. delta=8
+  double delta = m_sreg_max_spd - given_spd;  
+
+  // eg delta=8 / rng=10. pct_discount=0.8
+  pct_discount = delta / spd_range;           
+
+  // ----------------------------------------------------------------
+  // Part 2: Convert pct discount to pct of original full value
+  // ----------------------------------------------------------------
+  // eg pct=0.8 * 50% = 40%.
+  double applied_discount = pct_discount * m_sreg_max_discount; 
+
+  // eg 40% becomes 0.4
+  applied_discount = applied_discount / 100;
+
+  // eg a 10% (.1) discount meant 90% (0.9) of original value
+  // eg 0.1 becomes 0.9
+  double retval = 1 - applied_discount; 
+
+  return(retval);
+}
+  
 
 //-----------------------------------------------------------
 // Procedure: updateBngExtremes()
