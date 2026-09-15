@@ -494,8 +494,14 @@ void BHV_OpRegionV26::postViewableRegion()
     poly.set_color("label", "off");
     poly.set_label("cp" + uintToString(i));
     poly.set_color("vertex", "white");
-    poly.set_vertex_size(5);
-    poly.set_transparency(0.9);
+    // NOTE: this "transparency" value is used directly as the fill alpha
+    // in the viewer (0 = invisible fill, 1 = fully opaque) -- higher is
+    // MORE opaque despite the name. Use 0 so the cover polys add no fill
+    // and never obscure contacts/markers inside the region. The clean
+    // outer boundary is still drawn as the "opborder" VIEW_SEGLIST above,
+    // so the region stays visible as an outline. No vertex dots either.
+    poly.set_vertex_size(0);
+    poly.set_transparency(0.0);
     poly.set_color("edge", "gray20");
     segl_border.set_duration(60);
     //applyHints(polys[i], m_hints, "core");

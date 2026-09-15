@@ -59,8 +59,21 @@ ContactLedger::ContactLedger(unsigned int history_size)
 
 void ContactLedger::setGeodesy(CMOOSGeodesy geodesy)
 {
+  // If the datum is unchanged, this call is a no-op. Otherwise a
+  // caller invoking setGeodesy() repeatedly, e.g., on every app
+  // iteration as pMarineViewer does, will keep overwriting the x/y
+  // reported in node reports with a local re-conversion of lat/lon
+  // via updateLocalCoords(). When the reporting vehicle's own
+  // lat/lon-to-x/y conversion differs from this ledger's (datum or
+  // UTM-vs-LocalGrid), the two positions alternate as new reports
+  // arrive, and the contact appears to jump back and forth.
+  if(m_geodesy_init &&
+     (geodesy.GetOriginLatitude()  == m_geodesy.GetOriginLatitude()) &&
+     (geodesy.GetOriginLongitude() == m_geodesy.GetOriginLongitude()))
+    return;
+
   m_geodesy = geodesy;
-  m_geodesy_init = true;  
+  m_geodesy_init = true;
   m_geodesy_updates++;
 
   updateLocalCoords();
@@ -71,10 +84,16 @@ void ContactLedger::setGeodesy(CMOOSGeodesy geodesy)
 
 bool ContactLedger::setGeodesy(double dlat, double dlon)
 {
+  // Same guard as above: unchanged datum means nothing to do.
+  if(m_geodesy_init &&
+     (dlat == m_geodesy.GetOriginLatitude()) &&
+     (dlon == m_geodesy.GetOriginLongitude()))
+    return(true);
+
   bool ok_init = m_geodesy.Initialise(dlat, dlon);
   if(!ok_init)
     return(false);
-  
+
   m_geodesy_init = true;
   m_geodesy_updates++;
 
