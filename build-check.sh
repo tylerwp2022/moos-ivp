@@ -191,6 +191,7 @@ if [ ! -e bin/pMarinePIDV22 ]; then  MISSING+="pMarinePIDV22,"; fi
 if [ ! -e bin/pBasicContactMgr ]; then  MISSING+="pBasicContactMgr,"; fi
 if [ ! -e bin/pContactMgrV20 ]; then  MISSING+="pContactMgrV20,"; fi
 if [ ! -e bin/pDeadManPost ];  then  MISSING+="pDeadManPost,"; fi
+if [ ! -e bin/pLLMAgent ];  then  MISSING+="pLLMAgent,"; fi
 if [ ! -e bin/pNodeReporter ]; then  MISSING+="pNodeReporter,"; fi
 if [ ! -e bin/pObstacleMgr ];  then  MISSING+="pObstacleMgr,"; fi
 if [ ! -e bin/pRealm ];  then  MISSING+="pRealm,"; fi

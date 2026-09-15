@@ -62,6 +62,30 @@ PMV_GUI::PMV_GUI(int g_w, int g_h, const char *g_l)
   mviewer   = new PMV_Viewer(0, 0, 1, 1);
   m_mviewer = mviewer;
 
+  // Configure the LLM chat pane widgets (placed in resizeWidgets)
+  m_chat_viewable = false;
+  m_chat_width    = 0.25;
+  m_chat_in_var   = "LLM_CHAT_IN";
+
+  m_chat_buff = new Fl_Text_Buffer();
+  m_chat_disp = new Fl_Text_Display(0, 0, 1, 1);
+  m_chat_disp->buffer(m_chat_buff);
+  m_chat_disp->wrap_mode(Fl_Text_Display::WRAP_AT_BOUNDS, 0);
+  m_chat_disp->textfont(FL_COURIER);
+  m_chat_disp->textsize(12);
+  m_chat_disp->box(FL_DOWN_BOX);
+  m_chat_disp->clear_visible_focus();
+
+  m_chat_status = new Fl_Output(0, 0, 1, 1);
+  m_chat_status->textsize(11);
+  m_chat_status->value("llm: idle");
+  m_chat_status->clear_visible_focus();
+
+  m_chat_input = new PMV_ChatInput(0, 0, 1, 1);
+  m_chat_input->when(FL_WHEN_ENTER_KEY_ALWAYS);
+  m_chat_input->textfont(FL_COURIER);
+  m_chat_input->callback((Fl_Callback*)PMV_GUI::cb_ChatSend);
+
   // Configure the AppCasting Browsing Widgets
   m_brw_nodes = new MY_Fl_Hold_Browser(0, 0, 1, 1);
   m_brw_nodes->callback(cb_SelectAppCastNode, 0);
@@ -261,6 +285,9 @@ void PMV_GUI::augmentMenu()
 		 FL_MENU_RADIO);
   m_menubar->add("InfoCasting/    Toggle InfoCasting", FL_CTRL+'a',
 		 (Fl_Callback*)PMV_GUI::cb_InfoCastSetting, (void*)42,
+		 FL_MENU_DIVIDER);
+  m_menubar->add("InfoCasting/    Toggle Chat Pane", FL_CTRL+'t',
+		 (Fl_Callback*)PMV_GUI::cb_ChatToggle, (void*)0,
 		 FL_MENU_DIVIDER);
 
   m_menubar->add("InfoCasting/content_mode=appcast", 0,
@@ -826,8 +853,12 @@ bool PMV_GUI::addAction(string svalue, bool separator)
 //            class should work fine. But if we want to tinker
 //            with event handling, this method is the place.
 
-int PMV_GUI::handle(int event) 
+int PMV_GUI::handle(int event)
 {
+  // Typing in the chat pane must never trigger the single-key hotkeys
+  if(m_chat_input && (Fl::focus() == m_chat_input))
+    return(Fl_Window::handle(event));
+
   switch(event) {
   case FL_KEYDOWN:
     if(Fl::event_key() == 65289) {
@@ -869,6 +900,99 @@ int PMV_GUI::handle(int event)
     }
   }
   return(Fl_Window::handle(event));
+}
+
+//----------------------------------------------------------
+// Procedure: cb_ChatSend
+//   Purpose: Enter in the chat input: queue the text as a MOOS
+//            post (handled verbatim by PMV_MOOSApp) and echo it.
+
+inline void PMV_GUI::cb_ChatSend_i()
+{
+  string text = stripBlankEnds(m_chat_input->value());
+  m_chat_input->value("");
+  if(text == "")
+    return;
+  pushPending(m_chat_in_var, text);
+  addChatLine("you", text);
+}
+
+void PMV_GUI::cb_ChatSend(Fl_Widget* o)
+{
+  ((PMV_GUI*)(o->parent()->user_data()))->cb_ChatSend_i();
+}
+
+//----------------------------------------------------------
+// Procedure: cb_ChatToggle
+
+inline void PMV_GUI::cb_ChatToggle_i()
+{
+  setChatViewable("toggle");
+  resizeWidgets();
+  redraw();
+}
+
+void PMV_GUI::cb_ChatToggle(Fl_Widget* o)
+{
+  ((PMV_GUI*)(o->parent()->user_data()))->cb_ChatToggle_i();
+}
+
+//----------------------------------------------------------
+// Procedure: addChatLine
+//   Purpose: Append one line to the transcript and keep the end
+//            in view. Newlines arrive encoded as "!@#" so the
+//            text survives the MOOSDB and the alog intact.
+
+void PMV_GUI::addChatLine(string who, string text)
+{
+  text = findReplace(text, "!@#", "\n");
+  string line = who + "> " + text + "\n";
+  m_chat_buff->append(line.c_str());
+
+  // Keep the transcript bounded
+  if(m_chat_buff->length() > 200000)
+    m_chat_buff->remove(0, 50000);
+
+  m_chat_disp->insert_position(m_chat_buff->length());
+  m_chat_disp->show_insert_position();
+}
+
+//----------------------------------------------------------
+// Procedure: setChatStatus
+
+void PMV_GUI::setChatStatus(string status)
+{
+  string s = "llm: " + status;
+  m_chat_status->value(s.c_str());
+}
+
+//----------------------------------------------------------
+// Procedure: setChatViewable
+
+bool PMV_GUI::setChatViewable(string str)
+{
+  if(tolower(str) == "toggle") {
+    m_chat_viewable = !m_chat_viewable;
+    return(true);
+  }
+  return(setBooleanOnString(m_chat_viewable, str));
+}
+
+//----------------------------------------------------------
+// Procedure: setChatWidth
+//   Purpose: Percent of the window width, clipped to [15,50].
+
+bool PMV_GUI::setChatWidth(string str)
+{
+  double pct = 0;
+  if(!setDoubleOnString(pct, str))
+    return(false);
+  if(pct < 15)
+    pct = 15;
+  if(pct > 50)
+    pct = 50;
+  m_chat_width = pct / 100.0;
+  return(true);
 }
 
 //----------------------------------------------------------
@@ -3213,6 +3337,15 @@ void PMV_GUI::resizeWidgets()
     xwid -= infocast_wid;
   }
 
+  // shrink the viewer width if showing the LLM chat pane (right edge)
+  double chat_wid = 0;
+  if(m_chat_viewable && !show_fullscreen) {
+    chat_wid = w() * m_chat_width;
+    if(chat_wid < 280)
+      chat_wid = 280;
+    xwid -= chat_wid;
+  }
+
   // shrink the viewer height if not in fullscreen
   if(!show_fullscreen) {
     int datafld_hgt = h() * pct_data_hgt;
@@ -3220,6 +3353,28 @@ void PMV_GUI::resizeWidgets()
   }
 
   mviewer->resize(xpos, ypos, xwid, yhgt);
+
+  // Place the chat pane: transcript over a status line over the input,
+  // spanning the same vertical extent as the viewer.
+  if(chat_wid > 0) {
+    int cx = w() - (int)chat_wid;
+    int cy = (int)ypos;
+    int cw = (int)chat_wid;
+    int ch = (int)yhgt;
+    int status_hgt = 20;
+    int input_hgt  = 26;
+    m_chat_disp->resize(cx, cy, cw, ch - status_hgt - input_hgt);
+    m_chat_status->resize(cx, cy + ch - status_hgt - input_hgt, cw, status_hgt);
+    m_chat_input->resize(cx, cy + ch - input_hgt, cw, input_hgt);
+    m_chat_disp->show();
+    m_chat_status->show();
+    m_chat_input->show();
+  }
+  else {
+    m_chat_disp->hide();
+    m_chat_status->hide();
+    m_chat_input->hide();
+  }
 
 
   // Part 6: Adjust the extents of the DATA block of widgets

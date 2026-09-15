@@ -158,6 +158,13 @@ void showExampleConfigAndExit()
   blk("  infocast_width        = 40      // {20, 25, 30, ..., 65, 70}  ");
   blk("  infocast_height       = 70      // {30, 35, 40, ..., 85, 90}  ");
   blk("                                                                ");
+  blk("  // LLM chat pane on the right edge (pairs with pLLMAgent)    ");
+  blk("  chat_viewable        = false   // {true, FALSE}               ");
+  blk("  chat_width           = 25      // pct of window, {15..50}     ");
+  blk("  chat_in_var          = LLM_CHAT_IN                            ");
+  blk("  chat_out_var         = LLM_CHAT_OUT                           ");
+  blk("  chat_status_var      = LLM_STATUS                             ");
+  blk("                                                                ");
   blk("  realmcast_show_source        = true  // {TRUE,false}          ");
   blk("  realmcast_show_community     = true  // {TRUE,false}          ");
   blk("  realmcast_show_subscriptions = true  // {TRUE,false}          ");

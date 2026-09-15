@@ -35,7 +35,10 @@ Additional packages:
   
 To do it all, cut and paste this:
 
-  sudo apt install g++ subversion xterm cmake patch libfltk1.3-dev freeglut3-dev libpng12-dev libjpeg-dev libxft-dev libxinerama-dev libtiff4-dev espeak
+  sudo apt install g++ subversion xterm cmake patch libfltk1.3-dev freeglut3-dev libpng12-dev libjpeg-dev libxft-dev libxinerama-dev libtiff4-dev espeak libssl-dev libcurl4-openssl-dev
+
+  (West Point fork) libssl-dev is needed by the moos-ivp-tak apps and
+  libcurl4-openssl-dev by moos-ivp-llm/pLLMAgent; both build by default.
 
 
 NOTE: As of this date we are no longer including FLTK as part of the 

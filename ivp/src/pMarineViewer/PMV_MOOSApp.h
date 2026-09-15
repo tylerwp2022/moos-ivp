@@ -122,7 +122,12 @@ class PMV_MOOSApp : public AppCastingMOOSApp
 
   std::string  m_mission_hash_var;  // MISSION_HASH
   std::string  m_mhash_short_var;   // MHASH
-  
+
+  // LLM chat pane variables (pairs with pLLMAgent)
+  std::string  m_chat_in_var;       // LLM_CHAT_IN
+  std::string  m_chat_out_var;      // LLM_CHAT_OUT
+  std::string  m_chat_status_var;   // LLM_STATUS
+
   std::vector<VarDataPair> m_beat_flags;  
 };
 

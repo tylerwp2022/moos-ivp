@@ -95,6 +95,7 @@
       '("uMACView" "procs_font_size" "nodes_font_size" "appcast_font_size" "appcast_color_scheme" "appcast_height" "refresh_mode" "content_mode" "watch_cluster" "realmcast_channel")
       '("uMAC")
       '("pDeadManPost" "heartbeat_var" "max_noheart" "deadflag" "post_policy" "active_at_start" "max_appcast_events")
+      '("pLLMAgent" "model" "api_key_env" "api_url" "max_tokens" "effort" "timeout" "max_retries" "max_tool_rounds" "refusal_fallback" "history_turns" "system_prompt" "system_prompt_file" "chat_in_var" "chat_out_var" "status_var" "chat_newline" "confirm_default" "vnames" "watch" "watch_all" "state_in_prompt" "stale_thresh" "tool")
       '("pRangeEvent" "min_range" "max_range" "event_var" "ignore_group" "max_appcast_events")
       '("uPokeDB" "poke")
       '("uQueryDB" "max_time" "halt_max_time" "condition" "halt_condition" "pass_condition" "fail_condition" "check_var")

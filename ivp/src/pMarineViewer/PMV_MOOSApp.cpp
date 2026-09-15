@@ -47,7 +47,11 @@ PMV_MOOSApp::PMV_MOOSApp()
   m_last_mhash_time    = 0;
   m_last_beat_time     = 0;
   m_block_heartbeat    = false;
-  
+
+  m_chat_in_var        = "LLM_CHAT_IN";
+  m_chat_out_var       = "LLM_CHAT_OUT";
+  m_chat_status_var    = "LLM_STATUS";
+
   VarDataPair pair1("HELM_MAP_CLEAR", 0);
   VarDataPair pair2("PMV_CONNECT", 0);
   m_connection_pairs.push_back(pair1);
@@ -256,6 +260,8 @@ void PMV_MOOSApp::registerVariables()
   Register("PMV_CONFIG");
   Register("BLOCK_HEARTBEAT");
   Register("RESET_MHASH");
+  Register(m_chat_out_var, 0);
+  Register(m_chat_status_var, 0);
 
   unsigned int i, vsize = m_scope_vars.size();
   for(i=0; i<vsize; i++)
@@ -291,6 +297,8 @@ void PMV_MOOSApp::handlePendingGUI()
       Register(val, 0);
       m_scope_vars.push_back(val);
     }
+    else if(var == m_chat_in_var)  // chat text is posted verbatim
+      Notify(var, val);
     else {
       string val_type = "string";
       if(isQuoted(val))  
@@ -374,8 +382,16 @@ void PMV_MOOSApp::handleNewMail(const MOOS_event & e)
       handled = handleMailConfig(sval);
     else if(key == "BLOCK_HEARTBEAT") 
       handled = setBooleanOnString(m_block_heartbeat, sval);
-    else if(key == "RESET_MHASH") 
+    else if(key == "RESET_MHASH")
       handled = setMissionHash();
+    else if(key == m_chat_out_var) {
+      m_gui->addChatLine("llm", sval);
+      handled = true;
+    }
+    else if(key == m_chat_status_var) {
+      m_gui->setChatStatus(sval);
+      handled = true;
+    }
       
     // PMV_MENU_CONTEXT = 
     // side=left, menukey=polyvert, post="POLY_VERT=x=$(XPOS),y=$(YPOS)"
@@ -896,8 +912,20 @@ void PMV_MOOSApp::handleStartUp(const MOOS_event & e) {
       handled = m_gui->setRadioCastAttrib(param, value);
     else if(param == "infocast_width") 
       handled = m_gui->setRadioCastAttrib(param, value);
-    else if(param == "infocast_nodes_width") 
+    else if(param == "infocast_nodes_width")
       handled = m_gui->setRadioCastAttrib(param, value);
+    else if(param == "chat_viewable")
+      handled = m_gui->setChatViewable(value);
+    else if(param == "chat_width")
+      handled = m_gui->setChatWidth(value);
+    else if(param == "chat_in_var") {
+      handled = setNonWhiteVarOnString(m_chat_in_var, value);
+      m_gui->setChatInVar(m_chat_in_var);
+    }
+    else if(param == "chat_out_var")
+      handled = setNonWhiteVarOnString(m_chat_out_var, value);
+    else if(param == "chat_status_var")
+      handled = setNonWhiteVarOnString(m_chat_status_var, value);
     else if(param == "stale_report_thresh") 
       handled = m_gui->mviewer->setParam(param, value);
     else if(param == "stale_remove_thresh") 

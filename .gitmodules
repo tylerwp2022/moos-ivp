@@ -10,3 +10,6 @@
 [submodule "ivp/src/uXboxJoystick"]
 	path = ivp/src/uXboxJoystick
 	url = git@github.com:tylerwp2022/uXboxJoystick.git
+[submodule "ivp/src/moos-ivp-llm"]
+	path = ivp/src/moos-ivp-llm
+	url = git@github.com:tylerwp2022/moos-ivp-llm.git

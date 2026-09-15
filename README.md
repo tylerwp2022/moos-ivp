@@ -42,8 +42,13 @@ Four repositories are vendored as submodules under `ivp/src/` and wired into the
 | `pRedirectWaypoint` | `pRedirectWaypoint` | Operator-driven vehicle redirect: select a team/vehicle and click a new waypoint from the shoreside viewer (driven by the `RDR_*` hotkeys added to pMarineViewer, below). |
 | `uXboxJoystick` | `uXboxJoystick` | Shoreside Xbox-controller teleop for MCTF vehicles. |
 | `uGfxMask` | `uGfxMask` | Graphics masking utility for shoreside display. |
+| `moos-ivp-llm` | `pLLMAgent`, `lib_llm`, `llm_selftest` | Operator chat with an LLM (Anthropic Messages API over libcurl). The model reads fleet state from the MOOSDB and acts on boats only through operator-defined `tool=` posts, each confirmed with y/n by default. Pairs with the pMarineViewer chat pane below. |
 
 Each submodule carries its own README with per-app configuration details; this section documents only how they integrate into the tree.
+
+### pMarineViewer chat pane (`ivp/src/pMarineViewer/PMV_GUI.*`, `PMV_MOOSApp.*`, `PMV_ChatInput.h`)
+
+A transcript, status line and text input on the right edge of the viewer. Enter posts the typed text to `LLM_CHAT_IN` verbatim; `LLM_CHAT_OUT` and `LLM_STATUS` are rendered as they arrive. Configure with `chat_viewable = true` and `chat_width = <pct>` in the pMarineViewer block; Ctrl+T toggles the pane. The input only takes keyboard focus from a mouse click and Escape gives focus back to the window, so the MCTF hotkeys above keep working when you are not typing. See `ivp/src/moos-ivp-llm/README.md` for the agent side and `ivp/missions/s1_alpha_llm/` for a runnable example (needs `ANTHROPIC_API_KEY` in the environment).
 
 ### Build system changes (`ivp/src/CMakeLists.txt`)
 

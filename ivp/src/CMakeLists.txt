@@ -199,6 +199,7 @@ SET(IVP_NON_GUI_LIBS
   lib_manifest       lib_marine_pid      lib_turngeo
   lib_geodaid        lib_survey          lib_dep_behaviors
   lib_gen_poly       moos-ivp-tak/lib_cot_geodesy
+  moos-ivp-llm/lib_llm
 )
 SET(IVP_GUI_LIBS
   lib_ipfview        lib_marineview
@@ -228,6 +229,7 @@ SET(ROBOT_APPS
   moos-ivp-tak/pCoTContact       moos-ivp-tak/pCoTShoreContact
   moos-ivp-tak/pCoTTrack         pRedirectWaypoint
   uXboxJoystick      uGfxMask
+  moos-ivp-llm/pLLMAgent         moos-ivp-llm/tests
 )
 SET(IVP_NON_GUI_APPS
   app_alogsplit      app_alogsort        app_alogcheck

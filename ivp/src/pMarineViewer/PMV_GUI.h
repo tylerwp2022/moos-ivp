@@ -30,6 +30,9 @@
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Hold_Browser.H>
 #include "MY_Fl_Hold_Browser.h"
+#include <FL/Fl_Text_Display.H>
+#include <FL/Fl_Text_Buffer.H>
+#include "PMV_ChatInput.h"
 #include "AppCastRepo.h"
 #include "RealmRepo.h"
 #include "InfoCastSettings.h"
@@ -81,7 +84,14 @@ public:
   void         closeCmdGUI();
 
   InfoCastSettings getInfoCastSettings() const {return(m_icast_settings);}
-  
+
+ public: // LLM chat pane (pairs with pLLMAgent)
+  void  addChatLine(std::string who, std::string text);
+  void  setChatStatus(std::string);
+  bool  setChatViewable(std::string);
+  bool  setChatWidth(std::string);
+  void  setChatInVar(std::string s) {m_chat_in_var=s;}
+
  public: // Window title bar preferences
   bool  showTitleIP(std::string str)
   {return(setBooleanOnString(m_show_title_ip, str));}
@@ -148,6 +158,11 @@ public: // InfoCast Related Functions
 
   inline void cb_CommandGUI_i();
   static void cb_CommandGUI(Fl_Widget*);
+
+  inline void cb_ChatSend_i();
+  static void cb_ChatSend(Fl_Widget*);
+  inline void cb_ChatToggle_i();
+  static void cb_ChatToggle(Fl_Widget*);
 
   inline void cb_SelectAppCastNode_i();
   static void cb_SelectAppCastNode(Fl_Widget*, long);
@@ -252,6 +267,15 @@ public: // InfoCast Related Functions
   MY_Fl_Hold_Browser *m_rc_brw_nodes;
   MY_Fl_Hold_Browser *m_rc_brw_procs;
   MY_Fl_Hold_Browser *m_rc_brw_casts;
+
+ protected: // Member variables added for the LLM chat pane
+  Fl_Text_Display *m_chat_disp;
+  Fl_Text_Buffer  *m_chat_buff;
+  PMV_ChatInput   *m_chat_input;
+  Fl_Output       *m_chat_status;
+  bool             m_chat_viewable;
+  double           m_chat_width;    // fraction of window width
+  std::string      m_chat_in_var;
 
   InfoCastSettings m_icast_settings;
 
