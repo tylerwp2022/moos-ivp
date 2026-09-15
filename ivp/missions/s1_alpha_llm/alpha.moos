@@ -173,7 +173,7 @@ ProcessConfig = pMarineViewer
 
   // LLM chat pane (right edge), fed by pLLMAgent
   chat_viewable        = true
-  chat_width           = 28
+  chat_width           = 28       // drag the divider or Ctrl+] / Ctrl+[ to resize
 
   // datum_viewable = true
   // datum_size     = 18

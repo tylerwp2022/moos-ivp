@@ -160,7 +160,8 @@ void showExampleConfigAndExit()
   blk("                                                                ");
   blk("  // LLM chat pane on the right edge (pairs with pLLMAgent)    ");
   blk("  chat_viewable        = false   // {true, FALSE}               ");
-  blk("  chat_width           = 25      // pct of window, {15..50}     ");
+  blk("  chat_width           = 25      // pct of window, {15..60}     ");
+  blk("  // resize live: drag the bar left of the pane, or Ctrl+] / Ctrl+[");
   blk("  chat_in_var          = LLM_CHAT_IN                            ");
   blk("  chat_out_var         = LLM_CHAT_OUT                           ");
   blk("  chat_status_var      = LLM_STATUS                             ");

@@ -86,6 +86,9 @@ PMV_GUI::PMV_GUI(int g_w, int g_h, const char *g_l)
   m_chat_input->textfont(FL_COURIER);
   m_chat_input->callback((Fl_Callback*)PMV_GUI::cb_ChatSend);
 
+  m_chat_split = new PMV_ChatSplitter(0, 0, 1, 1);
+  m_chat_split->callback((Fl_Callback*)PMV_GUI::cb_ChatDrag);
+
   // Configure the AppCasting Browsing Widgets
   m_brw_nodes = new MY_Fl_Hold_Browser(0, 0, 1, 1);
   m_brw_nodes->callback(cb_SelectAppCastNode, 0);
@@ -287,7 +290,11 @@ void PMV_GUI::augmentMenu()
 		 (Fl_Callback*)PMV_GUI::cb_InfoCastSetting, (void*)42,
 		 FL_MENU_DIVIDER);
   m_menubar->add("InfoCasting/    Toggle Chat Pane", FL_CTRL+'t',
-		 (Fl_Callback*)PMV_GUI::cb_ChatToggle, (void*)0,
+		 (Fl_Callback*)PMV_GUI::cb_ChatToggle, (void*)0, 0);
+  m_menubar->add("InfoCasting/    Chat Pane Wider", FL_CTRL+']',
+		 (Fl_Callback*)PMV_GUI::cb_ChatWidth, (void*)1, 0);
+  m_menubar->add("InfoCasting/    Chat Pane Narrower", FL_CTRL+'[',
+		 (Fl_Callback*)PMV_GUI::cb_ChatWidth, (void*)2,
 		 FL_MENU_DIVIDER);
 
   m_menubar->add("InfoCasting/content_mode=appcast", 0,
@@ -938,6 +945,53 @@ void PMV_GUI::cb_ChatToggle(Fl_Widget* o)
 }
 
 //----------------------------------------------------------
+// Procedure: cb_ChatWidth
+//   Purpose: Menu / keyboard step of the pane width. 1=wider, 2=narrower.
+
+inline void PMV_GUI::cb_ChatWidth_i(int v)
+{
+  if(v == 1)
+    adjustChatWidth(5);
+  else if(v == 2)
+    adjustChatWidth(-5);
+  resizeWidgets();
+  redraw();
+}
+
+void PMV_GUI::cb_ChatWidth(Fl_Widget* o, int v)
+{
+  ((PMV_GUI*)(o->parent()->user_data()))->cb_ChatWidth_i(v);
+}
+
+//----------------------------------------------------------
+// Procedure: cb_ChatDrag
+//   Purpose: The splitter is being dragged; the pane's left edge
+//            follows the mouse.
+
+inline void PMV_GUI::cb_ChatDrag_i()
+{
+  double new_wid = w() - Fl::event_x() - (m_chat_split->w() / 2.0);
+  double pct = 100.0 * new_wid / (double)w();
+  setChatWidth(doubleToString(pct, 2));
+  resizeWidgets();
+  redraw();
+}
+
+void PMV_GUI::cb_ChatDrag(Fl_Widget* o)
+{
+  ((PMV_GUI*)(o->parent()->user_data()))->cb_ChatDrag_i();
+}
+
+//----------------------------------------------------------
+// Procedure: adjustChatWidth
+
+bool PMV_GUI::adjustChatWidth(double delta_pct)
+{
+  double pct = (m_chat_width * 100.0) + delta_pct;
+  return(setChatWidth(doubleToString(pct, 2)));
+}
+
+//----------------------------------------------------------
 // Procedure: addChatLine
 //   Purpose: Append one line to the transcript and keep the end
 //            in view. Newlines arrive encoded as "!@#" so the
@@ -980,7 +1034,7 @@ bool PMV_GUI::setChatViewable(string str)
 
 //----------------------------------------------------------
 // Procedure: setChatWidth
-//   Purpose: Percent of the window width, clipped to [15,50].
+//   Purpose: Percent of the window width, clipped to [15,60].
 
 bool PMV_GUI::setChatWidth(string str)
 {
@@ -989,8 +1043,8 @@ bool PMV_GUI::setChatWidth(string str)
     return(false);
   if(pct < 15)
     pct = 15;
-  if(pct > 50)
-    pct = 50;
+  if(pct > 60)
+    pct = 60;
   m_chat_width = pct / 100.0;
   return(true);
 }
@@ -3337,13 +3391,16 @@ void PMV_GUI::resizeWidgets()
     xwid -= infocast_wid;
   }
 
-  // shrink the viewer width if showing the LLM chat pane (right edge)
-  double chat_wid = 0;
+  // shrink the viewer width if showing the LLM chat pane (right edge),
+  // leaving room for the drag splitter between the map and the pane
+  double chat_wid  = 0;
+  double split_wid = 0;
   if(m_chat_viewable && !show_fullscreen) {
     chat_wid = w() * m_chat_width;
     if(chat_wid < 280)
       chat_wid = 280;
-    xwid -= chat_wid;
+    split_wid = 6;
+    xwid -= (chat_wid + split_wid);
   }
 
   // shrink the viewer height if not in fullscreen
@@ -3355,9 +3412,10 @@ void PMV_GUI::resizeWidgets()
   mviewer->resize(xpos, ypos, xwid, yhgt);
 
   // Place the chat pane: transcript over a status line over the input,
-  // spanning the same vertical extent as the viewer.
+  // spanning the same vertical extent as the viewer. Colors follow the
+  // infocast color scheme computed in Part 4 so the panes match.
   if(chat_wid > 0) {
-    int cx = w() - (int)chat_wid;
+    int cx = (int)(w() - chat_wid);
     int cy = (int)ypos;
     int cw = (int)chat_wid;
     int ch = (int)yhgt;
@@ -3366,14 +3424,24 @@ void PMV_GUI::resizeWidgets()
     m_chat_disp->resize(cx, cy, cw, ch - status_hgt - input_hgt);
     m_chat_status->resize(cx, cy + ch - status_hgt - input_hgt, cw, status_hgt);
     m_chat_input->resize(cx, cy + ch - input_hgt, cw, input_hgt);
+    m_chat_split->resize(cx - (int)split_wid, cy, (int)split_wid, ch);
+    m_chat_disp->color(color_back);
+    m_chat_disp->textcolor(color_text);
+    m_chat_status->color(color_back);
+    m_chat_status->textcolor(color_text);
+    m_chat_input->color(color_back);
+    m_chat_input->textcolor(color_text);
+    m_chat_input->cursor_color(color_text);
     m_chat_disp->show();
     m_chat_status->show();
     m_chat_input->show();
+    m_chat_split->show();
   }
   else {
     m_chat_disp->hide();
     m_chat_status->hide();
     m_chat_input->hide();
+    m_chat_split->hide();
   }
 
 

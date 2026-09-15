@@ -48,7 +48,7 @@ Each submodule carries its own README with per-app configuration details; this s
 
 ### pMarineViewer chat pane (`ivp/src/pMarineViewer/PMV_GUI.*`, `PMV_MOOSApp.*`, `PMV_ChatInput.h`)
 
-A transcript, status line and text input on the right edge of the viewer. Enter posts the typed text to `LLM_CHAT_IN` verbatim; `LLM_CHAT_OUT` and `LLM_STATUS` are rendered as they arrive. Configure with `chat_viewable = true` and `chat_width = <pct>` in the pMarineViewer block; Ctrl+T toggles the pane. The input only takes keyboard focus from a mouse click and Escape gives focus back to the window, so the MCTF hotkeys above keep working when you are not typing. See `ivp/src/moos-ivp-llm/README.md` for the agent side and `ivp/missions/s1_alpha_llm/` for a runnable example (needs `ANTHROPIC_API_KEY` in the environment).
+A transcript, status line and text input on the right edge of the viewer. Enter posts the typed text to `LLM_CHAT_IN` verbatim; `LLM_CHAT_OUT` and `LLM_STATUS` are rendered as they arrive. Configure with `chat_viewable = true` and `chat_width = <pct>` (15 to 60) in the pMarineViewer block. Ctrl+T toggles the pane; drag the thin bar between the map and the pane, or press Ctrl+] / Ctrl+[, to resize it live. The pane takes its background and text colors from the active `appcast_color_scheme` so it matches the infocast browsers. The input only takes keyboard focus from a mouse click and Escape gives focus back to the window, so the MCTF hotkeys above keep working when you are not typing. See `ivp/src/moos-ivp-llm/README.md` for the agent side and `ivp/missions/s1_alpha_llm/` for a runnable example (needs `ANTHROPIC_API_KEY` in the environment).
 
 ### Build system changes (`ivp/src/CMakeLists.txt`)
 

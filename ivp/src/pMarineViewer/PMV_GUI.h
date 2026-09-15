@@ -33,6 +33,7 @@
 #include <FL/Fl_Text_Display.H>
 #include <FL/Fl_Text_Buffer.H>
 #include "PMV_ChatInput.h"
+#include "PMV_ChatSplitter.h"
 #include "AppCastRepo.h"
 #include "RealmRepo.h"
 #include "InfoCastSettings.h"
@@ -90,6 +91,7 @@ public:
   void  setChatStatus(std::string);
   bool  setChatViewable(std::string);
   bool  setChatWidth(std::string);
+  bool  adjustChatWidth(double delta_pct);
   void  setChatInVar(std::string s) {m_chat_in_var=s;}
 
  public: // Window title bar preferences
@@ -163,6 +165,10 @@ public: // InfoCast Related Functions
   static void cb_ChatSend(Fl_Widget*);
   inline void cb_ChatToggle_i();
   static void cb_ChatToggle(Fl_Widget*);
+  inline void cb_ChatWidth_i(int);
+  static void cb_ChatWidth(Fl_Widget*, int);
+  inline void cb_ChatDrag_i();
+  static void cb_ChatDrag(Fl_Widget*);
 
   inline void cb_SelectAppCastNode_i();
   static void cb_SelectAppCastNode(Fl_Widget*, long);
@@ -275,6 +281,7 @@ public: // InfoCast Related Functions
   Fl_Output       *m_chat_status;
   bool             m_chat_viewable;
   double           m_chat_width;    // fraction of window width
+  PMV_ChatSplitter *m_chat_split;
   std::string      m_chat_in_var;
 
   InfoCastSettings m_icast_settings;
