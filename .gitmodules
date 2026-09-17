@@ -13,3 +13,6 @@
 [submodule "ivp/src/moos-ivp-llm"]
 	path = ivp/src/moos-ivp-llm
 	url = git@github.com:tylerwp2022/moos-ivp-llm.git
+[submodule "ivp/src/moos-ivp-bt"]
+	path = ivp/src/moos-ivp-bt
+	url = git@github.com:tylerwp2022/moos-ivp-bt.git

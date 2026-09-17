@@ -1,6 +1,10 @@
 //-------------------------------------------------
-// NAME: M. Benjamin, MIT CSAIL
+// NAME: M. Benjamin, MIT CSAIL (s1_alpha), adapted for pLLMAgent
 // FILE: alpha.moos
+//
+// Blank LLM mission: no pre-programmed route. The helm only follows
+// what the chat pane, the buttons or a map click posts. alpha.bhv
+// documents the flag conventions the tools below rely on.
 //-------------------------------------------------
 
 ServerHost   = localhost
@@ -32,6 +36,7 @@ ProcessConfig = ANTLER
   Run = pNodeReporter	@ NewConsole = false
   Run = pRealm	      @ NewConsole = false
   Run = pLLMAgent     @ NewConsole = false
+  Run = pBehaviorTree @ NewConsole = false
 }
 
 //------------------------------------------
@@ -49,13 +54,16 @@ ProcessConfig = pLogger
   Log = IVPHELM_LIFE_EVENT @ 0 NOSYNC
   Log = REPORT @ 0 NOSYNC
   Log = BHV_SETTINGS @ 0 NOSYNC
-  Log = SUMMARY @ 0 NOSYNC
+  Log = MISSION @ 0 NOSYNC
 
   LogAuxSrc = true
   WildCardLogging = true
   WildCardOmitPattern = *_STATUS
   WildCardOmitPattern = DB_VARSUMMARY
   WildCardOmitPattern = DB_RWSUMMARY
+  // The boat idles between commands and the PID posts this at 20 Hz
+  // the whole time it has no fresh DESIRED_* input.
+  WildCardOmitPattern = PID_STALE
   WildCardExclusionLog = true
 }
 
@@ -100,6 +108,14 @@ ProcessConfig = pHelmIvP
   behaviors  = alpha.bhv
   domain     = course:0:359:360
   domain     = speed:0:4:41
+
+  // A parked helm clears every behavior's updates= variable (WPT_UPDATE,
+  // RETURN_UPDATE) on each tick without applying it. Keep the helm in
+  // DRIVE from launch and after an all-stop so updates always land;
+  // with DEPLOY=false it just idles. MOOS_MANUAL_OVERRIDE=true still
+  // parks it if an operator needs that.
+  start_engaged   = true
+  park_on_allstop = false
 }
 
 //------------------------------------------
@@ -157,11 +173,6 @@ ProcessConfig = pMarineViewer
 
   trails_point_size   = 1
 
-	//op_vertex = x=-83, y=-47,    lwidth=1,lcolor=yellow,looped=true,group=moa
-  //op_vertex = x=-46.4, y=-129.2, lwidth=1,lcolor=yellow,looped=true,group=moa
-  //op_vertex = x=94.6, y=-62.2,   lwidth=1,lcolor=yellow,looped=true,group=moa
-  //op_vertex = x=58,   y=20,    lwidth=1,lcolor=yellow,looped=true,group=moa
-
   // Appcast configuration
   appcast_height       = 75
   appcast_width        = 30
@@ -175,37 +186,38 @@ ProcessConfig = pMarineViewer
   chat_viewable        = true
   chat_width           = 28       // drag the divider or Ctrl+] / Ctrl+[ to resize
 
-  // datum_viewable = true
-  // datum_size     = 18
-  // gui_size = small
+  // Map clicks post the same flags as the goto and return tools:
+  // left click drives alpha to that point, right click brings it home.
+  left_context[goto] = BT_CMD=cancel
+  left_context[goto] = DEPLOY=true
+  left_context[goto] = MOOS_MANUAL_OVERRIDE=false
+  left_context[goto] = RETURN=false
+  left_context[goto] = WPT_UPDATE=points=$[XPOS],$[YPOS]
 
-  // left_context[survey-point] = DEPLOY=true
-  // left_context[survey-point] = MOOS_MANUAL_OVERRIDE=false
-  // left_context[survey-point] = RETURN=false
-
+  right_context[return] = BT_CMD=cancel
   right_context[return] = DEPLOY=true
   right_context[return] = MOOS_MANUAL_OVERRIDE=false
-  right_context[return] = RETURN=false
+  right_context[return] = RETURN=true
 
-  scope  = SUMMARY
+  scope  = LLM_STATUS
+  scope  = IVPHELM_STATE
+  scope  = DEPLOY
   scope  = RETURN
+  scope  = WPT_UPDATE
   scope  = WPT_STAT
-  scope  = VIEW_SEGLIST
-  scope  = VIEW_POINT
-  scope  = VIEW_POLYGON
+  scope  = MISSION
+  scope  = BT_STATE
+  scope  = BT_ACTIVE
+  scope  = BT_LOG
   scope  = MVIEWER_LCLICK
-  scope  = MVIEWER_RCLICK
 
-  button_one = DEPLOY # DEPLOY=true
-  button_one = MOOS_MANUAL_OVERRIDE=false # RETURN=false
-  button_two = RETURN # RETURN=true
-  button_three = SLOWER # WPT_UPDATE=speed=1.5
-  button_four = FASTER # WPT_UPDATE=speed=3.5
+  button_one   = STOP # BT_CMD=halt # DEPLOY=false # RETURN=false
+  button_two   = RETURN # BT_CMD=cancel # DEPLOY=true # RETURN=true # MOOS_MANUAL_OVERRIDE=false
+  button_three = SLOWER # WPT_UPDATE=speed=1.0 # RETURN_UPDATE=speed=1.0
+  button_four  = FASTER # WPT_UPDATE=speed=3.0 # RETURN_UPDATE=speed=3.0
 
-  action  = MENU_KEY=deploy # DEPLOY = true # RETURN = false
-  action+ = MENU_KEY=deploy # MOOS_MANUAL_OVERRIDE=false
-  action  = RETURN=true
-  action  = UPDATES_RETURN=speed=1.4
+  action = MENU_KEY=stop # BT_CMD=halt # DEPLOY=false # RETURN=false
+  action = MENU_KEY=return # BT_CMD=cancel # DEPLOY=true # RETURN=true # MOOS_MANUAL_OVERRIDE=false
 }
 
 //------------------------------------------
@@ -226,6 +238,13 @@ ProcessConfig = pNodeReporter
 // pLLMAgent config block
 // The API key is read from the ANTHROPIC_API_KEY environment
 // variable of the shell that runs launch.sh; it is never stored here.
+//
+// Every tool that moves the boat posts DEPLOY=true and releases
+// MOOS_MANUAL_OVERRIDE in the same line as its WPT_UPDATE. A tool's
+// posts go out in one mail batch, in order, so the helm is driving by
+// the time it looks at the update. A bare WPT_UPDATE sent to a parked
+// helm is discarded, which is how the survey version of this mission
+// ignored "move alpha to 20,20".
 
 ProcessConfig = pLLMAgent
 {
@@ -237,15 +256,51 @@ ProcessConfig = pLLMAgent
   max_tokens      = 4096
   confirm_default = true
 
-  system_prompt = "Mission: one simulated vehicle named alpha running a waypoint survey on Forest Lake, single MOOS community. The helm takes DEPLOY/RETURN flags and WPT_UPDATE for the survey behavior. Speeds are in meters per second; the boat cruises near 2 m/s."
+  system_prompt = "Mission: one simulated vehicle named alpha on Forest Lake, single MOOS community, no pre-programmed route. The helm only does what the tools post. Positions are local-grid meters, x east and y north of the datum. alpha launches at x=0 y=-20, which is also where the return tool sends it. Speeds are m/s: cruise near 2, max 4."
+  system_prompt = "goto and route replace the current track and start the boat moving on their own (they set DEPLOY and release manual override). return drives home. stop idles the helm so the boat coasts to a halt. speed changes the cruise speed now and for later legs. A goto, route or return ends with DEPLOY=false and MISSION set to goto_complete or return_complete, and the boat drifts at the last point until the next command. IVPHELM_UPDATE_RESULT shows whether the helm accepted the last update. If IVPHELM_STATE reads PARK an operator has parked the helm; goto, route and return release it once approved, but say so."
+  system_prompt = "Anything with more than one step, or that should run unattended, is a plan: write a behavior tree and hand it to run_plan. A plan owns the boat while it runs; goto, route, return and stop cancel it first, and halt_plan stops it alone. In a tree, a leg is the posts the goto tool makes (MOOS_MANUAL_OVERRIDE=false, RETURN=false, DEPLOY=true, WPT_UPDATE=points=x,y or points=x1,y1:x2,y2) followed by a WaitFor whose cond is MISSION = goto_complete with fresh true; a return leg posts RETURN=true and DEPLOY=true then waits the same way for MISSION = return_complete; speed is WPT_UPDATE=speed=n. BT_STATE, BT_ACTIVE and BT_LOG show a plan's progress."
 
-  watch = DEPLOY, RETURN, MOOS_MANUAL_OVERRIDE, NAV_SPEED, NAV_HEADING
-  watch = WPT_STAT, SUMMARY, MISSION, DESIRED_SPEED, DESIRED_HEADING
+  watch = DEPLOY, RETURN, MOOS_MANUAL_OVERRIDE, IVPHELM_STATE, IVPHELM_ALLSTOP
+  watch = NAV_X, NAV_Y, NAV_SPEED, NAV_HEADING, DESIRED_SPEED, DESIRED_HEADING
+  watch = WPT_UPDATE, RETURN_UPDATE, WPT_STAT, WPT_INDEX, MISSION
+  watch = IVPHELM_UPDATE_RESULT   // result=success or param_error for each update
+  watch = BT_STATE, BT_ACTIVE, BT_EVENT, BT_LOG
 
-  tool = name=deploy, desc="Start the mission: release manual override and deploy the vehicle on its survey", receivers=local, post=DEPLOY=true, post=MOOS_MANUAL_OVERRIDE=false, post=RETURN=false
-  tool = name=return, desc="Abort the survey and send the vehicle to its return point", receivers=local, post=RETURN=true
-  tool = name=goto, desc="Replace the survey route with one local-grid waypoint", receivers=local, arg=X:number:meters east of the datum, arg=Y:number:meters north of the datum, post=WPT_UPDATE={points=$[X],$[Y]}
-  tool = name=speed, desc="Set the survey cruise speed", receivers=local, confirm=false, arg=SPEED:number:speed in m/s between 0.5 and 4, post=WPT_UPDATE=speed=$[SPEED]
+  // Posts to this variable are validated and outlined before the
+  // operator approves them; the node catalog joins the system prompt.
+  bt_tree_var = BT_TREE
+
+  tool = name=goto, desc="Drive alpha to one point and stop there. Replaces any current track and gets the boat moving even if it is idle.", receivers=local, arg=X:number:meters east of the datum, arg=Y:number:meters north of the datum, post=BT_CMD=cancel, post=DEPLOY=true, post=MOOS_MANUAL_OVERRIDE=false, post=RETURN=false, post=WPT_UPDATE={points=$[X],$[Y]}
+  tool = name=route, desc="Drive alpha through several points in order and stop at the last one. Replaces any current track and gets the boat moving even if it is idle.", receivers=local, arg="POINTS:string:colon-separated x,y pairs in local-grid meters, for example 20,-40:60,-40:60,-80", post=BT_CMD=cancel, post=DEPLOY=true, post=MOOS_MANUAL_OVERRIDE=false, post=RETURN=false, post=WPT_UPDATE={points=$[POINTS]}
+  tool = name=return, desc="Abandon the current track and drive alpha back to its launch point at x=0 y=-20", receivers=local, post=BT_CMD=cancel, post=DEPLOY=true, post=MOOS_MANUAL_OVERRIDE=false, post=RETURN=true
+  tool = name=stop, desc="Idle the helm so alpha coasts to a stop where it is. Discards the current track. Posts immediately without confirmation.", receivers=local, confirm=false, post=BT_CMD=halt, post=DEPLOY=false, post=RETURN=false
+  tool = name=speed, desc="Set the cruise speed in m/s. Applies at once if underway and to later goto, route and return legs.", receivers=local, confirm=false, arg=SPEED:number:speed in m/s between 0.5 and 4, post=WPT_UPDATE=speed=$[SPEED], post=RETURN_UPDATE=speed=$[SPEED]
+
+  tool = name=run_plan, desc="Run a multi-step plan unattended: a behavior tree XML document using only the node catalog in your instructions. Replaces any running plan.", receivers=local, arg="TREE:string:the complete XML document as one string", post=BT_TREE=$[TREE]
+  tool = name=halt_plan, desc="Halt the running plan. The helm idles and the boat coasts to a stop. Posts immediately without confirmation.", receivers=local, confirm=false, post=BT_CMD=halt
+
+  app_logging = true
+}
+
+//------------------------------------------
+// pBehaviorTree config block
+// Runs a plan pLLMAgent wrote, or a file:
+//   uPokeDB alpha.moos BT_TREE_FILE=plans/box_and_home.xml
+// A halted or failed plan idles the helm the way the stop tool does.
+// BT_CMD=cancel halts without those flags, for a goto or return that
+// is taking the boat over itself.
+
+ProcessConfig = pBehaviorTree
+{
+  AppTick   = 4
+  CommsTick = 4
+
+  halt_flag = DEPLOY=false
+  halt_flag = RETURN=false
+  fail_flag = DEPLOY=false
+  fail_flag = RETURN=false
+
+  watch = DEPLOY, RETURN, MISSION, IVPHELM_STATE, NAV_X, NAV_Y, NAV_SPEED
 
   app_logging = true
 }

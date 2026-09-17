@@ -1,0 +1,29 @@
+<!-- Survey a small box at 2 m/s, hold for a moment, then return home.
+     Run without the LLM:  uPokeDB alpha.moos BT_TREE_FILE=plans/box_and_home.xml
+     Every leg engages the helm itself, so nothing here depends on the
+     order the operator pressed buttons in. -->
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence>
+      <Log msg="box survey starting"/>
+      <SubTree ID="Engage"/>
+      <Post var="WPT_UPDATE" val="speed=2"/>
+      <Post var="WPT_UPDATE" val="points=40,-60:80,-60:80,-100:40,-100"/>
+      <WaitFor cond="MISSION = goto_complete" fresh="true" timeout="600"/>
+      <Log msg="box done, holding"/>
+      <Wait sec="15"/>
+      <SubTree ID="Engage"/>
+      <Post var="RETURN" val="true"/>
+      <WaitFor cond="MISSION = return_complete" fresh="true" timeout="600"/>
+      <Log msg="home"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="Engage">
+    <Sequence>
+      <Post var="MOOS_MANUAL_OVERRIDE" val="false"/>
+      <Post var="RETURN" val="false"/>
+      <Post var="DEPLOY" val="true"/>
+    </Sequence>
+  </BehaviorTree>
+</root>
