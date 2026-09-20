@@ -87,7 +87,9 @@ public:
   InfoCastSettings getInfoCastSettings() const {return(m_icast_settings);}
 
  public: // LLM chat pane (pairs with pLLMAgent)
-  void  addChatLine(std::string who, std::string text);
+  void  addChatLine(std::string who, std::string text, std::string mode="");
+  bool  setChatColor(std::string role, std::string color);
+  void  applyChatColors(Fl_Color back, Fl_Color text);
   void  setChatStatus(std::string);
   bool  setChatViewable(std::string);
   bool  setChatWidth(std::string);
@@ -277,6 +279,9 @@ public: // InfoCast Related Functions
  protected: // Member variables added for the LLM chat pane
   Fl_Text_Display *m_chat_disp;
   Fl_Text_Buffer  *m_chat_buff;
+  Fl_Text_Buffer  *m_chat_style;      // one style letter per byte of m_chat_buff
+  Fl_Text_Display::Style_Table_Entry m_chat_styles[4];  // A you, B llm, C ask, D plan
+  std::string      m_chat_colors[4];  // "auto" or a color name, same order
   PMV_ChatInput   *m_chat_input;
   Fl_Output       *m_chat_status;
   bool             m_chat_viewable;

@@ -127,6 +127,7 @@ class PMV_MOOSApp : public AppCastingMOOSApp
   std::string  m_chat_in_var;       // LLM_CHAT_IN
   std::string  m_chat_out_var;      // LLM_CHAT_OUT
   std::string  m_chat_status_var;   // LLM_STATUS
+  std::string  m_chat_plan_var;     // BT_CHAT, lines from a running plan
 
   std::vector<VarDataPair> m_beat_flags;  
 };

@@ -161,6 +161,10 @@ void showExampleConfigAndExit()
   blk("  // LLM chat pane on the right edge (pairs with pLLMAgent)    ");
   blk("  chat_viewable        = false   // {true, FALSE}               ");
   blk("  chat_width           = 25      // pct of window, {15..60}     ");
+  blk("  chat_plan_var        = BT_CHAT // plan> lines; off to hide     ");
+  blk("  chat_color_you       = auto    // auto or a color name, also   ");
+  blk("  chat_color_llm       = auto    // chat_color_ask (a message    ");
+  blk("  chat_color_plan      = auto    // waiting on you)              ");
   blk("  // resize live: drag the bar left of the pane, or Ctrl+] / Ctrl+[");
   blk("  chat_in_var          = LLM_CHAT_IN                            ");
   blk("  chat_out_var         = LLM_CHAT_OUT                           ");

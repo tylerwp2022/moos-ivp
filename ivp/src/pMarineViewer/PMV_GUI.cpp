@@ -76,6 +76,20 @@ PMV_GUI::PMV_GUI(int g_w, int g_h, const char *g_l)
   m_chat_disp->box(FL_DOWN_BOX);
   m_chat_disp->clear_visible_focus();
 
+  // Lines are colored by role through a parallel style buffer: A is
+  // the operator, B the model, C anything waiting on the operator,
+  // D the running plan. Colors are set in applyChatColors() once the
+  // pane's background is known.
+  m_chat_style = new Fl_Text_Buffer();
+  for(int i=0; i<4; i++) {
+    m_chat_colors[i]       = "auto";
+    m_chat_styles[i].color = FL_BLACK;
+    m_chat_styles[i].font  = FL_COURIER;
+    m_chat_styles[i].size  = 12;
+    m_chat_styles[i].attr  = 0;
+  }
+  m_chat_disp->highlight_data(m_chat_style, m_chat_styles, 4, 'A', 0, 0);
+
   m_chat_status = new Fl_Output(0, 0, 1, 1);
   m_chat_status->textsize(11);
   m_chat_status->value("llm: idle");
@@ -997,18 +1011,97 @@ bool PMV_GUI::adjustChatWidth(double delta_pct)
 //            in view. Newlines arrive encoded as "!@#" so the
 //            text survives the MOOSDB and the alog intact.
 
-void PMV_GUI::addChatLine(string who, string text)
+void PMV_GUI::addChatLine(string who, string text, string mode)
 {
   text = findReplace(text, "!@#", "\n");
   string line = who + "> " + text + "\n";
-  m_chat_buff->append(line.c_str());
 
-  // Keep the transcript bounded
-  if(m_chat_buff->length() > 200000)
+  // The color says what the line is, the prefix says who wrote it
+  char style = 'B';                       // the model
+  if(who == "you")
+    style = 'A';
+  else if(mode == "ask")
+    style = 'C';                          // waiting on the operator
+  else if(who == "plan")
+    style = 'D';
+
+  m_chat_buff->append(line.c_str());
+  m_chat_style->append(string(line.size(), style).c_str());
+
+  // Keep the transcript bounded, both buffers alike
+  if(m_chat_buff->length() > 200000) {
     m_chat_buff->remove(0, 50000);
+    m_chat_style->remove(0, 50000);
+  }
 
   m_chat_disp->insert_position(m_chat_buff->length());
   m_chat_disp->show_insert_position();
+}
+
+//----------------------------------------------------------
+// Procedure: setChatColor
+//   Purpose: Config hook: chat_color_<role> = auto | <color name>
+
+bool PMV_GUI::setChatColor(string role, string color)
+{
+  int idx = -1;
+  role = tolower(stripBlankEnds(role));
+  if(role == "you")
+    idx = 0;
+  else if(role == "llm")
+    idx = 1;
+  else if(role == "ask")
+    idx = 2;
+  else if(role == "plan")
+    idx = 3;
+  if(idx < 0)
+    return(false);
+
+  color = tolower(stripBlankEnds(color));
+  if((color != "auto") && !isColor(color))
+    return(false);
+  m_chat_colors[idx] = color;
+  return(true);
+}
+
+//----------------------------------------------------------
+// Procedure: applyChatColors
+//   Purpose: Resolve the four role colors against the pane's
+//            background. "auto" picks a palette that reads on
+//            the light schemes (white, beige) or the dark ones
+//            (the indigos); the model's lines use the scheme's
+//            own text color so they match the app-casts.
+
+void PMV_GUI::applyChatColors(Fl_Color back, Fl_Color text)
+{
+  unsigned char r, g, b;
+  Fl::get_color(back, r, g, b);
+  bool dark = ((0.299 * r + 0.587 * g + 0.114 * b) < 128);
+
+  Fl_Color dflt[4];
+  if(dark) {
+    dflt[0] = fl_rgb_color(170, 215, 255);   // you: light blue
+    dflt[1] = text;                          // llm
+    dflt[2] = fl_rgb_color(255, 205, 120);   // ask: amber
+    dflt[3] = fl_rgb_color(165, 240, 165);   // plan: pale green
+  }
+  else {
+    dflt[0] = fl_rgb_color(0, 60, 180);      // you: blue
+    dflt[1] = text;                          // llm
+    dflt[2] = fl_rgb_color(180, 70, 0);      // ask: dark orange
+    dflt[3] = fl_rgb_color(0, 115, 45);      // plan: green
+  }
+
+  for(int i=0; i<4; i++) {
+    Fl_Color c = dflt[i];
+    if(m_chat_colors[i] != "auto") {
+      ColorPack cpack(m_chat_colors[i]);
+      c = fl_rgb_color((int)(cpack.red() * 255), (int)(cpack.grn() * 255),
+		       (int)(cpack.blu() * 255));
+    }
+    m_chat_styles[i].color = c;
+  }
+  m_chat_disp->redraw();
 }
 
 //----------------------------------------------------------
@@ -3427,6 +3520,7 @@ void PMV_GUI::resizeWidgets()
     m_chat_split->resize(cx - (int)split_wid, cy, (int)split_wid, ch);
     m_chat_disp->color(color_back);
     m_chat_disp->textcolor(color_text);
+    applyChatColors(color_back, color_text);
     m_chat_status->color(color_back);
     m_chat_status->textcolor(color_text);
     m_chat_input->color(color_back);

@@ -51,6 +51,7 @@ PMV_MOOSApp::PMV_MOOSApp()
   m_chat_in_var        = "LLM_CHAT_IN";
   m_chat_out_var       = "LLM_CHAT_OUT";
   m_chat_status_var    = "LLM_STATUS";
+  m_chat_plan_var      = "BT_CHAT";
 
   VarDataPair pair1("HELM_MAP_CLEAR", 0);
   VarDataPair pair2("PMV_CONNECT", 0);
@@ -262,6 +263,8 @@ void PMV_MOOSApp::registerVariables()
   Register("RESET_MHASH");
   Register(m_chat_out_var, 0);
   Register(m_chat_status_var, 0);
+  if(m_chat_plan_var != "")
+    Register(m_chat_plan_var, 0);
 
   unsigned int i, vsize = m_scope_vars.size();
   for(i=0; i<vsize; i++)
@@ -385,7 +388,14 @@ void PMV_MOOSApp::handleNewMail(const MOOS_event & e)
     else if(key == "RESET_MHASH")
       handled = setMissionHash();
     else if(key == m_chat_out_var) {
-      m_gui->addChatLine("llm", sval);
+      // A message that waits for the operator carries source aux "ask"
+      string mode = strBegins(msg.GetSourceAux(), "ask") ? "ask" : "";
+      m_gui->addChatLine("llm", sval, mode);
+      handled = true;
+    }
+    else if((m_chat_plan_var != "") && (key == m_chat_plan_var)) {
+      string mode = strBegins(msg.GetSourceAux(), "ask") ? "ask" : "";
+      m_gui->addChatLine("plan", sval, mode);
       handled = true;
     }
     else if(key == m_chat_status_var) {
@@ -926,6 +936,16 @@ void PMV_MOOSApp::handleStartUp(const MOOS_event & e) {
       handled = setNonWhiteVarOnString(m_chat_out_var, value);
     else if(param == "chat_status_var")
       handled = setNonWhiteVarOnString(m_chat_status_var, value);
+    else if(param == "chat_plan_var") {
+      if(tolower(value) == "off") {
+	m_chat_plan_var = "";
+	handled = true;
+      }
+      else
+	handled = setNonWhiteVarOnString(m_chat_plan_var, value);
+    }
+    else if(strBegins(param, "chat_color_"))
+      handled = m_gui->setChatColor(param.substr(11), value);
     else if(param == "stale_report_thresh") 
       handled = m_gui->mviewer->setParam(param, value);
     else if(param == "stale_remove_thresh") 
