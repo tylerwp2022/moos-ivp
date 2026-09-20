@@ -1,0 +1,21 @@
+<!-- The same box as box_and_home.xml, written with the Goto leaf:
+     each corner engages the helm and waits for arrival by itself.
+     Run without the LLM:  uPokeDB alpha.moos BT_TREE_FILE=plans/box_goto.xml
+     The return leg still uses generic nodes until a Return leaf exists. -->
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence>
+      <Say msg="surveying the box"/>
+      <Goto x="40" y="-60" timeout="300"/>
+      <Goto x="80" y="-60" timeout="300"/>
+      <Goto x="80" y="-100" timeout="300"/>
+      <Goto x="40" y="-100" timeout="300"/>
+      <Say msg="box done, heading home"/>
+      <Post var="MOOS_MANUAL_OVERRIDE" val="false"/>
+      <Post var="RETURN" val="true"/>
+      <Post var="DEPLOY" val="true"/>
+      <WaitFor cond="MISSION = return_complete" fresh="true" timeout="600"/>
+      <Say msg="home"/>
+    </Sequence>
+  </BehaviorTree>
+</root>

@@ -16,3 +16,6 @@
 [submodule "ivp/src/moos-ivp-bt"]
 	path = ivp/src/moos-ivp-bt
 	url = git@github.com:tylerwp2022/moos-ivp-bt.git
+[submodule "ivp/src/moos-ivp-cap"]
+	path = ivp/src/moos-ivp-cap
+	url = git@github.com:tylerwp2022/moos-ivp-cap.git
