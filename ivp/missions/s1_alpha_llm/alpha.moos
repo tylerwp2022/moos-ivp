@@ -256,9 +256,6 @@ ProcessConfig = pLLMAgent
   max_tokens      = 4096
   confirm_default = true
 
-  system_prompt = "Mission: one simulated vehicle named alpha on Forest Lake, single MOOS community, no pre-programmed route. The helm only does what the tools post. Positions are local-grid meters, x east and y north of the datum. alpha launches at x=0 y=-20, which is also where the return tool sends it. Speeds are m/s: cruise near 2, max 4."
-  system_prompt = "goto and route replace the current track and start the boat moving on their own (they set DEPLOY and release manual override). return drives home. stop idles the helm so the boat coasts to a halt. speed changes the cruise speed now and for later legs. A goto, route or return ends with DEPLOY=false and MISSION set to goto_complete or return_complete, and the boat drifts at the last point until the next command. IVPHELM_UPDATE_RESULT shows whether the helm accepted the last update. If IVPHELM_STATE reads PARK an operator has parked the helm; goto, route and return release it once approved, but say so."
-  system_prompt = "Anything with more than one step, or that should run unattended, is a plan: write a behavior tree and hand it to run_plan. A plan owns the boat while it runs; goto, route, return and stop cancel it first, and halt_plan stops it alone. In a tree, a single-point leg is one Goto node: it engages the helm and waits for arrival on its own. A multi-point leg is the posts the route tool makes (MOOS_MANUAL_OVERRIDE=false, RETURN=false, DEPLOY=true, WPT_UPDATE=points=x1,y1:x2,y2) followed by a WaitFor whose cond is MISSION = goto_complete with fresh true; a return leg posts RETURN=true and DEPLOY=true then waits the same way for MISSION = return_complete; speed is WPT_UPDATE=speed=n. BT_STATE, BT_ACTIVE and BT_LOG show a plan's progress."
 
   watch = DEPLOY, RETURN, MOOS_MANUAL_OVERRIDE, IVPHELM_STATE, IVPHELM_ALLSTOP
   watch = NAV_X, NAV_Y, NAV_SPEED, NAV_HEADING, DESIRED_SPEED, DESIRED_HEADING
@@ -269,16 +266,18 @@ ProcessConfig = pLLMAgent
   // Posts to this variable are validated and outlined before the
   // operator approves them; the node catalog joins the system prompt.
   bt_tree_var = BT_TREE
+  system_prompt_file = prompts/alpha.txt   // mission facts; tool semantics come from the .cap files
 
-  tool = name=goto, desc="Drive alpha to one point and stop there. Replaces any current track and gets the boat moving even if it is idle.", receivers=local, arg=X:number:meters east of the datum, arg=Y:number:meters north of the datum, post=BT_CMD=cancel, post=DEPLOY=true, post=MOOS_MANUAL_OVERRIDE=false, post=RETURN=false, post=WPT_UPDATE={points=$[X],$[Y]}
-  tool = name=route, desc="Drive alpha through several points in order and stop at the last one. Replaces any current track and gets the boat moving even if it is idle.", receivers=local, arg="POINTS:string:colon-separated x,y pairs in local-grid meters, for example 20,-40:60,-40:60,-80", post=BT_CMD=cancel, post=DEPLOY=true, post=MOOS_MANUAL_OVERRIDE=false, post=RETURN=false, post=WPT_UPDATE={points=$[POINTS]}
-  tool = name=return, desc="Abandon the current track and drive alpha back to its launch point at x=0 y=-20", receivers=local, post=BT_CMD=cancel, post=DEPLOY=true, post=MOOS_MANUAL_OVERRIDE=false, post=RETURN=true
-  tool = name=stop, desc="Idle the helm so alpha coasts to a stop where it is. Discards the current track. Posts immediately without confirmation.", receivers=local, confirm=false, post=BT_CMD=halt, post=DEPLOY=false, post=RETURN=false
-  tool = name=speed, desc="Set the cruise speed in m/s. Applies at once if underway and to later goto, route and return legs.", receivers=local, confirm=false, arg=SPEED:number:speed in m/s between 0.5 and 4, post=WPT_UPDATE=speed=$[SPEED], post=RETURN_UPDATE=speed=$[SPEED]
+  // Tools come from capability files: the standard set (goto, route,
+  // return, stop, speed) is built in, moos-ivp-bt adds run_plan,
+  // halt_plan and reply_plan, and a mission adds its own with
+  //   capability_dir = capabilities
+  // A tool that is also a plan leaf cancels the running plan first
+  // (tool_cancels_plan, BT_CMD). Proposals draw their shapes on the
+  // map in view_color until approved or declined.
+  view_color = orange
 
-  tool = name=run_plan, desc="Run a multi-step plan unattended: a behavior tree XML document using only the node catalog in your instructions. Replaces any running plan.", receivers=local, arg="TREE:string:the complete XML document as one string", post=BT_TREE=$[TREE]
-  tool = name=halt_plan, desc="Halt the running plan. The helm idles and the boat coasts to a stop. Posts immediately without confirmation.", receivers=local, confirm=false, post=BT_CMD=halt
-  tool = name=reply_plan, desc="Answer a yes/no question the running plan asked (an Ask node). Use it only when the operator has told you the answer or clearly wants you to decide.", receivers=local, confirm=false, arg=ANSWER:string:yes or no, post=BT_REPLY=$[ANSWER]
+
 
   app_logging = true
 }
