@@ -29,7 +29,7 @@ cd ivp/src_unit_tests && ./alltest.sh               # runs every dir that has a 
 cd ivp/src_unit_tests/testConvexHull && utest cases.utf -v   # one test
 ```
 
-The framework is homegrown: the `utest` runner drives table-driven `cases.utf` files; a `.skip_test` marker makes a dir non-fatal. No gtest/catch2. CI (`.github/workflows/build.yml`) runs `build.sh`, `build-check.sh`, `build-utests.sh`, and `alltest.sh` on Ubuntu 24.04 and macOS.
+The framework is homegrown: the `utest` runner drives table-driven `cases.utf` files; a `.skip_test` marker makes a dir non-fatal. No gtest/catch2. CI (`.github/workflows/build.yml`) runs `build.sh`, `build-check.sh`, `build-utests.sh`, and `alltest.sh` on Ubuntu 24.04 and macOS for pushes to `main` and `llm-integration`. It checks out submodules recursively; the private ones need the repository secret `SUBMODULE_TOKEN`, a fine-grained PAT with contents read access to the fork and to `moos-ivp-llm`, `moos-ivp-bt` and `moos-ivp-cap`. The offline self-tests `bin/cap_selftest`, `bin/bt_selftest` and `bin/llm_selftest` are not run by CI.
 
 ## Architecture
 
@@ -46,7 +46,7 @@ The framework is homegrown: the `utest` runner drives table-driven `cases.utf` f
 **Hard constraints.**
 - C++11 only, compiled with `-Wall -Wextra -pedantic`. Wrap vendored headers as `SYSTEM` includes if they warn.
 - Nothing in the tree uses `std::thread`. Background work uses MOOS `CMOOSThread` + `SafeList` (`lib_genutil/MOOSAppRunnerThread` is the pattern). Never block inside `Iterate()`.
-- There is no HTTP client and no general JSON parser in the tree; `lib_mbutil/JsonUtils` only converts flat `{"k":"v"}` to MOOS comma-separated pairs. OpenSSL is already a hard dependency of the default build via `moos-ivp-tak` (`pCoTBridge/CoTBridge.cpp` is a raw TLS client with reconnect logic). Neither Dockerfile under `docker/` nor CI installs `libssl-dev` or `libcurl4-openssl-dev`; add them there when introducing such a dependency.
+- There is no HTTP client and no general JSON parser in the tree; `lib_mbutil/JsonUtils` only converts flat `{"k":"v"}` to MOOS comma-separated pairs. OpenSSL is already a hard dependency of the default build via `moos-ivp-tak` (`pCoTBridge/CoTBridge.cpp` is a raw TLS client with reconnect logic). Both Dockerfiles under `docker/` and the Ubuntu CI job install `libssl-dev` and `libcurl4-openssl-dev`; the macOS CI job relies on the system libcurl and brew for the rest. Add any new system dependency in all three places.
 
 **Style.** 2-space indent, `m_` member prefix, `//-----` banner with `// Procedure: Name` above each method, parenthesized `return(x);`.
 

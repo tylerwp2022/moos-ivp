@@ -1,7 +1,7 @@
 name: CMake Build
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "llm-integration" ]
   pull_request:
     branches: [ "main" ]
 
@@ -24,7 +24,18 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+    # The fork's added apps are git submodules under ivp/src/; an empty
+    # submodule directory fails at CMake configure time. Three of them
+    # are private repositories, which the job's own GITHUB_TOKEN cannot
+    # read, so a fine-grained personal access token with read access to
+    # this repository and to moos-ivp-llm, moos-ivp-bt and moos-ivp-cap
+    # is stored as the repository secret SUBMODULE_TOKEN. Without the
+    # secret the public submodules still check out and the build fails
+    # at configure on the private ones.
     - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        token: ${{ secrets.SUBMODULE_TOKEN || github.token }}
     - name: Install Dependencies - Debian/Ubuntu
       if: matrix.os-type == 'debian'
       run: |
