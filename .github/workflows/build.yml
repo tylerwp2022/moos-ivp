@@ -11,6 +11,8 @@ env:
 jobs:
   build:
     strategy:
+      # Let every platform finish so one failure does not hide the others
+      fail-fast: false
       matrix:
         # https://docs.github.com/en/actions/using-github-hosted-runners/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
         include:

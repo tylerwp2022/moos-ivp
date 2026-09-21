@@ -229,11 +229,16 @@ SET(ROBOT_APPS
   moos-ivp-tak/pCoTGraphics      moos-ivp-tak/pCoTChat
   moos-ivp-tak/pCoTContact       moos-ivp-tak/pCoTShoreContact
   moos-ivp-tak/pCoTTrack         pRedirectWaypoint
-  uXboxJoystick      uGfxMask
+  uGfxMask
   moos-ivp-cap/cap_check         moos-ivp-cap/tests
   moos-ivp-llm/pLLMAgent         moos-ivp-llm/tests
   moos-ivp-bt/pBehaviorTree      moos-ivp-bt/tests
 )
+# uXboxJoystick reads the Linux joystick API (linux/joystick.h) and links
+# with GNU ld group flags, so it builds on Linux only.
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  LIST(APPEND ROBOT_APPS uXboxJoystick)
+endif()
 SET(IVP_NON_GUI_APPS
   app_alogsplit      app_alogsort        app_alogcheck
   app_alogtest       app_gen_obstacles   app_bhv2graphviz
