@@ -275,8 +275,8 @@ ProcessConfig = pLLMAgent
   //   capability_dir = capabilities
   // A tool that is also a plan leaf cancels the running plan first
   // (tool_cancels_plan, BT_CMD). Proposals draw their shapes on the
-  // map in view_color until approved or declined.
-  view_color = orange
+  // map until approved or declined, each part in the next color.
+  view_color = orange, yellow, magenta, cyan, dodger_blue, white
 
 
 

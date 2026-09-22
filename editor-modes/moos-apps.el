@@ -96,7 +96,7 @@
       '("uMAC")
       '("pDeadManPost" "heartbeat_var" "max_noheart" "deadflag" "post_policy" "active_at_start" "max_appcast_events")
       '("pLLMAgent" "model" "api_key_env" "api_url" "max_tokens" "effort" "timeout" "max_retries" "max_tool_rounds" "refusal_fallback" "history_turns" "system_prompt" "system_prompt_file" "chat_in_var" "chat_out_var" "status_var" "chat_newline" "confirm_default" "vnames" "watch" "watch_all" "state_in_prompt" "stale_thresh" "bt_tree_var" "tool")
-      '("pBehaviorTree" "tree_var" "tree_file_var" "cmd_var" "status_var" "active_var" "event_var" "log_var" "autostart" "echo_posts" "max_events" "halt_flag" "fail_flag" "end_flag" "watch")
+      '("pBehaviorTree" "tree_var" "tree_file_var" "cmd_var" "status_var" "active_var" "event_var" "log_var" "autostart" "echo_posts" "max_events" "halt_flag" "fail_flag" "end_flag" "watch" "standard_capabilities" "capability_dir" "view" "plan_view_color" "active_view_color" "success_view_color" "failure_view_color")
       '("pRangeEvent" "min_range" "max_range" "event_var" "ignore_group" "max_appcast_events")
       '("uPokeDB" "poke")
       '("uQueryDB" "max_time" "halt_max_time" "condition" "halt_condition" "pass_condition" "fail_condition" "check_var")
