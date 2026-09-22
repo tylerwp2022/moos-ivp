@@ -96,9 +96,9 @@ PMV_GUI::PMV_GUI(int g_w, int g_h, const char *g_l)
   m_chat_status->clear_visible_focus();
 
   m_chat_input = new PMV_ChatInput(0, 0, 1, 1);
-  m_chat_input->when(FL_WHEN_ENTER_KEY_ALWAYS);
   m_chat_input->textfont(FL_COURIER);
   m_chat_input->callback((Fl_Callback*)PMV_GUI::cb_ChatSend);
+  m_chat_input->setGrowHook(PMV_GUI::cb_ChatGrow, this);
 
   m_chat_split = new PMV_ChatSplitter(0, 0, 1, 1);
   m_chat_split->callback((Fl_Callback*)PMV_GUI::cb_ChatDrag);
@@ -930,8 +930,12 @@ int PMV_GUI::handle(int event)
 
 inline void PMV_GUI::cb_ChatSend_i()
 {
-  string text = stripBlankEnds(m_chat_input->value());
-  m_chat_input->value("");
+  string text = stripBlankEnds(findReplace(m_chat_input->getText(), "\n", " "));
+  m_chat_input->clearText();
+  if(m_chat_input->wantedHeight(m_chat_input->w()) != m_chat_input->h()) {
+    resizeWidgets();
+    redraw();
+  }
   if(text == "")
     return;
   pushPending(m_chat_in_var, text);
@@ -1140,6 +1144,35 @@ bool PMV_GUI::setChatWidth(string str)
     pct = 60;
   m_chat_width = pct / 100.0;
   return(true);
+}
+
+//----------------------------------------------------------
+// Procedure: setChatInputLines
+//   Purpose: How many lines the input grows to before it scrolls.
+
+bool PMV_GUI::setChatInputLines(string str)
+{
+  int lines = 0;
+  if(!setIntOnString(lines, str))
+    return(false);
+  if(lines < 1)
+    lines = 1;
+  if(lines > 20)
+    lines = 20;
+  m_chat_input->setMaxLines(lines);
+  return(true);
+}
+
+//----------------------------------------------------------
+// Procedure: cb_ChatGrow
+//   Purpose: The input's text needs a different height: lay the
+//            pane out again so the transcript gives up or takes
+//            back the room.
+
+void PMV_GUI::cb_ChatGrow(void* gui)
+{
+  ((PMV_GUI*)gui)->resizeWidgets();
+  ((PMV_GUI*)gui)->redraw();
 }
 
 //----------------------------------------------------------
@@ -3513,7 +3546,9 @@ void PMV_GUI::resizeWidgets()
     int cw = (int)chat_wid;
     int ch = (int)yhgt;
     int status_hgt = 20;
-    int input_hgt  = 26;
+    int input_hgt  = m_chat_input->wantedHeight(cw);
+    if(input_hgt > (ch / 2))
+      input_hgt = ch / 2;
     m_chat_disp->resize(cx, cy, cw, ch - status_hgt - input_hgt);
     m_chat_status->resize(cx, cy + ch - status_hgt - input_hgt, cw, status_hgt);
     m_chat_input->resize(cx, cy + ch - input_hgt, cw, input_hgt);

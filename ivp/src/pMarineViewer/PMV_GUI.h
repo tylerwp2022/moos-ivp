@@ -93,6 +93,7 @@ public:
   void  setChatStatus(std::string);
   bool  setChatViewable(std::string);
   bool  setChatWidth(std::string);
+  bool  setChatInputLines(std::string);
   bool  adjustChatWidth(double delta_pct);
   void  setChatInVar(std::string s) {m_chat_in_var=s;}
 
@@ -171,6 +172,7 @@ public: // InfoCast Related Functions
   static void cb_ChatWidth(Fl_Widget*, int);
   inline void cb_ChatDrag_i();
   static void cb_ChatDrag(Fl_Widget*);
+  static void cb_ChatGrow(void*);
 
   inline void cb_SelectAppCastNode_i();
   static void cb_SelectAppCastNode(Fl_Widget*, long);

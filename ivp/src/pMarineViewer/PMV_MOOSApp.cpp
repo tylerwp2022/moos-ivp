@@ -928,6 +928,8 @@ void PMV_MOOSApp::handleStartUp(const MOOS_event & e) {
       handled = m_gui->setChatViewable(value);
     else if(param == "chat_width")
       handled = m_gui->setChatWidth(value);
+    else if(param == "chat_input_lines")
+      handled = m_gui->setChatInputLines(value);
     else if(param == "chat_in_var") {
       handled = setNonWhiteVarOnString(m_chat_in_var, value);
       m_gui->setChatInVar(m_chat_in_var);

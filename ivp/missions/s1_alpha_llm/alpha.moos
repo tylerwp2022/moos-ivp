@@ -185,6 +185,7 @@ ProcessConfig = pMarineViewer
   // LLM chat pane (right edge), fed by pLLMAgent
   chat_viewable        = true
   chat_width           = 28       // drag the divider or Ctrl+] / Ctrl+[ to resize
+  chat_input_lines     = 6        // the input grows to this many lines, then scrolls
 
   // Map clicks post the same flags as the goto and return tools:
   // left click drives alpha to that point, right click brings it home.
