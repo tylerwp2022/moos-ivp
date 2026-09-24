@@ -193,6 +193,7 @@ ProcessConfig = pMarineViewer
   left_context[goto] = DEPLOY=true
   left_context[goto] = MOOS_MANUAL_OVERRIDE=false
   left_context[goto] = RETURN=false
+  left_context[goto] = TASK=waypoint
   left_context[goto] = WPT_UPDATE=points=$[XPOS],$[YPOS]
 
   right_context[return] = BT_CMD=cancel
@@ -204,6 +205,7 @@ ProcessConfig = pMarineViewer
   scope  = IVPHELM_STATE
   scope  = DEPLOY
   scope  = RETURN
+  scope  = TASK
   scope  = WPT_UPDATE
   scope  = WPT_STAT
   scope  = MISSION
@@ -252,7 +254,7 @@ ProcessConfig = pLLMAgent
   AppTick   = 4
   CommsTick = 4
 
-  model           = claude-opus-5
+  model           = claude-opus-5-5
   effort          = medium
   max_tokens      = 4096
   confirm_default = true
@@ -260,7 +262,8 @@ ProcessConfig = pLLMAgent
 
   watch = DEPLOY, RETURN, MOOS_MANUAL_OVERRIDE, IVPHELM_STATE, IVPHELM_ALLSTOP
   watch = NAV_X, NAV_Y, NAV_SPEED, NAV_HEADING, DESIRED_SPEED, DESIRED_HEADING
-  watch = WPT_UPDATE, RETURN_UPDATE, WPT_STAT, WPT_INDEX, MISSION
+  watch = WPT_UPDATE, RETURN_UPDATE, WPT_STAT, WPT_INDEX, MISSION, TASK
+  watch = OPREGION, PERIODIC_SPEED, TURN_LIMIT
   watch = IVPHELM_UPDATE_RESULT   // result=success or param_error for each update
   watch = BT_STATE, BT_ACTIVE, BT_EVENT, BT_LOG
 
@@ -270,12 +273,21 @@ ProcessConfig = pLLMAgent
   system_prompt_file = prompts/alpha.txt   // mission facts; tool semantics come from the .cap files
 
   // Tools come from capability files: the standard set (goto, route,
-  // return, stop, speed) is built in, moos-ivp-bt adds run_plan,
-  // halt_plan and reply_plan, and a mission adds its own with
+  // return, stop, speed and the map tools) is built in, moos-ivp-bt
+  // adds run_plan, halt_plan and reply_plan, the shipped helm set adds
+  // loiter, station_keep, hold_heading, op_region, periodic_speed and
+  // turn_limit (a UUV mission would add depth the same way), and a
+  // mission adds its own with
   //   capability_dir = capabilities
+  // capability_keep lists the only names to load, capability_drop
+  // names to leave out; pBehaviorTree takes the same lines so the
+  // tools and the plan leaves agree.
+  capability_dir = helm
+  // capability_drop = turn_limit, turn_limit_off, periodic_speed, periodic_speed_off
   // A tool that takes the boat over (cancels_plan in its .cap: goto,
-  // route, return, stop) cancels the running plan first; speed and
-  // the map tools leave it running (tool_cancels_plan, BT_CMD).
+  // route, return, stop, loiter, station_keep, hold_heading) cancels the
+  // running plan first; speed, the modifiers and the map tools leave it
+  // running (tool_cancels_plan, BT_CMD).
   // Proposals draw their shapes on the map until approved or
   // declined, each part in the next color.
   view_color = orange, yellow, magenta, cyan, dodger_blue, white
@@ -303,7 +315,10 @@ ProcessConfig = pBehaviorTree
   fail_flag = DEPLOY=false
   fail_flag = RETURN=false
 
-  watch = DEPLOY, RETURN, MISSION, IVPHELM_STATE, NAV_X, NAV_Y, NAV_SPEED
+  watch = DEPLOY, RETURN, TASK, MISSION, IVPHELM_STATE, NAV_X, NAV_Y, NAV_SPEED
+
+  capability_dir = helm      // the same sets and filters as pLLMAgent
+  // capability_drop = turn_limit, turn_limit_off, periodic_speed, periodic_speed_off
 
   app_logging = true
 }

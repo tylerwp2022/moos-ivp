@@ -1,0 +1,17 @@
+<!-- A tour of the helm drivers: loiter, station-keep and hold-heading run
+     until the next command, so each is followed by a Wait; Return ends
+     the tour. Run without the LLM:
+       uPokeDB alpha.moos BT_TREE_FILE=plans/drivers_tour.xml -->
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence>
+      <Loiter x="40" y="-60" radius="20"/>
+      <Wait sec="60"/>
+      <StationKeep x="0" y="-80"/>
+      <Wait sec="40"/>
+      <HoldHeading heading="90" speed="2"/>
+      <Wait sec="20"/>
+      <Return/>
+    </Sequence>
+  </BehaviorTree>
+</root>
