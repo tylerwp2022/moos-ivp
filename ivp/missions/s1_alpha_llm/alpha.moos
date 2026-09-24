@@ -273,9 +273,11 @@ ProcessConfig = pLLMAgent
   // return, stop, speed) is built in, moos-ivp-bt adds run_plan,
   // halt_plan and reply_plan, and a mission adds its own with
   //   capability_dir = capabilities
-  // A tool that is also a plan leaf cancels the running plan first
-  // (tool_cancels_plan, BT_CMD). Proposals draw their shapes on the
-  // map until approved or declined, each part in the next color.
+  // A tool that takes the boat over (cancels_plan in its .cap: goto,
+  // route, return, stop) cancels the running plan first; speed and
+  // the map tools leave it running (tool_cancels_plan, BT_CMD).
+  // Proposals draw their shapes on the map until approved or
+  // declined, each part in the next color.
   view_color = orange, yellow, magenta, cyan, dodger_blue, white
 
 
