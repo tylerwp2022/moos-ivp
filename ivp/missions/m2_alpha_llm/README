@@ -29,15 +29,12 @@ block waits on BT_STATE_<VNAME>; Report lines come back up as
 BT_REPORT_<VNAME> and Signal goes down as BT_SIGNAL. pLLMAgent addresses it
 through teams = team (run_plan vname=team) and the fleet prompt tells the
 model when a plan is a team plan. Vehicles a plan does not list are left
-alone. A second executor, red (the same app under the pAntler alias
-pBehaviorTreeRed, team = red), shows a team of teams: team's config says
-teams = red, so a plan for team may hold <Member vname="red"> with red's
-own Team plan inside, and pLLMAgent (teams = team, red) may also send red
-a plan directly. plans/team_line_south.xml is the full form (each member
-reports at the line, the coordinator signals the move south),
-plans/team_box.xml the compact form, plans/team_of_teams.xml red beside
-cal (three vehicles), plans/follow_ben.xml a vehicle reacting to another
-through the contact variables (BEN_RANGE).
+alone. plans/team_line_south.xml is the full form (each member reports at
+the line, the coordinator signals the move south), plans/team_box.xml the
+compact form, plans/follow_ben.xml a vehicle reacting to another through
+the contact variables (BEN_RANGE). A member may itself be a team executor
+(a team of teams; see the moos-ivp-bt README), which this mission keeps
+out to stay minimal.
 
 Without the model, from this directory:
   uPokeDB targ_shoreside.moos BT_TREE_FILE_ABE=plans/box_goto.xml
@@ -46,8 +43,7 @@ Without the model, from this directory:
   uPokeDB targ_shoreside.moos BT_TREE_FILE_TEAM=plans/team_line_south.xml
   uPokeDB targ_shoreside.moos BT_CMD_TEAM=halt
   uXMS targ_shoreside.moos BT_STATE_TEAM BT_MEMBERS_TEAM BT_STATE_ABE BT_STATE_BEN BT_REPORT_ABE BT_REPORT_BEN
-  uPokeDB targ_shoreside.moos BT_TREE_FILE_TEAM=plans/team_of_teams.xml
-  pBehaviorTree --check=plans/team_of_teams.xml --team --vnames=abe,ben,cal --teams=red
+  pBehaviorTree --check=plans/team_line_south.xml --team --vnames=abe,ben
 
 This is the shape the MCTF mission takes later: pLLMAgent joins its
 shoreside block, pBehaviorTree and the bridge lines join meta_surveyor.moos.

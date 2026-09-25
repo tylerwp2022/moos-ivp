@@ -34,7 +34,6 @@ ProcessConfig = ANTLER
 #endif
   Run = pLLMAgent       @ NewConsole = false
   Run = pBehaviorTree   @ NewConsole = false
-  Run = pBehaviorTree   @ NewConsole = false ~ pBehaviorTreeRed
 }
 
 #include plugs.moos <pShare>
@@ -200,13 +199,12 @@ ProcessConfig = pLLMAgent
   receivers = all:vname
   vnames    = $(VNAMES_CSV)      // the roster before the first NODE_REPORT
 
-  // The team executors below, addressed like vehicles by the plan
-  // tools: run_plan vname=team posts BT_TREE_TEAM. red is a team of
-  // its own that team may hand a plan to (a team of teams).
-  teams = team, red
+  // The team executor below, addressed like a vehicle by the plan
+  // tools: run_plan vname=team posts BT_TREE_TEAM.
+  teams = team
 
   // What comes back from each vehicle, renamed with its name by its
-  // uFldNodeBroker, and from the team executors; a * registers a
+  // uFldNodeBroker, and from the team executor; a * registers a
   // wildcard.
   watch = BT_STATE_*, BT_ACTIVE_*, BT_LOG_*, MISSION_*
   watch = BT_REPORT_*, BT_MEMBERS_*
@@ -241,32 +239,10 @@ ProcessConfig = pBehaviorTree
 
   team      = team
   vnames    = $(VNAMES_CSV)      // the fleet, before the first NODE_REPORT
-  teams     = red                // members that are teams of their own
 
   capability_dir = helm          // the same leaves the vehicles have
   view_prefix    = bt_team_
   contacts       = true          // ABE_BEN_RANGE and friends for conditions
-
-  app_logging = true
-}
-
-//------------------------------------------
-// A second team executor, red, to show a team of teams: the same
-// app under an alias, addressed as BT_TREE_RED. A plan for team may
-// hold <Member vname="red"> with a Team plan inside, which lands
-// here; pLLMAgent may also send red a plan directly.
-
-ProcessConfig = pBehaviorTreeRed
-{
-  AppTick   = 4
-  CommsTick = 4
-
-  team      = red
-  vnames    = $(VNAMES_CSV)
-
-  capability_dir = helm
-  view_prefix    = bt_red_
-  contacts       = true
 
   app_logging = true
 }
