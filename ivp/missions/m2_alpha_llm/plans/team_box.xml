@@ -1,0 +1,27 @@
+<!-- A team plan in the compact form: a step that names its vehicle runs
+     as a one-step plan on that vehicle, and a Parallel waits for both.
+     abe and ben each drive two legs side by side, then everyone returns.
+
+     Poke it at the team executor on the shoreside:
+       uPokeDB targ_shoreside.moos BT_TREE_FILE_TEAM=plans/team_box.xml
+     Offline check:
+       pBehaviorTree --check=plans/team_box.xml --team --vnames=abe,ben -->
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Team members="abe,ben">
+      <Sequence>
+        <Say msg="abe and ben: two legs side by side, then home"/>
+        <Parallel>
+          <Goto vname="abe" x="40" y="-60" timeout="300"/>
+          <Goto vname="ben" x="80" y="-60" timeout="300"/>
+        </Parallel>
+        <Parallel>
+          <Goto vname="abe" x="40" y="-100" timeout="300"/>
+          <Goto vname="ben" x="80" y="-100" timeout="300"/>
+        </Parallel>
+        <Return vname="all" timeout="600"/>
+        <Say msg="both home"/>
+      </Sequence>
+    </Team>
+  </BehaviorTree>
+</root>

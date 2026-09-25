@@ -1,0 +1,45 @@
+<!-- A team plan in the full form: every member gets its own plan, with
+     a milestone (Report) and a wait for the team's go (BT_SIGNAL); the
+     coordinator branch on the shoreside waits for both milestones and
+     signals. abe and ben line up on y=-105 (abe at x=100, ben at x=50),
+     head south together at 2 m/s and stop past y=-180.
+
+     Poke it at the team executor on the shoreside:
+       uPokeDB targ_shoreside.moos BT_TREE_FILE_TEAM=plans/team_line_south.xml
+     Offline check:
+       pBehaviorTree --check=plans/team_line_south.xml --team --vnames=abe,ben -->
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Team members="abe,ben">
+      <Parallel>
+        <Member vname="abe">
+          <Sequence>
+            <Goto x="100" y="-105" timeout="300"/>
+            <Report msg="at_line"/>
+            <WaitFor cond="BT_SIGNAL = go_south" fresh="true" timeout="300"/>
+            <HoldHeading heading="180" speed="2"/>
+            <WaitFor cond="NAV_Y &lt; -180" timeout="300"/>
+            <Stop/>
+            <Say msg="abe stopped"/>
+          </Sequence>
+        </Member>
+        <Member vname="ben">
+          <Sequence>
+            <Goto x="50" y="-105" timeout="300"/>
+            <Report msg="at_line"/>
+            <WaitFor cond="BT_SIGNAL = go_south" fresh="true" timeout="300"/>
+            <HoldHeading heading="180" speed="2"/>
+            <WaitFor cond="NAV_Y &lt; -180" timeout="300"/>
+            <Stop/>
+            <Say msg="ben stopped"/>
+          </Sequence>
+        </Member>
+        <Sequence>
+          <WaitFor cond="(BT_REPORT_ABE = at_line) and (BT_REPORT_BEN = at_line)" fresh="true" timeout="400"/>
+          <Say msg="both on the line, heading south"/>
+          <Signal vname="all" msg="go_south"/>
+        </Sequence>
+      </Parallel>
+    </Team>
+  </BehaviorTree>
+</root>

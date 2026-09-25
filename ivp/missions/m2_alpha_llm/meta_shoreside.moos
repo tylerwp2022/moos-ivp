@@ -33,6 +33,8 @@ ProcessConfig = ANTLER
   Run = pMarineViewer   @ NewConsole = false
 #endif
   Run = pLLMAgent       @ NewConsole = false
+  Run = pBehaviorTree   @ NewConsole = false
+  Run = pBehaviorTree   @ NewConsole = false ~ pBehaviorTreeRed
 }
 
 #include plugs.moos <pShare>
@@ -57,7 +59,7 @@ ProcessConfig = uFldShoreBroker
   qbridge = OPREGION, OPREGION_UPDATE
   qbridge = PERIODIC_SPEED, PERIODIC_SPEED_UPDATE
   qbridge = TURN_LIMIT, TURN_LIMIT_UPDATE
-  qbridge = BT_TREE, BT_TREE_FILE, BT_CMD, BT_REPLY
+  qbridge = BT_TREE, BT_TREE_FILE, BT_CMD, BT_REPLY, BT_SIGNAL
   qbridge = NODE_REPORT, NODE_MESSAGE
 
   auto_bridge_appcast = true
@@ -165,13 +167,15 @@ ProcessConfig = pMarineViewer
   scope = RETURN_ALL
   scope = MVIEWER_LCLICK
 
-  button_one   = STOP_ALL # BT_CMD_ALL=halt # DEPLOY_ALL=false # RETURN_ALL=false
-  button_two   = RETURN_ALL # BT_CMD_ALL=cancel # DEPLOY_ALL=true # RETURN_ALL=true # MOOS_MANUAL_OVERRIDE_ALL=false
+  // The team plan on the shoreside is stopped first, then every
+  // vehicle's own plan, then the helm flags.
+  button_one   = STOP_ALL # BT_CMD_TEAM=halt # BT_CMD_ALL=halt # DEPLOY_ALL=false # RETURN_ALL=false
+  button_two   = RETURN_ALL # BT_CMD_TEAM=cancel # BT_CMD_ALL=cancel # DEPLOY_ALL=true # RETURN_ALL=true # MOOS_MANUAL_OVERRIDE_ALL=false
   button_three = SLOWER # WPT_UPDATE_ALL=speed=1.0 # RETURN_UPDATE_ALL=speed=1.0
   button_four  = FASTER # WPT_UPDATE_ALL=speed=3.0 # RETURN_UPDATE_ALL=speed=3.0
 
-  action = MENU_KEY=stop_all # BT_CMD_ALL=halt # DEPLOY_ALL=false # RETURN_ALL=false
-  action = MENU_KEY=return_all # BT_CMD_ALL=cancel # DEPLOY_ALL=true # RETURN_ALL=true # MOOS_MANUAL_OVERRIDE_ALL=false
+  action = MENU_KEY=stop_all # BT_CMD_TEAM=halt # BT_CMD_ALL=halt # DEPLOY_ALL=false # RETURN_ALL=false
+  action = MENU_KEY=return_all # BT_CMD_TEAM=cancel # BT_CMD_ALL=cancel # DEPLOY_ALL=true # RETURN_ALL=true # MOOS_MANUAL_OVERRIDE_ALL=false
 }
 
 //------------------------------------------
@@ -196,9 +200,16 @@ ProcessConfig = pLLMAgent
   receivers = all:vname
   vnames    = $(VNAMES_CSV)      // the roster before the first NODE_REPORT
 
+  // The team executors below, addressed like vehicles by the plan
+  // tools: run_plan vname=team posts BT_TREE_TEAM. red is a team of
+  // its own that team may hand a plan to (a team of teams).
+  teams = team, red
+
   // What comes back from each vehicle, renamed with its name by its
-  // uFldNodeBroker; a * registers a wildcard.
+  // uFldNodeBroker, and from the team executors; a * registers a
+  // wildcard.
   watch = BT_STATE_*, BT_ACTIVE_*, BT_LOG_*, MISSION_*
+  watch = BT_REPORT_*, BT_MEMBERS_*
   watch = IVPHELM_STATE_*, IVPHELM_UPDATE_RESULT_*
   watch = DEPLOY_ALL, RETURN_ALL
 
@@ -208,6 +219,54 @@ ProcessConfig = pLLMAgent
   capability_dir = helm
   // capability_drop = turn_limit, turn_limit_off, periodic_speed, periodic_speed_off
   view_color = orange, yellow, magenta, cyan, dodger_blue, white
+
+  app_logging = true
+}
+
+//------------------------------------------
+// pBehaviorTree config block: the team executor
+// team = team names it and gives every BT_* variable a _TEAM suffix,
+// so a plan reaches it as BT_TREE_TEAM the way a vehicle's reaches
+// it as BT_TREE_ABE. A team plan starts with <Team members="abe,ben">
+// and drives no vehicle itself: each Member block (or leaf with a
+// vname) goes down as that vehicle's own plan, BT_TREE_<VNAME>, and
+// the block waits on BT_STATE_<VNAME>. Report lines come back up as
+// BT_REPORT_<VNAME>; Signal goes down as BT_SIGNAL. No halt or fail
+// flags: a halt reaches the members through their own executors.
+
+ProcessConfig = pBehaviorTree
+{
+  AppTick   = 4
+  CommsTick = 4
+
+  team      = team
+  vnames    = $(VNAMES_CSV)      // the fleet, before the first NODE_REPORT
+  teams     = red                // members that are teams of their own
+
+  capability_dir = helm          // the same leaves the vehicles have
+  view_prefix    = bt_team_
+  contacts       = true          // ABE_BEN_RANGE and friends for conditions
+
+  app_logging = true
+}
+
+//------------------------------------------
+// A second team executor, red, to show a team of teams: the same
+// app under an alias, addressed as BT_TREE_RED. A plan for team may
+// hold <Member vname="red"> with a Team plan inside, which lands
+// here; pLLMAgent may also send red a plan directly.
+
+ProcessConfig = pBehaviorTreeRed
+{
+  AppTick   = 4
+  CommsTick = 4
+
+  team      = red
+  vnames    = $(VNAMES_CSV)
+
+  capability_dir = helm
+  view_prefix    = bt_red_
+  contacts       = true
 
   app_logging = true
 }

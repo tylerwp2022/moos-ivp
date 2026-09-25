@@ -265,8 +265,12 @@ void PMV_MOOSApp::registerVariables()
   Register(m_chat_status_var, 0);
   if(m_chat_plan_var != "") {
     // BT_CHAT_* takes a fleet's per-vehicle copies (BT_CHAT_ABE, ...)
-    if(strEnds(m_chat_plan_var, "*"))
+    // and the bare BT_CHAT of a local executor as well
+    if(strEnds(m_chat_plan_var, "*")) {
       Register(m_chat_plan_var, "*", 0);
+      if(strEnds(m_chat_plan_var, "_*"))
+	Register(m_chat_plan_var.substr(0, m_chat_plan_var.size()-2), 0);
+    }
     else
       Register(m_chat_plan_var, 0);
   }
@@ -1559,6 +1563,8 @@ bool PMV_MOOSApp::chatPlanMatch(const string& key) const
   if(!strEnds(m_chat_plan_var, "*"))
     return(key == m_chat_plan_var);
   string base = m_chat_plan_var.substr(0, m_chat_plan_var.size()-1);
+  if(strEnds(base, "_") && (key == base.substr(0, base.size()-1)))
+    return(true);   // the bare variable under BT_CHAT_*
   return(strBegins(key, base));
 }
 

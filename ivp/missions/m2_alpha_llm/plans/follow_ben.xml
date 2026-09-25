@@ -1,0 +1,17 @@
+<!-- A vehicle's own plan reacting to another boat: abe waits until ben
+     comes within 20 m (BEN_RANGE, from ben's node reports), then moves
+     off to the west. Poke it at abe:
+       uPokeDB targ_shoreside.moos BT_TREE_FILE_ABE=plans/follow_ben.xml
+     then send ben over (abe launches at 0,-20; ben at 30,-20):
+       uPokeDB targ_shoreside.moos TASK_BEN=waypoint WPT_UPDATE_BEN=points=5,-25 DEPLOY_BEN=true MOOS_MANUAL_OVERRIDE_BEN=false -->
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence>
+      <Say msg="waiting for ben to come within 20 m"/>
+      <WaitFor cond="BEN_RANGE &lt; 20" fresh="true" timeout="600"/>
+      <Say msg="ben is close, moving off"/>
+      <Goto x="-40" y="-60" timeout="300"/>
+      <Say msg="clear"/>
+    </Sequence>
+  </BehaviorTree>
+</root>

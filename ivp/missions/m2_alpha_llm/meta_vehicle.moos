@@ -66,6 +66,7 @@ ProcessConfig = uFldNodeBroker
   bridge = src=BT_ACTIVE, alias=BT_ACTIVE_%(VNAME)
   bridge = src=BT_CHAT,   alias=BT_CHAT_%(VNAME)
   bridge = src=BT_LOG,    alias=BT_LOG_%(VNAME)
+  bridge = src=BT_REPORT, alias=BT_REPORT_%(VNAME)
   bridge = src=MISSION,   alias=MISSION_%(VNAME)
   bridge = src=IVPHELM_STATE, alias=IVPHELM_STATE_%(VNAME)
   bridge = src=IVPHELM_UPDATE_RESULT, alias=IVPHELM_UPDATE_RESULT_%(VNAME)

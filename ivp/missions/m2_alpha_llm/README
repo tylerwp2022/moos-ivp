@@ -20,10 +20,34 @@ must be set in the shell for the chat to answer; without it the fleet
 still runs from the viewer (clicks act on the nearest vehicle, the
 buttons on all) and from uPokeDB.
 
+The shoreside also runs a pBehaviorTree in team mode (team = team, so its
+variables are BT_TREE_TEAM, BT_STATE_TEAM, BT_CHAT_TEAM ...): the executor
+of any plan that involves more than one vehicle. A team plan starts with
+<Team members="abe,ben"> and drives no vehicle itself: each Member block,
+or a leaf with a vname, goes down to that vehicle as its own plan and the
+block waits on BT_STATE_<VNAME>; Report lines come back up as
+BT_REPORT_<VNAME> and Signal goes down as BT_SIGNAL. pLLMAgent addresses it
+through teams = team (run_plan vname=team) and the fleet prompt tells the
+model when a plan is a team plan. Vehicles a plan does not list are left
+alone. A second executor, red (the same app under the pAntler alias
+pBehaviorTreeRed, team = red), shows a team of teams: team's config says
+teams = red, so a plan for team may hold <Member vname="red"> with red's
+own Team plan inside, and pLLMAgent (teams = team, red) may also send red
+a plan directly. plans/team_line_south.xml is the full form (each member
+reports at the line, the coordinator signals the move south),
+plans/team_box.xml the compact form, plans/team_of_teams.xml red beside
+cal (three vehicles), plans/follow_ben.xml a vehicle reacting to another
+through the contact variables (BEN_RANGE).
+
 Without the model, from this directory:
   uPokeDB targ_shoreside.moos BT_TREE_FILE_ABE=plans/box_goto.xml
   uPokeDB targ_shoreside.moos TASK_BEN=waypoint WPT_UPDATE_BEN=points=40,-40 DEPLOY_BEN=true MOOS_MANUAL_OVERRIDE_BEN=false
   uPokeDB targ_shoreside.moos BT_REPLY_ABE=yes
+  uPokeDB targ_shoreside.moos BT_TREE_FILE_TEAM=plans/team_line_south.xml
+  uPokeDB targ_shoreside.moos BT_CMD_TEAM=halt
+  uXMS targ_shoreside.moos BT_STATE_TEAM BT_MEMBERS_TEAM BT_STATE_ABE BT_STATE_BEN BT_REPORT_ABE BT_REPORT_BEN
+  uPokeDB targ_shoreside.moos BT_TREE_FILE_TEAM=plans/team_of_teams.xml
+  pBehaviorTree --check=plans/team_of_teams.xml --team --vnames=abe,ben,cal --teams=red
 
 This is the shape the MCTF mission takes later: pLLMAgent joins its
 shoreside block, pBehaviorTree and the bridge lines join meta_surveyor.moos.

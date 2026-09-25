@@ -1,0 +1,43 @@
+<!-- A team of teams: the plan for team has two members, the team red
+     (abe and ben, run by the red executor, pBehaviorTreeRed) and the
+     vehicle cal. red's Member block holds red's own Team plan; cal gets
+     a one-step plan. Needs three vehicles (launch.sh --amt=3).
+
+     Poke it at the top team executor:
+       uPokeDB targ_shoreside.moos BT_TREE_FILE_TEAM=plans/team_of_teams.xml
+     Offline check:
+       pBehaviorTree --check=plans/team_of_teams.xml --team --vnames=abe,ben,cal --teams=red -->
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Team members="red,cal">
+      <Sequence>
+        <Parallel>
+          <Member vname="red">
+            <Team members="abe,ben">
+              <Sequence>
+                <Parallel>
+                  <Goto vname="abe" x="40" y="-60" timeout="300"/>
+                  <Goto vname="ben" x="80" y="-60" timeout="300"/>
+                </Parallel>
+                <Say msg="red pair on station"/>
+                <Report msg="on_station"/>
+              </Sequence>
+            </Team>
+          </Member>
+          <Member vname="cal">
+            <Sequence>
+              <Goto x="-40" y="-60" timeout="300"/>
+              <Say msg="cal on station"/>
+            </Sequence>
+          </Member>
+        </Parallel>
+        <Say msg="everyone on station, heading home"/>
+        <Member vname="red">
+          <Team members="abe,ben">
+            <Return vname="all" timeout="600"/>
+          </Team>
+        </Member>
+      </Sequence>
+    </Team>
+  </BehaviorTree>
+</root>
