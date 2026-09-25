@@ -263,8 +263,13 @@ void PMV_MOOSApp::registerVariables()
   Register("RESET_MHASH");
   Register(m_chat_out_var, 0);
   Register(m_chat_status_var, 0);
-  if(m_chat_plan_var != "")
-    Register(m_chat_plan_var, 0);
+  if(m_chat_plan_var != "") {
+    // BT_CHAT_* takes a fleet's per-vehicle copies (BT_CHAT_ABE, ...)
+    if(strEnds(m_chat_plan_var, "*"))
+      Register(m_chat_plan_var, "*", 0);
+    else
+      Register(m_chat_plan_var, 0);
+  }
 
   unsigned int i, vsize = m_scope_vars.size();
   for(i=0; i<vsize; i++)
@@ -393,8 +398,11 @@ void PMV_MOOSApp::handleNewMail(const MOOS_event & e)
       m_gui->addChatLine("llm", sval, mode);
       handled = true;
     }
-    else if((m_chat_plan_var != "") && (key == m_chat_plan_var)) {
+    else if((m_chat_plan_var != "") && chatPlanMatch(key)) {
       string mode = strBegins(msg.GetSourceAux(), "ask") ? "ask" : "";
+      string who  = chatPlanVehicle(key);   // the vehicle, in a fleet
+      if(who != "")
+	sval = who + ": " + sval;
       m_gui->addChatLine("plan", sval, mode);
       handled = true;
     }
@@ -1538,4 +1546,33 @@ bool PMV_MOOSApp::buildReport()
   m_msgs << "  vehicle zoom:  " << vzoom_str << endl;
   
   return(true);
+}
+
+//----------------------------------------------------------------------
+// Procedure: chatPlanMatch
+//   Purpose: Whether a mail key is the plan chat variable, or one of a
+//            fleet's per-vehicle copies when chat_plan_var ends in *
+//            (BT_CHAT_* matches BT_CHAT_ABE, BT_CHAT_BEN, ...).
+
+bool PMV_MOOSApp::chatPlanMatch(const string& key) const
+{
+  if(!strEnds(m_chat_plan_var, "*"))
+    return(key == m_chat_plan_var);
+  string base = m_chat_plan_var.substr(0, m_chat_plan_var.size()-1);
+  return(strBegins(key, base));
+}
+
+//----------------------------------------------------------------------
+// Procedure: chatPlanVehicle
+//   Purpose: The vehicle a per-vehicle copy names, lowercase (abe for
+//            BT_CHAT_ABE under BT_CHAT_*), or empty for a plain match.
+
+string PMV_MOOSApp::chatPlanVehicle(const string& key) const
+{
+  if(!strEnds(m_chat_plan_var, "*"))
+    return("");
+  string base = m_chat_plan_var.substr(0, m_chat_plan_var.size()-1);
+  if(key.size() <= base.size())
+    return("");
+  return(tolower(key.substr(base.size())));
 }

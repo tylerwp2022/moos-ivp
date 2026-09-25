@@ -1,0 +1,28 @@
+<!-- Drive to the first corner, ask before going on, then come home.
+     Run without the LLM:  uPokeDB targ_shoreside.moos BT_TREE_FILE_ABE=plans/ask_then_home.xml
+     Answer in the chat pane with y or n (pLLMAgent routes it to BT_REPLY_ABE),
+     or directly:          uPokeDB targ_shoreside.moos BT_REPLY_ABE=yes
+     A "no" or two minutes of silence fails the Ask, so the Fallback
+     takes the boat home either way. -->
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence>
+      <Say msg="heading to the first corner"/>
+      <Goto x="40" y="-60" timeout="300"/>
+      <Fallback>
+        <Sequence>
+          <Ask msg="At 40,-60. Continue to 80,-60?" timeout="120"/>
+          <Goto x="80" y="-60" timeout="300"/>
+          <Say msg="second corner reached"/>
+        </Sequence>
+        <Say msg="skipping the second corner"/>
+      </Fallback>
+      <Say msg="heading home"/>
+      <Post var="MOOS_MANUAL_OVERRIDE" val="false"/>
+      <Post var="RETURN" val="true"/>
+      <Post var="DEPLOY" val="true"/>
+      <WaitFor cond="MISSION = return_complete" fresh="true" timeout="600"/>
+      <Say msg="home"/>
+    </Sequence>
+  </BehaviorTree>
+</root>

@@ -162,7 +162,9 @@ void showExampleConfigAndExit()
   blk("  chat_viewable        = false   // {true, FALSE}               ");
   blk("  chat_width           = 25      // pct of window, {15..60}     ");
   blk("  chat_input_lines     = 6       // input lines max, {1..20}    ");
-  blk("  chat_plan_var        = BT_CHAT // plan> lines; off to hide     ");
+  blk("  chat_plan_var        = BT_CHAT // plan> lines; off to hide;    ");
+  blk("                                 // BT_CHAT_* in a fleet: each   ");
+  blk("                                 // vehicle's lines, with its name ");
   blk("  chat_color_you       = auto    // auto or a color name, also   ");
   blk("  chat_color_llm       = auto    // chat_color_ask (a message    ");
   blk("  chat_color_plan      = auto    // waiting on you)              ");

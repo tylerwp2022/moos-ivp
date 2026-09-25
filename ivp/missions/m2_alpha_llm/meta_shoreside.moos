@@ -1,0 +1,213 @@
+//-------------------------------------------------
+// FILE: meta_shoreside.moos  (m2_alpha_llm)
+//
+// The shoreside: pMarineViewer with the chat pane and pLLMAgent, plus
+// the uField apps that connect the vehicles. Filled in by
+// launch_shoreside.sh. Nothing here drives a boat directly: every
+// command is a VAR_<VNAME> or VAR_ALL post that uFldShoreBroker
+// bridges to the vehicle as the bare variable.
+//-------------------------------------------------
+
+ServerHost = localhost
+ServerPort = $(MOOS_PORT)
+Community  = shoreside
+
+#include plugs.moos <origin_warp>
+
+//------------------------------------------
+// Antler configuration block
+
+ProcessConfig = ANTLER
+{
+  MSBetweenLaunches = 100
+
+  Run = MOOSDB          @ NewConsole = false
+  Run = pRealm          @ NewConsole = false
+  Run = pLogger         @ NewConsole = false
+  Run = uProcessWatch   @ NewConsole = false
+  Run = pShare          @ NewConsole = false
+  Run = pHostInfo       @ NewConsole = false
+  Run = uFldShoreBroker @ NewConsole = false
+  Run = uFldNodeComms   @ NewConsole = false
+#ifndef NOGUI
+  Run = pMarineViewer   @ NewConsole = false
+#endif
+  Run = pLLMAgent       @ NewConsole = false
+}
+
+#include plugs.moos <pShare>
+#include plugs.moos <pHostInfo>
+#include plugs.moos <uProcessWatch>
+
+//------------------------------------------
+// uFldShoreBroker config block
+// qbridge = FOO bridges FOO_ALL and FOO_<VNAME> here to FOO on the
+// vehicle. pLLMAgent's tools post the _<VNAME> forms (receivers =
+// all:vname below), pMarineViewer's buttons the _ALL forms and its
+// map clicks the _<VNAME> of the nearest vehicle.
+
+ProcessConfig = uFldShoreBroker
+{
+  AppTick   = 1
+  CommsTick = 1
+
+  qbridge = DEPLOY, RETURN, MOOS_MANUAL_OVERRIDE, TASK
+  qbridge = WPT_UPDATE, RETURN_UPDATE, LOITER_UPDATE, STATION_UPDATE
+  qbridge = HEADING_UPDATE, HEADING_SPEED_UPDATE
+  qbridge = OPREGION, OPREGION_UPDATE
+  qbridge = PERIODIC_SPEED, PERIODIC_SPEED_UPDATE
+  qbridge = TURN_LIMIT, TURN_LIMIT_UPDATE
+  qbridge = BT_TREE, BT_TREE_FILE, BT_CMD, BT_REPLY
+  qbridge = NODE_REPORT, NODE_MESSAGE
+
+  auto_bridge_appcast = true
+}
+
+//------------------------------------------
+// uFldNodeComms config block
+
+ProcessConfig = uFldNodeComms
+{
+  AppTick   = 2
+  CommsTick = 2
+
+  comms_range      = 500
+  critical_range   = 25
+  min_msg_interval = 15
+  max_msg_length   = 1000
+  groups           = true
+
+  view_node_rpt_pulses = false
+}
+
+//------------------------------------------
+// pLogger config block
+
+ProcessConfig = pLogger
+{
+  AppTick   = 8
+  CommsTick = 8
+
+  File          = XLOG_SHORESIDE
+  PATH          = ./
+  AsyncLog      = true
+  FileTimeStamp = true
+
+  LogAuxSrc = true
+  WildCardLogging = true
+  WildCardOmitPattern = *_STATUS
+  WildCardOmitPattern = DB_VARSUMMARY
+  WildCardOmitPattern = DB_RWSUMMARY
+  WildCardOmitPattern = NODE_BROKER_PING
+  WildCardOmitPattern = PSHARE_INPUT_SUMMARY
+  WildCardOmitPattern = PSHARE_OUTPUT_SUMMARY
+  WildCardOmitPattern = PHI_HOST*
+  WildCardExclusionLog = true
+}
+
+//------------------------------------------
+// pMarineViewer config block
+
+ProcessConfig = pMarineViewer
+{
+  AppTick    = 4
+  CommsTick  = 4
+
+  tiff_file            = forrest19.tif
+
+  set_pan_x            = -90
+  set_pan_y            = -280
+  zoom                 = 0.65
+  vehicles_shape_scale = 1.5
+  vehicles_name_mode   = names
+  hash_delta           = 50
+  hash_shade           = 0.22
+  hash_viewable        = true
+
+  trails_point_size    = 1
+
+  stale_report_thresh  = 10
+  stale_remove_thresh  = 18
+
+  // Appcast configuration
+  appcast_height       = 75
+  appcast_width        = 30
+  appcast_viewable     = true
+  appcast_color_scheme = indigo
+  nodes_font_size      = xlarge
+  procs_font_size      = xlarge
+  appcast_font_size    = large
+
+  // LLM chat pane (right edge), fed by pLLMAgent. Each vehicle's plan
+  // lines arrive as BT_CHAT_<VNAME> and show with its name in front.
+  chat_viewable        = true
+  chat_width           = 28
+  chat_input_lines     = 6
+  chat_plan_var        = BT_CHAT_*
+
+  // Map clicks act on the vehicle nearest the click: left click sends
+  // it to that point, right click brings it home.
+  left_context[goto] = BT_CMD_$[UP_VNAME_CLOSEST]=cancel
+  left_context[goto] = DEPLOY_$[UP_VNAME_CLOSEST]=true
+  left_context[goto] = MOOS_MANUAL_OVERRIDE_$[UP_VNAME_CLOSEST]=false
+  left_context[goto] = RETURN_$[UP_VNAME_CLOSEST]=false
+  left_context[goto] = TASK_$[UP_VNAME_CLOSEST]=waypoint
+  left_context[goto] = WPT_UPDATE_$[UP_VNAME_CLOSEST]=points=$[XPOS],$[YPOS]
+
+  right_context[return] = BT_CMD_$[UP_VNAME_CLOSEST]=cancel
+  right_context[return] = DEPLOY_$[UP_VNAME_CLOSEST]=true
+  right_context[return] = MOOS_MANUAL_OVERRIDE_$[UP_VNAME_CLOSEST]=false
+  right_context[return] = RETURN_$[UP_VNAME_CLOSEST]=true
+
+  scope = LLM_STATUS
+  scope = LLM_TOOL_POST
+  scope = DEPLOY_ALL
+  scope = RETURN_ALL
+  scope = MVIEWER_LCLICK
+
+  button_one   = STOP_ALL # BT_CMD_ALL=halt # DEPLOY_ALL=false # RETURN_ALL=false
+  button_two   = RETURN_ALL # BT_CMD_ALL=cancel # DEPLOY_ALL=true # RETURN_ALL=true # MOOS_MANUAL_OVERRIDE_ALL=false
+  button_three = SLOWER # WPT_UPDATE_ALL=speed=1.0 # RETURN_UPDATE_ALL=speed=1.0
+  button_four  = FASTER # WPT_UPDATE_ALL=speed=3.0 # RETURN_UPDATE_ALL=speed=3.0
+
+  action = MENU_KEY=stop_all # BT_CMD_ALL=halt # DEPLOY_ALL=false # RETURN_ALL=false
+  action = MENU_KEY=return_all # BT_CMD_ALL=cancel # DEPLOY_ALL=true # RETURN_ALL=true # MOOS_MANUAL_OVERRIDE_ALL=false
+}
+
+//------------------------------------------
+// pLLMAgent config block
+// The API key is read from the ANTHROPIC_API_KEY environment
+// variable of the shell that runs launch.sh; it is never stored here.
+
+ProcessConfig = pLLMAgent
+{
+  AppTick   = 4
+  CommsTick = 4
+
+  model           = claude-opus-5-5
+  effort          = medium
+  max_tokens      = 4096
+  confirm_default = true
+
+  // The fleet: every capability whose file names no receivers takes a
+  // vname argument (all fans out over the roster) and posts
+  // VAR_<VNAME>, which uFldShoreBroker bridges to that vehicle. The
+  // map tools say receivers = local in their files and draw here.
+  receivers = all:vname
+  vnames    = $(VNAMES_CSV)      // the roster before the first NODE_REPORT
+
+  // What comes back from each vehicle, renamed with its name by its
+  // uFldNodeBroker; a * registers a wildcard.
+  watch = BT_STATE_*, BT_ACTIVE_*, BT_LOG_*, MISSION_*
+  watch = IVPHELM_STATE_*, IVPHELM_UPDATE_RESULT_*
+  watch = DEPLOY_ALL, RETURN_ALL
+
+  bt_tree_var        = BT_TREE
+  system_prompt_file = prompts/fleet.txt
+
+  capability_dir = helm
+  // capability_drop = turn_limit, turn_limit_off, periodic_speed, periodic_speed_off
+  view_color = orange, yellow, magenta, cyan, dodger_blue, white
+
+  app_logging = true
+}

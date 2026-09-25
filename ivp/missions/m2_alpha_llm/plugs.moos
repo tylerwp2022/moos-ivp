@@ -1,0 +1,48 @@
+<tag><origin_warp>
+MOOSTimeWarp = $(WARP)
+
+// Forest Lake
+LatOrigin  = 43.825300
+LongOrigin = -70.330400
+
+<tag><pHostInfo>
+//--------------------------------------------------
+// pHostInfo Config Block
+
+ProcessConfig = pHostInfo
+{
+  AppTick   = 1
+  CommsTick = 1
+
+  default_hostip_force = $(IP_ADDR)
+}
+
+<tag><pShare>
+//--------------------------------------------------
+// pShare Config Block
+
+ProcessConfig = pShare
+{
+  AppTick   = 2
+  CommsTick = 2
+
+  input = route = $(IP_ADDR):$(PSHARE_PORT)
+}
+
+<tag><uProcessWatch>
+//--------------------------------------------------
+// uProcessWatch Config Block
+
+ProcessConfig = uProcessWatch
+{
+  AppTick   = 1
+  CommsTick = 1
+
+  allow_retractions = true
+  watch_all = true
+  nowatch   = uMAC*
+  nowatch   = uXMS*
+  nowatch   = uPokeDB*
+  nowatch   = uQueryDB*
+  summary_wait = 12
+}

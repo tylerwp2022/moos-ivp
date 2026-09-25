@@ -1,0 +1,218 @@
+//--------    FILE: meta_vehicle.bhv  (m2_alpha_llm)   -------------
+//
+// One vehicle of the fleet, filled in by launch_vehicle.sh: the
+// s1_alpha_llm helm with this vehicle's own return point. The flags
+// below arrive from the shoreside as DEPLOY_$(VNAME) etc., delivered
+// here as the bare names by uFldShoreBroker.
+//
+// Blank mission: no pre-programmed route. Nothing here moves the
+// boat until the operator or pLLMAgent posts one of these:
+//
+//   goto / route : DEPLOY=true, RETURN=false, TASK=waypoint, WPT_UPDATE=points=...
+//   loiter       : DEPLOY=true, RETURN=false, TASK=loiter, LOITER_UPDATE=polygon=...
+//   station_keep : DEPLOY=true, RETURN=false, TASK=station, STATION_UPDATE=station_pt=...
+//   hold_heading : DEPLOY=true, RETURN=false, TASK=heading, HEADING_UPDATE=heading=...
+//   return       : DEPLOY=true, RETURN=true
+//   stop         : DEPLOY=false
+//   speed        : WPT_UPDATE=speed=..., RETURN_UPDATE=..., LOITER_UPDATE=..., HEADING_SPEED_UPDATE=...
+//
+// TASK names the driver, so one post selects it and deselects the
+// rest. The waypoint behaviors clear DEPLOY when they finish, so the
+// helm idles (all-stop, boat coasts to a halt) until the next
+// command; loiter, station-keep and hold-heading run until the next
+// command. Modifiers ride on top of any driver, each on its own
+// flag: OPREGION, PERIODIC_SPEED, TURN_LIMIT (op_region and friends).
+
+initialize   DEPLOY = false
+initialize   RETURN = false
+initialize   TASK = none
+initialize   OPREGION = false
+initialize   PERIODIC_SPEED = false
+initialize   TURN_LIMIT = false
+
+//----------------------------------------------
+Behavior = BHV_Waypoint
+{
+  name      = waypt_goto
+  pwt       = 100
+  condition = DEPLOY = true
+  condition = RETURN = false
+  condition = TASK = waypoint
+  endflag   = DEPLOY = false
+  endflag   = MISSION = goto_complete
+  updates   = WPT_UPDATE
+  perpetual = true
+
+  points         = empty     // idle until a WPT_UPDATE arrives
+  speed          = 2.0       // m/s, changed by WPT_UPDATE=speed=...
+  lead           = 8
+  lead_damper    = 1
+  lead_to_start  = true
+  capture_line   = true
+  capture_radius = 5.0
+  slip_radius    = 15.0
+  order          = normal
+  repeat         = 0
+
+  visual_hints = nextpt_color=yellow, nextpt_vertex_size=8, nextpt_lcolor=gray70
+  visual_hints = vertex_color=dodger_blue, edge_color=white
+  visual_hints = vertex_size=5, edge_size=1
+}
+
+//----------------------------------------------
+Behavior = BHV_Waypoint
+{
+  name      = waypt_return
+  pwt       = 100
+  condition = DEPLOY = true
+  condition = RETURN = true
+  endflag   = RETURN = false
+  endflag   = DEPLOY = false
+  endflag   = MISSION = return_complete
+  updates   = RETURN_UPDATE
+  perpetual = true
+
+  points         = $(RETURN_POS)   // this vehicle's launch position
+  speed          = 2.0
+  lead           = 8
+  lead_damper    = 1
+  lead_to_start  = true
+  capture_line   = true
+  capture_radius = 3.0
+  slip_radius    = 10.0
+}
+
+//----------------------------------------------
+// loiter: circles the polygon LOITER_UPDATE hands it, until the next
+// command. The radius here is the vertex capture radius, not the
+// circle: that comes with the polygon.
+Behavior = BHV_Loiter
+{
+  name      = loiter
+  pwt       = 100
+  condition = DEPLOY = true
+  condition = RETURN = false
+  condition = TASK = loiter
+  updates   = LOITER_UPDATE
+  perpetual = true
+
+  polygon   = format=radial,x=0,y=-60,radius=20,pts=8   // replaced by LOITER_UPDATE
+  speed     = 2.0                                       // changed by LOITER_UPDATE=speed=...
+  clockwise = best
+  radius    = 4.0
+  nm_radius = 15.0
+
+  visual_hints = nextpt_color=yellow, nextpt_vertex_size=8
+  visual_hints = edge_color=white, vertex_color=dodger_blue, vertex_size=3
+}
+
+//----------------------------------------------
+// station_keep: holds the point STATION_UPDATE hands it, driving back
+// whenever the boat drifts past outer_radius.
+Behavior = BHV_StationKeep
+{
+  name      = station
+  pwt       = 100
+  condition = DEPLOY = true
+  condition = RETURN = false
+  condition = TASK = station
+  updates   = STATION_UPDATE
+  perpetual = true
+
+  station_pt    = $(RETURN_POS)  // replaced by STATION_UPDATE
+  inner_radius  = 4
+  outer_radius  = 12
+  outer_speed   = 1.0
+  transit_speed = 2.0
+  swing_time    = 4
+
+  visual_hints = vertex_size=0, edge_color=gray50
+}
+
+//----------------------------------------------
+// hold_heading: this pair. ConstantHeading defaults to a zero
+// duration, which would end it at once, so both say no-time-limit.
+Behavior = BHV_ConstantHeading
+{
+  name      = const_heading
+  pwt       = 100
+  condition = DEPLOY = true
+  condition = RETURN = false
+  condition = TASK = heading
+  updates   = HEADING_UPDATE
+  perpetual = true
+  duration  = no-time-limit
+
+  heading   = 0              // replaced by HEADING_UPDATE
+}
+
+Behavior = BHV_ConstantSpeed
+{
+  name      = const_speed
+  pwt       = 100
+  condition = DEPLOY = true
+  condition = RETURN = false
+  condition = TASK = heading
+  updates   = HEADING_SPEED_UPDATE
+  perpetual = true
+  duration  = no-time-limit
+
+  speed     = 2.0            // replaced by HEADING_SPEED_UPDATE
+}
+
+//----------------------------------------------
+// op_region: a fence that turns the boat back, not a kill switch.
+// It arms once the boat has been inside the polygon for
+// trigger_entry_time. Inside, it has no say; the moment the boat
+// crosses out (save_dist = 0) it outweighs the driver (pwt) and
+// turns the boat back in at recover_spd, with no helm error. Leave
+// halt_dist unset: with it the helm would halt with a BehaviorError
+// that far out, as the classic BHV_OpRegion does at the first step.
+// core_poly must be convex.
+Behavior = BHV_OpRegionV24
+{
+  name      = opregion
+  pwt       = 300
+  condition = DEPLOY = true
+  condition = OPREGION = true
+  updates   = OPREGION_UPDATE
+
+  core_poly = -100,40:100,40:100,-160:-100,-160   // replaced by OPREGION_UPDATE
+  save_dist          = 0
+  recover_spd        = 1.5
+  trigger_entry_time = 1
+  save_flag          = OPREGION_OUTSIDE = true
+
+  visual_hints = edge_color=yellow, vertex_color=yellow, vertex_size=0, edge_size=1
+}
+
+//----------------------------------------------
+// periodic_speed: period_busy seconds at the driver's speed, then
+// period_lazy seconds at period_speed, repeating while the flag is up.
+Behavior = BHV_PeriodicSpeed
+{
+  name      = periodic_speed
+  pwt       = 100
+  condition = DEPLOY = true
+  condition = PERIODIC_SPEED = true
+  updates   = PERIODIC_SPEED_UPDATE
+
+  period_busy  = 60
+  period_lazy  = 30
+  period_speed = 0.5
+}
+
+//----------------------------------------------
+// turn_limit: over the last memory_time seconds the heading stays
+// within turn_range degrees, for a towed sensor.
+Behavior = BHV_MemoryTurnLimit
+{
+  name      = turn_limit
+  pwt       = 100
+  condition = DEPLOY = true
+  condition = TURN_LIMIT = true
+  updates   = TURN_LIMIT_UPDATE
+
+  memory_time = 60
+  turn_range  = 150
+}

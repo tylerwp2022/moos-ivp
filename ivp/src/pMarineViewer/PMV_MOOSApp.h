@@ -68,6 +68,8 @@ class PMV_MOOSApp : public AppCastingMOOSApp
   bool handleMailClear(std::string);
   bool handleMailCenter(std::string);
   bool handleMailConfig(std::string) {return(true);}
+  bool        chatPlanMatch(const std::string& key) const;
+  std::string chatPlanVehicle(const std::string& key) const;
   bool handleConfigCmd(std::string);
   bool handleConfigWatchCluster(std::string);
 

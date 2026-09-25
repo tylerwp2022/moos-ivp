@@ -1,0 +1,29 @@
+m2_alpha_llm: the s1_alpha_llm mission as a small fleet.
+
+One shoreside community (MOOSDB 9000, pShare 9200) runs pMarineViewer with
+the chat pane and pLLMAgent. Each simulated vehicle (abe, ben, ... on
+9001+/9201+) is its own community with the blank alpha helm and its own
+pBehaviorTree. The model names a vehicle (or all) in every tool;
+uFldShoreBroker carries DEPLOY_ABE, BT_TREE_ABE and friends down to abe as
+the bare variables, and each vehicle's uFldNodeBroker sends its node
+report, its plan's map shapes and its status back up renamed with its
+name (BT_STATE_ABE, BT_CHAT_ABE, MISSION_ABE); pLLMAgent and the chat pane
+route by that suffix.
+
+  ./launch.sh [--amt=N] [--nogui] [--just_make] [time_warp]
+
+launch.sh runs launch_vehicle.sh once per vehicle and launch_shoreside.sh,
+filling meta_vehicle.moos, meta_vehicle.bhv and meta_shoreside.moos with
+nsplug (the targ_* files are the results), then runs uMAC on the
+shoreside; quitting uMAC or Ctrl-C halts everything. ANTHROPIC_API_KEY
+must be set in the shell for the chat to answer; without it the fleet
+still runs from the viewer (clicks act on the nearest vehicle, the
+buttons on all) and from uPokeDB.
+
+Without the model, from this directory:
+  uPokeDB targ_shoreside.moos BT_TREE_FILE_ABE=plans/box_goto.xml
+  uPokeDB targ_shoreside.moos TASK_BEN=waypoint WPT_UPDATE_BEN=points=40,-40 DEPLOY_BEN=true MOOS_MANUAL_OVERRIDE_BEN=false
+  uPokeDB targ_shoreside.moos BT_REPLY_ABE=yes
+
+This is the shape the MCTF mission takes later: pLLMAgent joins its
+shoreside block, pBehaviorTree and the bridge lines join meta_surveyor.moos.
