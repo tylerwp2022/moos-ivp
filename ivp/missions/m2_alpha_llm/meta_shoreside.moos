@@ -34,6 +34,7 @@ ProcessConfig = ANTLER
 #endif
   Run = pLLMAgent       @ NewConsole = false
   Run = pBehaviorTree   @ NewConsole = false
+  Run = uFldTeam        @ NewConsole = false
 }
 
 #include plugs.moos <pShare>
@@ -60,6 +61,7 @@ ProcessConfig = uFldShoreBroker
   qbridge = TURN_LIMIT, TURN_LIMIT_UPDATE
   qbridge = BT_TREE, BT_TREE_FILE, BT_CMD, BT_REPLY, BT_SIGNAL
   qbridge = NODE_REPORT, NODE_MESSAGE
+  qbridge = PLATFORM_COLOR, TRAIL_UPDATE    // uFldTeam: team colors, formation slots
 
   auto_bridge_appcast = true
 }
@@ -210,11 +212,17 @@ ProcessConfig = pLLMAgent
   watch = BT_REPORT_*, BT_MEMBERS_*
   watch = IVPHELM_STATE_*, IVPHELM_UPDATE_RESULT_*
   watch = DEPLOY_ALL, RETURN_ALL
+  watch = TEAM_LIST, TEAM_EVENT, TEAM_REPORT_*, TEAM_MISSION_*   // uFldTeam
 
   bt_tree_var        = BT_TREE
   system_prompt_file = prompts/fleet.txt
 
+  // helm: the single-vehicle drivers and modifiers; team: the
+  // uFldTeam tools (team_form, team_goto, team_formation ...), which
+  // take a team argument and post TEAM_CMD here (receivers = local).
+  // One directory per line.
   capability_dir = helm
+  capability_dir = team
   // capability_drop = turn_limit, turn_limit_off, periodic_speed, periodic_speed_off
   view_color = orange, yellow, magenta, cyan, dodger_blue, white
 
@@ -243,6 +251,28 @@ ProcessConfig = pBehaviorTree
   capability_dir = helm          // the same leaves the vehicles have
   view_prefix    = bt_team_
   contacts       = true          // ABE_BEN_RANGE and friends for conditions
+
+  app_logging = true
+}
+
+//------------------------------------------
+// uFldTeam config block: teams as objects
+// TEAM_CMD creates and disbands teams of these vehicles and moves
+// them: "move red to x,y" moves the team's centroid there, every
+// member keeping its offset, or holding a slot of a formation. Each
+// team's centroid, spread and state come out as TEAM_REPORT_<NAME>
+// and TEAM_<NAME>_X/_Y/...; members take the team color on the map.
+// Vehicles are driven through the same posts the goto, speed and
+// stop tools make, bridged down by uFldShoreBroker.
+
+ProcessConfig = uFldTeam
+{
+  AppTick   = 4
+  CommsTick = 4
+
+  vnames    = $(VNAMES_CSV)      // the fleet, before the first NODE_REPORT
+  speed     = 2.0
+  contact_max_age = 30
 
   app_logging = true
 }

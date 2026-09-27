@@ -36,6 +36,15 @@ the contact variables (BEN_RANGE). A member may itself be a team executor
 (a team of teams; see the moos-ivp-bt README), which this mission keeps
 out to stay minimal.
 
+The shoreside also runs uFldTeam (moos-ivp-team): teams of vehicles as
+objects. TEAM_CMD forms a team (its members take the team color on the
+map), moves its center of mass with every member keeping its offset, or
+puts it in a formation (line, column, wedge, circle ...) that holds at rest
+and moves as a body behind a virtual leader the members trail with
+BHV_Trail (the formation block in meta_vehicle.bhv). TEAM_REPORT_<NAME>,
+TEAM_<NAME>_X/_Y/... and TEAM_MISSION_<NAME> come back. pLLMAgent gets the
+team_* tools from the team capability set (a capability_dir = team line).
+
 Without the model, from this directory:
   uPokeDB targ_shoreside.moos BT_TREE_FILE_ABE=plans/box_goto.xml
   uPokeDB targ_shoreside.moos TASK_BEN=waypoint WPT_UPDATE_BEN=points=40,-40 DEPLOY_BEN=true MOOS_MANUAL_OVERRIDE_BEN=false
@@ -44,6 +53,10 @@ Without the model, from this directory:
   uPokeDB targ_shoreside.moos BT_CMD_TEAM=halt
   uXMS targ_shoreside.moos BT_STATE_TEAM BT_MEMBERS_TEAM BT_STATE_ABE BT_STATE_BEN BT_REPORT_ABE BT_REPORT_BEN
   pBehaviorTree --check=plans/team_line_south.xml --team --vnames=abe,ben
+  uPokeDB targ_shoreside.moos TEAM_CMD:=action=create,name=red,members=abe:ben
+  uPokeDB targ_shoreside.moos TEAM_CMD:=action=formation,name=red,shape=line,spacing=30
+  uPokeDB targ_shoreside.moos TEAM_CMD:=action=goto,name=red,x=60,y=-160
+  uXMS targ_shoreside.moos TEAM_LIST TEAM_REPORT_RED TEAM_MISSION_RED TEAM_EVENT
 
 This is the shape the MCTF mission takes later: pLLMAgent joins its
 shoreside block, pBehaviorTree and the bridge lines join meta_surveyor.moos.

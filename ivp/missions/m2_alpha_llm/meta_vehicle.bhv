@@ -12,6 +12,8 @@
 //   loiter       : DEPLOY=true, RETURN=false, TASK=loiter, LOITER_UPDATE=polygon=...
 //   station_keep : DEPLOY=true, RETURN=false, TASK=station, STATION_UPDATE=station_pt=...
 //   hold_heading : DEPLOY=true, RETURN=false, TASK=heading, HEADING_UPDATE=heading=...
+//   formation    : DEPLOY=true, RETURN=false, TASK=formation, TRAIL_UPDATE=contact=...
+//                  (uFldTeam: hold a slot on the team's virtual leader)
 //   return       : DEPLOY=true, RETURN=true
 //   stop         : DEPLOY=false
 //   speed        : WPT_UPDATE=speed=..., RETURN_UPDATE=..., LOITER_UPDATE=..., HEADING_SPEED_UPDATE=...
@@ -107,8 +109,17 @@ Behavior = BHV_Loiter
 }
 
 //----------------------------------------------
-// station_keep: holds the point STATION_UPDATE hands it, driving back
-// whenever the boat drifts past outer_radius.
+// station_keep: holds the point STATION_UPDATE hands it. The radii
+// are collapsed on purpose and set wider than the boat's turning
+// circle: outside 10 m the boat drives at transit_speed, inside it
+// cuts thrust and coasts to a stop. The behavior's usual ramp (speed
+// falling to zero between outer and inner radius) would leave the
+// boat creeping at a few tenths of a m/s, and uSimMarineV22's turn
+// rate falls with speed, so a boat nudged toward a point from inside
+// the ramp cannot turn onto it and circles it. At 1.2 m/s these boats
+// turn at about 6 deg/s, a radius near 7.5 m: a smaller inner radius
+// is unreachable from a curved approach and the boat orbits it at
+// exactly that radius, so 10 m lets the first pass enter and stop.
 Behavior = BHV_StationKeep
 {
   name      = station
@@ -120,10 +131,10 @@ Behavior = BHV_StationKeep
   perpetual = true
 
   station_pt    = $(RETURN_POS)  // replaced by STATION_UPDATE
-  inner_radius  = 4
-  outer_radius  = 12
-  outer_speed   = 1.0
-  transit_speed = 2.0
+  inner_radius  = 10
+  outer_radius  = 10
+  outer_speed   = 1.2
+  transit_speed = 1.2
   swing_time    = 4
 
   visual_hints = vertex_size=0, edge_color=gray50
@@ -158,6 +169,35 @@ Behavior = BHV_ConstantSpeed
   duration  = no-time-limit
 
   speed     = 2.0            // replaced by HEADING_SPEED_UPDATE
+}
+
+//----------------------------------------------
+// formation: hold a slot relative to a contact, the team's virtual
+// leader (<team>_lead) that uFldTeam posts to this vehicle as a
+// NODE_REPORT. TRAIL_UPDATE names the contact and the slot as a range
+// and an angle; the angle is relative to the leader's heading (+90
+// starboard, 180 astern) or a compass bearing (trail_angle_type =
+// absolute) for a formation that keeps a fixed orientation. No
+// contact line here: a placeholder name would draw a warning every
+// tick until the first update.
+Behavior = BHV_Trail
+{
+  name      = formation
+  pwt       = 100
+  condition = DEPLOY = true
+  condition = RETURN = false
+  condition = TASK = formation
+  updates   = TRAIL_UPDATE
+  perpetual = true
+
+  trail_range      = 20        // replaced per slot by TRAIL_UPDATE
+  trail_angle      = 180
+  trail_angle_type = relative
+  radius           = 3
+  nm_radius        = 15
+  pwt_outer_dist   = 0         // always relevant
+  no_alert_request = true
+  post_trail_dist_on_idle = false
 }
 
 //----------------------------------------------

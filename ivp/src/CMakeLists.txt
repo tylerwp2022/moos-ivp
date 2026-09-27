@@ -200,7 +200,7 @@ SET(IVP_NON_GUI_LIBS
   lib_geodaid        lib_survey          lib_dep_behaviors
   lib_gen_poly       moos-ivp-tak/lib_cot_geodesy
   moos-ivp-cap/lib_cap          moos-ivp-llm/lib_llm
-  moos-ivp-bt/lib_bt
+  moos-ivp-bt/lib_bt            moos-ivp-team/lib_team
 )
 SET(IVP_GUI_LIBS
   lib_ipfview        lib_marineview
@@ -233,6 +233,7 @@ SET(ROBOT_APPS
   moos-ivp-cap/cap_check         moos-ivp-cap/tests
   moos-ivp-llm/pLLMAgent         moos-ivp-llm/tests
   moos-ivp-bt/pBehaviorTree      moos-ivp-bt/tests
+  moos-ivp-team/uFldTeam         moos-ivp-team/tests
 )
 # uXboxJoystick reads the Linux joystick API (linux/joystick.h) and links
 # with GNU ld group flags, so it builds on Linux only.
