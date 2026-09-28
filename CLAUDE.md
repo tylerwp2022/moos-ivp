@@ -29,7 +29,7 @@ cd ivp/src_unit_tests && ./alltest.sh               # runs every dir that has a 
 cd ivp/src_unit_tests/testConvexHull && utest cases.utf -v   # one test
 ```
 
-The framework is homegrown: the `utest` runner drives table-driven `cases.utf` files; a `.skip_test` marker makes a dir non-fatal. No gtest/catch2. CI (`.github/workflows/build.yml`) runs `build.sh`, `build-check.sh`, `build-utests.sh`, and `alltest.sh` on Ubuntu 24.04 and macOS for pushes to `main` and `llm-integration`. It checks out submodules recursively; the private ones need the repository secret `SUBMODULE_TOKEN`, a fine-grained PAT with contents read access to the fork and to `moos-ivp-llm`, `moos-ivp-bt` and `moos-ivp-cap`. The offline self-tests `bin/cap_selftest`, `bin/bt_selftest` and `bin/llm_selftest` are not run by CI.
+The framework is homegrown: the `utest` runner drives table-driven `cases.utf` files; a `.skip_test` marker makes a dir non-fatal. No gtest/catch2. CI (`.github/workflows/build.yml`) runs `build.sh`, `build-check.sh`, `build-utests.sh`, and `alltest.sh` on Ubuntu 24.04 and macOS for pushes to `main` and `llm-integration`. It checks out submodules recursively; the private ones need the repository secret `SUBMODULE_TOKEN`, a fine-grained PAT with contents read access to the fork and to `moos-ivp-llm`, `moos-ivp-bt`, `moos-ivp-cap` and `moos-ivp-team` (a submodule the PAT does not cover fails every job at checkout with a 403). The offline self-tests `bin/cap_selftest`, `bin/bt_selftest`, `bin/llm_selftest` and `bin/team_selftest` are not run by CI.
 
 ## Architecture
 
