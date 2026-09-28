@@ -45,8 +45,7 @@ ProcessConfig = ANTLER
 // uFldShoreBroker config block
 // qbridge = FOO bridges FOO_ALL and FOO_<VNAME> here to FOO on the
 // vehicle. pLLMAgent's tools post the _<VNAME> forms (receivers =
-// all:vname below), pMarineViewer's buttons the _ALL forms and its
-// map clicks the _<VNAME> of the nearest vehicle.
+// all:vname below) and pMarineViewer's buttons the _ALL forms.
 
 ProcessConfig = uFldShoreBroker
 {
@@ -148,35 +147,23 @@ ProcessConfig = pMarineViewer
   chat_input_lines     = 6
   chat_plan_var        = BT_CHAT_*
 
-  // Map clicks act on the vehicle nearest the click: left click sends
-  // it to that point, right click brings it home.
-  left_context[goto] = BT_CMD_$[UP_VNAME_CLOSEST]=cancel
-  left_context[goto] = DEPLOY_$[UP_VNAME_CLOSEST]=true
-  left_context[goto] = MOOS_MANUAL_OVERRIDE_$[UP_VNAME_CLOSEST]=false
-  left_context[goto] = RETURN_$[UP_VNAME_CLOSEST]=false
-  left_context[goto] = TASK_$[UP_VNAME_CLOSEST]=waypoint
-  left_context[goto] = WPT_UPDATE_$[UP_VNAME_CLOSEST]=points=$[XPOS],$[YPOS]
-
-  right_context[return] = BT_CMD_$[UP_VNAME_CLOSEST]=cancel
-  right_context[return] = DEPLOY_$[UP_VNAME_CLOSEST]=true
-  right_context[return] = MOOS_MANUAL_OVERRIDE_$[UP_VNAME_CLOSEST]=false
-  right_context[return] = RETURN_$[UP_VNAME_CLOSEST]=true
-
+  // No mouse context: the vehicles are driven from the chat, the
+  // buttons below and uPokeDB, never by a click on the map.
   scope = LLM_STATUS
   scope = LLM_TOOL_POST
   scope = DEPLOY_ALL
   scope = RETURN_ALL
   scope = MVIEWER_LCLICK
 
-  // The team plan on the shoreside is stopped first, then every
-  // vehicle's own plan, then the helm flags.
-  button_one   = STOP_ALL # BT_CMD_TEAM=halt # BT_CMD_ALL=halt # DEPLOY_ALL=false # RETURN_ALL=false
-  button_two   = RETURN_ALL # BT_CMD_TEAM=cancel # BT_CMD_ALL=cancel # DEPLOY_ALL=true # RETURN_ALL=true # MOOS_MANUAL_OVERRIDE_ALL=false
+  // BT_CMD_ALL reaches every team plan on the shoreside executor and,
+  // through the qbridge, every vehicle's own plan; then the helm flags.
+  button_one   = STOP_ALL # BT_CMD_ALL=halt # DEPLOY_ALL=false # RETURN_ALL=false
+  button_two   = RETURN_ALL # BT_CMD_ALL=cancel # DEPLOY_ALL=true # RETURN_ALL=true # MOOS_MANUAL_OVERRIDE_ALL=false
   button_three = SLOWER # WPT_UPDATE_ALL=speed=1.0 # RETURN_UPDATE_ALL=speed=1.0
   button_four  = FASTER # WPT_UPDATE_ALL=speed=3.0 # RETURN_UPDATE_ALL=speed=3.0
 
-  action = MENU_KEY=stop_all # BT_CMD_TEAM=halt # BT_CMD_ALL=halt # DEPLOY_ALL=false # RETURN_ALL=false
-  action = MENU_KEY=return_all # BT_CMD_TEAM=cancel # BT_CMD_ALL=cancel # DEPLOY_ALL=true # RETURN_ALL=true # MOOS_MANUAL_OVERRIDE_ALL=false
+  action = MENU_KEY=stop_all # BT_CMD_ALL=halt # DEPLOY_ALL=false # RETURN_ALL=false
+  action = MENU_KEY=return_all # BT_CMD_ALL=cancel # DEPLOY_ALL=true # RETURN_ALL=true # MOOS_MANUAL_OVERRIDE_ALL=false
 }
 
 //------------------------------------------
@@ -201,15 +188,17 @@ ProcessConfig = pLLMAgent
   receivers = all:vname
   vnames    = $(VNAMES_CSV)      // the roster before the first NODE_REPORT
 
-  // The team executor below, addressed like a vehicle by the plan
-  // tools: run_plan vname=team posts BT_TREE_TEAM.
-  teams = team
+  // The teams uFldTeam keeps are the plan executor's slots, addressed
+  // like a vehicle by the plan tools: run_plan vname=red posts
+  // BT_TREE_RED. The names come from TEAM_LIST as teams are formed and
+  // disbanded, the members from TEAM_REPORT_<NAME>.
+  teams_var = TEAM_LIST
 
   // What comes back from each vehicle, renamed with its name by its
-  // uFldNodeBroker, and from the team executor; a * registers a
+  // uFldNodeBroker, and from each team's plan slot; a * registers a
   // wildcard.
   watch = BT_STATE_*, BT_ACTIVE_*, BT_LOG_*, MISSION_*
-  watch = BT_REPORT_*, BT_MEMBERS_*
+  watch = BT_REPORT_*, BT_MEMBERS_*, BT_PLAN_*
   watch = IVPHELM_STATE_*, IVPHELM_UPDATE_RESULT_*
   watch = DEPLOY_ALL, RETURN_ALL
   watch = TEAM_LIST, TEAM_EVENT, TEAM_REPORT_*, TEAM_MISSION_*   // uFldTeam
@@ -220,36 +209,46 @@ ProcessConfig = pLLMAgent
   // helm: the single-vehicle drivers and modifiers; team: the
   // uFldTeam tools (team_form, team_goto, team_formation ...), which
   // take a team argument and post TEAM_CMD here (receivers = local).
-  // One directory per line.
+  // One directory per line. contact: follow (one vehicle trails
+  // another along its track). The towed-sensor and energy-saving
+  // pairs have no role here; every tool costs prompt tokens each turn.
   capability_dir = helm
   capability_dir = team
-  // capability_drop = turn_limit, turn_limit_off, periodic_speed, periodic_speed_off
+  capability_dir = contact
+  capability_drop = turn_limit, turn_limit_off, periodic_speed, periodic_speed_off
   view_color = orange, yellow, magenta, cyan, dodger_blue, white
 
   app_logging = true
 }
 
 //------------------------------------------
-// pBehaviorTree config block: the team executor
-// team = team names it and gives every BT_* variable a _TEAM suffix,
-// so a plan reaches it as BT_TREE_TEAM the way a vehicle's reaches
-// it as BT_TREE_ABE. A team plan starts with <Team members="abe,ben">
-// and drives no vehicle itself: each Member block (or leaf with a
-// vname) goes down as that vehicle's own plan, BT_TREE_<VNAME>, and
-// the block waits on BT_STATE_<VNAME>. Report lines come back up as
-// BT_REPORT_<VNAME>; Signal goes down as BT_SIGNAL. No halt or fail
-// flags: a halt reaches the members through their own executors.
+// pBehaviorTree config block: the team plan executor
+// One plan slot per team uFldTeam keeps (teams_var = TEAM_LIST): a
+// team's variables carry its suffix, so a plan reaches red as
+// BT_TREE_RED the way a vehicle's reaches abe as BT_TREE_ABE, and two
+// teams run two plans at once. A team plan starts with a bare <Team>
+// (the whole team, from TEAM_REPORT_<NAME>) and drives no vehicle
+// itself: each Member block (or leaf with a vname) goes down as that
+// vehicle's own plan, BT_TREE_<VNAME>, and the block waits on
+// BT_STATE_<VNAME>; the team leaves (TeamFormation, TeamGoto ...)
+// run here and post TEAM_CMD. Report lines come back up as
+// BT_REPORT_<VNAME>; Signal goes down as BT_SIGNAL. BT_PLAN_<TEAM>
+// names the running plan, which uFldTeam shows per team. A disbanded
+// team's plan is halted with it. No halt or fail flags: a halt
+// reaches the members through their own executors.
 
 ProcessConfig = pBehaviorTree
 {
   AppTick   = 4
   CommsTick = 4
 
-  team      = team
+  teams_var = TEAM_LIST
   vnames    = $(VNAMES_CSV)      // the fleet, before the first NODE_REPORT
 
   capability_dir = helm          // the same leaves the vehicles have
-  view_prefix    = bt_team_
+  capability_dir = team          // the team leaves, run on this executor
+  capability_dir = contact       // follow, dispatched to the follower
+  view_prefix    = bt_           // shapes labelled bt_<team>_...
   contacts       = true          // ABE_BEN_RANGE and friends for conditions
 
   app_logging = true

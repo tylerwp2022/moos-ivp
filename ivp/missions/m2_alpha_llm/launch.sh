@@ -11,7 +11,7 @@
 #  Part 1: Convenience functions, SIGINT/SIGTERM handling
 #------------------------------------------------------------
 vecho() { if [ "$VERBOSE" != "" ]; then echo "$ME: $1"; fi }
-on_exit() { echo; echo "$ME: Halting all apps"; kill -- -$$; }
+on_exit() { trap "" SIGINT SIGTERM; echo; echo "$ME: Halting all apps"; kill -- -$$; }
 trap on_exit SIGINT
 trap on_exit SIGTERM
 
@@ -119,6 +119,6 @@ fi
 #  Part 6: uMAC until the mission is quit, then halt everything
 #------------------------------------------------------------
 uMAC targ_shoreside.moos
-trap "" SIGINT
+trap "" SIGINT SIGTERM
 echo; echo "$ME: Halting all apps"
 kill -- -$$

@@ -1,0 +1,27 @@
+<!--
+  team_wedge_south.xml: a plan for a team that acts as a body. The bare
+  <Team> means the whole team the executor's slot is for (its members
+  come from uFldTeam's TEAM_REPORT_<NAME>). The team leaves run on the
+  shoreside executor itself: TeamFormation until uFldTeam reports the
+  team formed, TeamGoto until the move is complete; a halt posts a
+  team_stop. The BehaviorTree ID is what BT_PLAN_<TEAM> and the team
+  table show while it runs.
+
+  Create the team first, then send the plan to its slot:
+    uPokeDB targ_shoreside.moos TEAM_CMD:=action=create,name=red,members=abe:ben
+    uPokeDB targ_shoreside.moos BT_TREE_FILE_RED=plans/team_wedge_south.xml
+  Check it offline:
+    pBehaviorTree --check=plans/team_wedge_south.xml --team --roster=abe,ben
+-->
+<root BTCPP_format="4" main_tree_to_execute="wedge_south">
+  <BehaviorTree ID="wedge_south">
+    <Team>
+      <Sequence>
+        <Say msg="red: forming a wedge, then moving south"/>
+        <TeamFormation team="red" shape="wedge" spacing="30" orient="travel" timeout="300"/>
+        <TeamGoto team="red" x="60" y="-160" timeout="600"/>
+        <Say msg="red: wedge at the goal"/>
+      </Sequence>
+    </Team>
+  </BehaviorTree>
+</root>

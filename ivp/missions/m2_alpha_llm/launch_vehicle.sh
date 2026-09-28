@@ -7,7 +7,7 @@
 #           by launch.sh, which picks the ports and positions.
 #------------------------------------------------------------
 vecho() { if [ "$VERBOSE" != "" ]; then echo "$ME: $1"; fi }
-on_exit() { echo; echo "$ME: Halting all apps"; kill -- -$$; }
+on_exit() { trap "" SIGINT SIGTERM; echo; echo "$ME: Halting all apps"; kill -- -$$; }
 trap on_exit SIGINT
 trap on_exit SIGTERM
 
@@ -111,6 +111,6 @@ if [ "${AUTO_LAUNCHED}" = "yes" ]; then
 fi
 
 uMAC targ_$VNAME.moos
-trap "" SIGINT
+trap "" SIGINT SIGTERM
 echo; echo "$ME: Halting all apps"
 kill -- -$$

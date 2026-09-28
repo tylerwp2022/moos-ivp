@@ -242,6 +242,7 @@ void PMV_MOOSApp::registerVariables()
   Register("VIEW_POINT",   0);
   Register("VIEW_VECTOR",  0);
   Register("VIEW_CIRCLE",  0);
+  Register("VIEW_RING",    0);
   Register("VIEW_ARROW",   0);
   Register("VIEW_SEGLIST", 0);
   Register("VIEW_SEGLR",   0);
@@ -486,6 +487,8 @@ void PMV_MOOSApp::handleNewMail(const MOOS_event & e)
       }
     }
     
+    if(!handled && (key == "VIEW_RING"))
+      handled = m_gui->mviewer->addRing(sval);
     if(!handled)
       handled = m_gui->mviewer->addGeoShape(key, sval, community, MOOSTime());
     if(!handled)

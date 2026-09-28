@@ -201,6 +201,40 @@ Behavior = BHV_Trail
 }
 
 //----------------------------------------------
+// convoy: follow another vehicle along its own track (the follow
+// capability, TASK = convoy). CONVOY_UPDATE names the leader and the
+// distance to keep (rng_lagging); the leader's position comes from
+// its node report into the helm's contact ledger. Between rng_tgating
+// and rng_lagging the follower matches the leader's speed; farther
+// back it closes up at spd_faster times that speed, closer it slows
+// to spd_slower times it, and within rng_estop it stops. rng_safety
+// is off so a 20 m spacing is allowed as asked; the capability says
+// 15 m or more.
+Behavior = BHV_Convoy
+{
+  name      = convoy
+  pwt       = 100
+  condition = DEPLOY = true
+  condition = RETURN = false
+  condition = TASK = convoy
+  updates   = CONVOY_UPDATE
+  perpetual = true
+
+  rng_safety  = false
+  rng_estop   = 5
+  rng_tgating = 10
+  rng_lagging = 20             // replaced per call by CONVOY_UPDATE
+  spd_max     = 4
+  spd_faster  = 1.3
+  spd_slower  = 0.7
+  radius      = 5
+  nm_radius   = 10
+  inter_mark_range = 5         // marks left along the leader's track
+  max_mark_range   = 150
+  on_no_contact_ok = true
+}
+
+//----------------------------------------------
 // op_region: a fence that turns the boat back, not a kill switch.
 // It arms once the boat has been inside the polygon for
 // trigger_entry_time. Inside, it has no say; the moment the boat

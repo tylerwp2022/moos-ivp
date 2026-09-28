@@ -4,12 +4,13 @@
      signals. abe and ben line up on y=-105 (abe at x=100, ben at x=50),
      head south together at 2 m/s and stop past y=-180.
 
-     Poke it at the team executor on the shoreside:
-       uPokeDB targ_shoreside.moos BT_TREE_FILE_TEAM=plans/team_line_south.xml
+     Form the team, then poke the plan at its slot on the shoreside:
+       uPokeDB targ_shoreside.moos TEAM_CMD:=action=create,name=red,members=abe:ben
+       uPokeDB targ_shoreside.moos BT_TREE_FILE_RED=plans/team_line_south.xml
      Offline check:
-       pBehaviorTree --check=plans/team_line_south.xml --team --vnames=abe,ben -->
-<root BTCPP_format="4" main_tree_to_execute="MainTree">
-  <BehaviorTree ID="MainTree">
+       pBehaviorTree --check=plans/team_line_south.xml --team --roster=abe,ben -->
+<root BTCPP_format="4" main_tree_to_execute="line_south">
+  <BehaviorTree ID="line_south">
     <Team members="abe,ben">
       <Parallel>
         <Member vname="abe">

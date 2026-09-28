@@ -52,6 +52,7 @@ class PMV_Viewer : public MarineViewer
   bool  handleNodeReport(std::string, std::string&);
 
   bool  addGeoShape(std::string p, std::string v, std::string c, double=0);
+  bool  addRing(std::string spec);   // VIEW_RING: a circle that follows a vehicle
   bool  addScopeVariable(std::string);
   bool  updateScopeVariable(std::string varname, std::string value, 
 			    std::string vtime, std::string vsource);
@@ -86,6 +87,7 @@ class PMV_Viewer : public MarineViewer
   
  private:
   void   drawVehicle(std::string, bool, std::string);
+  void   drawRings();
   void   drawTrailPoints(CPList&, unsigned int=0);
   void   handleMouse(int, int, std::string s="left");
   void   handleMoveMouse(int, int);
@@ -137,6 +139,11 @@ class PMV_Viewer : public MarineViewer
   VPlug_GeoShapesMap  m_geoshapes_map;
 
   std::map<std::string, std::string> m_map_vcolor;
+
+  // Rings that follow a vehicle (VIEW_RING), one per vehicle name:
+  // vname -> "radius,color"; drawn at the vehicle's current position
+  // on every redraw, so nothing has to repost as the vehicle moves.
+  std::map<std::string, std::pair<double, std::string> > m_rings;
 };
 
 #endif 

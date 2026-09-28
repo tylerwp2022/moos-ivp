@@ -264,6 +264,8 @@ void showInterfaceAndExit()
   blk("  VIEW_VECTOR                                                   ");
   blk("  VIEW_MARKER                                                   ");
   blk("  VIEW_CIRCLE                                                   ");
+  blk("  VIEW_RING   = vname=ben,radius=20,color=yellow: a circle that  ");
+  blk("                follows the vehicle; active=false takes it off   ");
   blk("  VIEW_ARROW                                                    ");
   blk("  VIEW_GRID                                                     ");
   blk("  VIEW_RANGE_PULSE                                              ");

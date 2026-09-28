@@ -198,8 +198,52 @@ void PMV_Viewer::draw()
       drawVehicle(vehiname, isactive, vehibody);
     }
   }
+  drawRings();
 
   glFlush();
+}
+
+//-------------------------------------------------------------
+// Procedure: addRing / drawRings
+//   Purpose: VIEW_RING = vname=ben,radius=20,color=yellow puts a
+//            circle of that radius around ben that moves with it;
+//            vname=ben,active=false takes it off. The circle is
+//            drawn from the ledger's latest position on every
+//            redraw, so the sender posts once.
+
+bool PMV_Viewer::addRing(string spec)
+{
+  string vname = tolower(tokStringParse(spec, "vname", ',', '='));
+  if(vname == "")
+    return(false);
+  string active = tolower(tokStringParse(spec, "active", ',', '='));
+  if(active == "false") {
+    m_rings.erase(vname);
+    return(true);
+  }
+  string rad_str = tokStringParse(spec, "radius", ',', '=');
+  if(!isNumber(rad_str) || (atof(rad_str.c_str()) <= 0))
+    return(false);
+  string color = tokStringParse(spec, "color", ',', '=');
+  if((color == "") || !isColor(color))
+    color = "yellow";
+  m_rings[vname] = make_pair(atof(rad_str.c_str()), color);
+  return(true);
+}
+
+void PMV_Viewer::drawRings()
+{
+  map<string, pair<double, string> >::const_iterator p;
+  for(p=m_rings.begin(); p!=m_rings.end(); p++) {
+    if(!m_ledger.hasVName(p->first))
+      continue;
+    XYCircle circle(m_ledger.getX(p->first), m_ledger.getY(p->first), p->second.first);
+    circle.set_label("ring_" + p->first);
+    circle.set_label_color("invisible");
+    circle.set_edge_color(p->second.second);
+    circle.set_edge_size(2);
+    drawCircle(circle, m_curr_time);
+  }
 }
 
 //-------------------------------------------------------------

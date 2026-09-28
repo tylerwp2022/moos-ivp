@@ -175,6 +175,7 @@ ProcessConfig = pBehaviorTree
   watch = DEPLOY, RETURN, TASK, MISSION, IVPHELM_STATE, NAV_X, NAV_Y, NAV_SPEED
 
   capability_dir = helm      // the same sets and filters as pLLMAgent
+  capability_dir = contact   // follow (BHV_Convoy)
   view_prefix    = bt_$(VNAME)_
 
   app_logging = true
