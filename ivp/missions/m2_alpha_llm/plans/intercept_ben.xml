@@ -1,0 +1,18 @@
+<!-- One vehicle chasing another: abe intercepts ben, closing to within
+     20 m at up to 3 m/s (the Intercept leaf ends on abe's own BEN_RANGE
+     and idles the helm), then falls in 20 m behind him along his track. Poke it at
+     abe, with ben already under way:
+       uPokeDB targ_shoreside.moos TASK_BEN=waypoint WPT_UPDATE_BEN=points=60,-120 DEPLOY_BEN=true MOOS_MANUAL_OVERRIDE_BEN=false
+       uPokeDB targ_shoreside.moos BT_TREE_FILE_ABE=plans/intercept_ben.xml
+     With avoid on, abe holds off at the 20 m standoff instead of
+     closing further. -->
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence>
+      <Say msg="intercepting ben"/>
+      <Intercept contact="ben" range="20" speed="3" timeout="600"/>
+      <Say msg="within 20 m of ben, falling in behind him"/>
+      <Follow contact="ben" range="20"/>
+    </Sequence>
+  </BehaviorTree>
+</root>

@@ -1,0 +1,21 @@
+<!-- A plan that forms its own team: no team red exists when this is
+     posted, so the executor opens the slot for it on the strength of the
+     TeamForm first step, uFldTeam lists the team a moment later, and the
+     rest runs as any team plan. From the shoreside:
+       uPokeDB targ_shoreside.moos BT_TREE_FILE_RED=plans/team_form_line.xml
+     pLLMAgent does the same when the model sends run_plan vname=red with
+     this shape, so forming and running are one approval. -->
+<root BTCPP_format="4" main_tree_to_execute="form_and_line">
+  <BehaviorTree ID="form_and_line">
+    <Team>
+      <Sequence>
+        <TeamForm team="red" members="abe:ben" color="auto"/>
+        <Say msg="team red formed, taking up a line"/>
+        <TeamFormation team="red" shape="line" spacing="20" orient="travel"/>
+        <TeamGoto team="red" x="40" y="-120"/>
+        <TeamFormationOff team="red"/>
+        <Say msg="line moved, formation released"/>
+      </Sequence>
+    </Team>
+  </BehaviorTree>
+</root>

@@ -28,15 +28,42 @@ and moves as a body behind a virtual leader the members trail with
 BHV_Trail (the formation block in meta_vehicle.bhv). TEAM_REPORT_<NAME>,
 TEAM_<NAME>_X/_Y/... and TEAM_MISSION_<NAME> come back. pLLMAgent gets the
 team_* tools from the team capability set (a capability_dir = team line),
-and follow from the contact set (capability_dir = contact): one vehicle
-trails another along its exact track at a set distance, through the
-BHV_Convoy block in meta_vehicle.bhv (TASK = convoy, CONVOY_UPDATE).
+and the contact set (capability_dir = contact): follow, one vehicle
+trailing another along its exact track at a set distance, through the
+BHV_Convoy block in meta_vehicle.bhv (TASK = convoy, CONVOY_UPDATE);
+intercept, one vehicle chasing another at a given top speed and closing
+to within a range, through the BHV_CutRange block (TASK = intercept,
+INTERCEPT_UPDATE) and a BHV_MaxSpeed block on the same task
+(INTERCEPT_SPEED_UPDATE; the cut-range behavior would otherwise run at
+the helm's 4 m/s and coast through the range); the behavior never
+completes, so the plan leaf ends on the executor's own contact range and
+its finish line idles the helm, while a tool call runs until the next
+command; and avoid, the vehicle's collision avoidance,
+colregs (BHV_AvdColregsV22) or basic (BHV_AvoidCollision) or off, one
+AVOID flag the two templated blocks condition on. pContactMgrV20 on each
+vehicle spawns those per contact (ignore_type = virtual keeps them off a
+team's leader) and every vehicle starts with AVOID = off; on, the 20 m
+standoff (max_util_cpa_dist) is what a follow or an intercept cannot get
+inside (headless at warp 10: a crossing with it off collided, with it on
+passed at 13 to 17 m; a 20 m line formation moved with its members 23 m
+apart and a 20 m follow settled 29 m behind). uFldCollisionDetect on the shoreside counts encounters, near
+misses (8 m) and collisions (4 m) between vehicles: COLLISION and
+NEAR_MISS name the pair and the _TOTAL variables count. pLLMAgent pushes
+the two events to the model as [alert: ...] notes, each opening a turn
+of its own so the agent can report and propose (alert = COLLISION,
+NEAR_MISS), off at launch; LLM_ALERTS=on, from the viewer's Action menu
+or uPokeDB, turns them on and off mutes them again. Also
+from that run: uFldTeam's slot legs set a member's waypoint speed to
+1.2 m/s and the helm keeps it, so a member let go (formation_off, stop,
+disband) now gets release_speed back.
 
 Beside it runs one pBehaviorTree with a plan slot per team (teams_var =
 TEAM_LIST): a team's variables carry its suffix (BT_TREE_RED, BT_STATE_RED,
 BT_CHAT_RED, BT_PLAN_RED ...), so a plan reaches red the way a vehicle's
 reaches abe, two teams run two plans at once, and a disbanded team's plan
-is halted with it. A team plan starts with a bare <Team> (the whole team,
+is halted with it. A plan for vehicles not yet in a team forms it: its
+first step is TeamForm, and both the executor and pLLMAgent take the new
+name (plans/team_form_line.xml). A team plan starts with a bare <Team> (the whole team,
 from TEAM_REPORT_<NAME>) and drives no vehicle itself: each Member block,
 or a leaf with a vname, goes down to that vehicle as its own plan and the
 block waits on BT_STATE_<VNAME>; Report lines come back up as

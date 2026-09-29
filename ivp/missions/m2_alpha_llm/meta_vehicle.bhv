@@ -14,6 +14,9 @@
 //   hold_heading : DEPLOY=true, RETURN=false, TASK=heading, HEADING_UPDATE=heading=...
 //   formation    : DEPLOY=true, RETURN=false, TASK=formation, TRAIL_UPDATE=contact=...
 //                  (uFldTeam: hold a slot on the team's virtual leader)
+//   follow       : DEPLOY=true, RETURN=false, TASK=convoy, CONVOY_UPDATE=contact=...
+//   intercept    : DEPLOY=true, RETURN=false, TASK=intercept, INTERCEPT_UPDATE=contact=...,
+//                  INTERCEPT_SPEED_UPDATE=max_speed=...
 //   return       : DEPLOY=true, RETURN=true
 //   stop         : DEPLOY=false
 //   speed        : WPT_UPDATE=speed=..., RETURN_UPDATE=..., LOITER_UPDATE=..., HEADING_SPEED_UPDATE=...
@@ -23,7 +26,9 @@
 // helm idles (all-stop, boat coasts to a halt) until the next
 // command; loiter, station-keep and hold-heading run until the next
 // command. Modifiers ride on top of any driver, each on its own
-// flag: OPREGION, PERIODIC_SPEED, TURN_LIMIT (op_region and friends).
+// flag: OPREGION, PERIODIC_SPEED, TURN_LIMIT (op_region and friends),
+// and AVOID = colregs | basic | off picks the collision avoidance
+// (the avoid capability), off at launch.
 
 initialize   DEPLOY = false
 initialize   RETURN = false
@@ -31,6 +36,7 @@ initialize   TASK = none
 initialize   OPREGION = false
 initialize   PERIODIC_SPEED = false
 initialize   TURN_LIMIT = false
+initialize   AVOID = off
 
 //----------------------------------------------
 Behavior = BHV_Waypoint
@@ -232,6 +238,135 @@ Behavior = BHV_Convoy
   inter_mark_range = 5         // marks left along the leader's track
   max_mark_range   = 150
   on_no_contact_ok = true
+}
+
+//----------------------------------------------
+// intercept: chase a contact and close on it (the intercept
+// capability, TASK = intercept). BHV_CutRange steers to cut the range,
+// leading a moving contact (patience: 0 is pure pursuit, pointing at
+// it; higher weighs the closest point of approach over the next
+// time_on_leg seconds instead). Its say is full beyond pwt_outer_dist
+// and fades to nothing at pwt_inner_dist, which INTERCEPT_UPDATE sets
+// to the range asked for: there the behavior falls silent and the
+// boat coasts, hanging about that far off until the contact pulls
+// away. It never completes by itself: a plan leaf ends on the
+// executor's own contact range and idles the helm; a tool call runs
+// until the next command. giveup_dist must be set (zero means the
+// behavior never enters pursuit at all); this one is beyond the lake.
+// With avoidance on, that block's standoff (20 m) holds the boat off
+// first. No contact line: a placeholder would warn until the first
+// update.
+Behavior = BHV_CutRange
+{
+  name      = intercept
+  pwt       = 100
+  condition = DEPLOY = true
+  condition = RETURN = false
+  condition = TASK = intercept
+  updates   = INTERCEPT_UPDATE
+  perpetual = true
+
+  pwt_outer_dist = 500
+  pwt_inner_dist = 10          // replaced per call by INTERCEPT_UPDATE
+  giveup_dist    = 5000
+  patience       = 85
+  time_on_leg    = 30
+  extrapolate    = true
+  decay          = 30,60
+  on_no_contact_ok = true
+}
+
+// The chase's top speed: BHV_CutRange takes whatever speed the domain
+// allows (4 m/s here) and the speed tool never reaches it, so the
+// intercept capability's speed argument arrives here as max_speed,
+// and this block outweighs everything else on the speed axis while
+// the intercept drives. Two chases at 4 m/s coasted through a 10 m
+// range into the target before it existed.
+Behavior = BHV_MaxSpeed
+{
+  name      = chase_speed        // not intercept_*: the helm reads a name that extends
+                                 // another (intercept) as a duplicate
+  pwt       = 500
+  condition = DEPLOY = true
+  condition = RETURN = false
+  condition = TASK = intercept
+  updates   = INTERCEPT_SPEED_UPDATE
+
+  max_speed = 2.0              // replaced per call by INTERCEPT_SPEED_UPDATE
+  tolerance = 0.2
+}
+
+//----------------------------------------------
+// avoidance: one instance per contact, spawned by pContactMgrV20 from
+// the alert each template requests at helm start (alert at
+// pwt_outer_dist, released at completed_dist), and gone again when
+// the contact passes completed_dist. Both templates spawn for every
+// contact; AVOID says which kind has a say, colregs (the rules of
+// the road: give way, stand on, overtake, head on) or basic (keep
+// the closest point of approach open, no rules). The say ramps from
+// nothing at pwt_outer_dist to full pwt at pwt_inner_dist, well above
+// the drivers (100) and below the fence (300): at 200 a crossing was
+// a 15 m pass, the driver's pull taking a third; a maneuver is rated by
+// its closest point of approach, worthless at min_util_cpa_dist and
+// perfect at max_util_cpa_dist, which is the standoff a follow or an
+// intercept cannot get inside while this is on. The ramp starts at
+// 70 m because two kayaks closing at 4 m/s need the give-way turn
+// under way by 50 m to pass at 20; from 40 m it was an 8 m pass. The virtual leader
+// of a formation is ignored by type, here and in the manager.
+Behavior = BHV_AvdColregsV22
+{
+  name       = avd_colregs_
+  pwt        = 250
+  condition  = DEPLOY = true
+  condition  = AVOID = colregs
+  updates    = COLREGS_INFO
+  templating = spawn
+
+  contact          = to-be-set
+  on_no_contact_ok = true
+  extrapolate      = true
+  decay            = 30,60
+  ignore_type      = virtual
+  can_disable      = true
+  use_refinery     = true
+
+  pwt_outer_dist    = 70
+  pwt_inner_dist    = 40
+  completed_dist    = 80
+  min_util_cpa_dist = 10
+  max_util_cpa_dist = 20
+  pwt_grade         = linear
+
+  bearing_line_config     = white:0, green:0.65, yellow:0.8, red:1.0
+  bearing_line_label_show = false
+}
+
+Behavior = BHV_AvoidCollision
+{
+  name       = avd_basic_
+  pwt        = 250
+  condition  = DEPLOY = true
+  condition  = AVOID = basic
+  updates    = AVOID_INFO
+  templating = spawn
+
+  contact          = to-be-set
+  on_no_contact_ok = true
+  extrapolate      = true
+  decay            = 30,60
+  ignore_type      = virtual
+  can_disable      = true
+  use_refinery     = true
+
+  pwt_outer_dist    = 70
+  pwt_inner_dist    = 40
+  completed_dist    = 80
+  min_util_cpa_dist = 10
+  max_util_cpa_dist = 20
+  pwt_grade         = linear
+
+  bearing_line_config     = white:0, green:0.65, yellow:0.8, red:1.0
+  bearing_line_label_show = false
 }
 
 //----------------------------------------------
