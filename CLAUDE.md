@@ -52,6 +52,26 @@ The framework is homegrown: the `utest` runner drives table-driven `cases.utf` f
 
 ## LLM integration (branch `llm-integration`)
 
-`ivp/src/moos-ivp-llm/` (submodule) holds `lib_llm` and `pLLMAgent`, the operator-chat agent; its README documents the `tool=` grammar, the MOOS interface, and the confirmation flow. The pMarineViewer chat pane is the fork-side half (`chat_viewable`, `chat_width`, `chat_input_lines`, `chat_*_var` params; `LLM_CHAT_IN` / `LLM_CHAT_OUT` / `LLM_STATUS`). `bin/llm_selftest` is the offline check for the library; `ivp/missions/s1_alpha_llm/` is the runnable single-vehicle example and `ivp/missions/m2_alpha_llm/` the fleet version (pLLMAgent on a shoreside, one community with its own pBehaviorTree per vehicle, `receivers = all:vname` so every tool names a vehicle, per-vehicle status bridged up as `BT_CHAT_<VNAME>` etc., and a shoreside pBehaviorTree with one plan slot per team uFldTeam keeps, `teams_var = TEAM_LIST`, that runs a team's plan by dispatching each member's own plan and waiting on its reports, or running the team leaves itself; pLLMAgent learns the same teams through `teams_var = TEAM_LIST`, and `pBehaviorTree --check=<file> --team --roster=abe,ben` validates a team plan offline); both need `ANTHROPIC_API_KEY` in the environment. The API key never goes in a mission file. Keep a mission's tool set to what it needs (`capability_keep` / `capability_drop`, opt-in sets): every tool costs prompt tokens each turn, and the API marks at most 20 tools strict; the moos-ivp-llm README section "How many tools, and the strict flag" is the briefing on this.
+Four submodules under `ivp/src/`, each with the README that is its reference:
+- `moos-ivp-llm`: `lib_llm` and `pLLMAgent`, the operator-chat agent (tool grammar, MOOS interface, confirmation flow, prompt and tool-count briefing in its README).
+- `moos-ivp-bt`: `lib_bt` and `pBehaviorTree`, the plan executor, per vehicle and in team mode on the shoreside; `pBehaviorTree --check=<file> [--team --roster=abe,ben]` validates a plan offline.
+- `moos-ivp-cap`: the capability files, one per tool and plan leaf, in sets a mission picks with `capability_dir` / `capability_keep` / `capability_drop`.
+- `moos-ivp-team`: `lib_team` and `uFldTeam`, teams as objects with formations around a virtual leader.
 
-`ivp/src/moos-ivp-team/` (submodule) holds `lib_team` and `uFldTeam`, the shoreside app that keeps teams of vehicles as objects: `TEAM_CMD` creates, changes and disbands them, each team has a color its members take on the map, and the app publishes the centroid (`TEAM_REPORT_<NAME>`, `TEAM_<NAME>_X`...). Moving a team moves its centroid: every member keeps its offset, or holds a slot of a formation around a virtual leader that the members trail with the helm's `BHV_Trail` (`TASK = formation`). The `team` capability set in moos-ivp-cap is its tool and leaf interface (`receivers = local`, so as plan leaves they run on the shoreside executor); each team's report carries the plan its executor slot runs (`plan=`, `plan_state=` from `BT_PLAN_<NAME>` and `BT_STATE_<NAME>`); `bin/team_selftest` is the offline check.
+Fork-side: the pMarineViewer chat pane (the only upstream edits besides `ivp/src/CMakeLists.txt`; `local-patches/` records any other deliberate upstream edit), `ivp/missions/s1_alpha_llm/` (one vehicle) and `ivp/missions/m2_alpha_llm/` (fleet, teams, contact set; its README explains the bridging and the roster variables; `test/` holds the scripted chat test).
+
+Rules: `ANTHROPIC_API_KEY` comes from the environment and never goes in a mission file. Keep a mission's tool set to what it needs: every tool costs prompt tokens each turn and the API marks at most 20 tools strict. Offline checks: `bin/llm_selftest`, `bin/bt_selftest`, `bin/cap_selftest`, `bin/team_selftest` (not run by CI), then the headless fleet, then the owner's live run.
+
+## Working in this repo
+
+- Commit and push only when the owner says so; never on your own initiative. No `Co-Authored-By` or "Generated with" lines in commits or PRs.
+- Absolute paths and `git -C <dir>` in shell commands; a `cd` inside a script is fine, a `cd` in the command itself is not.
+- Build and verify each piece before the next: library self-test, then the app headless on a scratch fleet, then the next piece. Say plainly what was verified and how, and what was not; a headless run is called headless.
+- Anything that changes vehicle behaviour (helm behaviours, formations, avoidance) gets one or two headless attempts at most, then a launch-and-watch recipe for the owner, who observes the viewer and proposes fixes; read the behaviour's documentation and measure the geometry before redesigning.
+- Fixes go one at a time through the `fix-review` skill: findings with evidence first, each fix explained in plain terms and approved or denied before it is built.
+- The shipped example missions stay minimal (m2_alpha_llm: one team, two members in its examples); generality lives in code, tests and READMEs. A mission's tool menu holds only what it needs.
+- Reads under this directory need no permission; writes to upstream source (anything outside the submodules, `ivp/src/CMakeLists.txt`, the fork-owned parts of pMarineViewer and `local-patches/`) are asked about first.
+
+## Skills
+
+`.claude/skills/` holds the repo's procedures as Claude Code skills, invoked by name: `fix-review` (how a review and its fixes are run), `review-run` (read a live run's logs), `headless-fleet` (scratch fleet on the 9100 ports, with `fleet.sh`), `commit-all` (submodules first, fork last, no attribution lines, then CI), `chat-test` (the scripted chat test, headless or with the viewer). Prefer them over re-deriving the steps.

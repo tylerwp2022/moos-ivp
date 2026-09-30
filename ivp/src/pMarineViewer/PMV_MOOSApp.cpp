@@ -263,6 +263,7 @@ void PMV_MOOSApp::registerVariables()
   Register("BLOCK_HEARTBEAT");
   Register("RESET_MHASH");
   Register(m_chat_out_var, 0);
+  Register(m_chat_in_var, 0);      // lines other apps type, echoed
   Register(m_chat_status_var, 0);
   if(m_chat_plan_var != "") {
     // BT_CHAT_* takes a fleet's per-vehicle copies (BT_CHAT_ABE, ...)
@@ -401,6 +402,15 @@ void PMV_MOOSApp::handleNewMail(const MOOS_event & e)
       // A message that waits for the operator carries source aux "ask"
       string mode = strBegins(msg.GetSourceAux(), "ask") ? "ask" : "";
       m_gui->addChatLine("llm", sval, mode);
+      handled = true;
+    }
+    else if(key == m_chat_in_var) {
+      // A line typed here was shown as it was sent; one another app
+      // posts (a scripted test through uPokeDB, say) is shown now,
+      // tagged with that app, in the operator's color, so the pane
+      // reads as the conversation the model actually had.
+      if(msg.GetSource() != GetAppName())
+	m_gui->addChatLine(msg.GetSource(), sval, "you");
       handled = true;
     }
     else if((m_chat_plan_var != "") && chatPlanMatch(key)) {

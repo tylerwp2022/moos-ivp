@@ -30,6 +30,7 @@ VNAME="abe"
 COLOR="yellow"
 START_POS="x=0,y=-20,heading=180"
 RETURN_POS="0,-20"
+STANDOFF=20        # avoidance standoff, meters: the .bhv blocks and the facts line
 
 #------------------------------------------------------------
 #  Part 2: Command-line arguments
@@ -90,10 +91,12 @@ nsplug meta_vehicle.moos targ_$VNAME.moos $NSFLAGS WARP=$TIME_WARP \
        IP_ADDR=$IP_ADDR            MOOS_PORT=$MOOS_PORT        \
        PSHARE_PORT=$PSHARE_PORT    SHORE_IP=$SHORE_IP          \
        SHORE_PSHARE=$SHORE_PSHARE  VNAME=$VNAME                \
-       COLOR=$COLOR                START_POS=$START_POS
+       COLOR=$COLOR                START_POS=$START_POS        \
+       STANDOFF=$STANDOFF
 
 nsplug meta_vehicle.bhv targ_$VNAME.bhv $NSFLAGS \
-       VNAME=$VNAME                RETURN_POS=$RETURN_POS
+       VNAME=$VNAME                RETURN_POS=$RETURN_POS      \
+       STANDOFF=$STANDOFF
 
 if [ "${JUST_MAKE}" = "yes" ]; then
     vecho "Targ files made for $VNAME; nothing launched."

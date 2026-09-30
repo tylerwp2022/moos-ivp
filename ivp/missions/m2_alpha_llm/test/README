@@ -1,0 +1,41 @@
+m2_alpha_llm/test: the scripted chat test
+
+chat_test.md (one directory up) is the conversation to hold with the
+model to exercise every tool, the plans, the teams and the contact set,
+with what to expect of each line. chat_driver.py holds that conversation
+for you against a live fleet and grades it; chat_tests.txt is the same
+script in the form the driver reads.
+
+  ./chat_driver.py                 headless, warp 10, every test
+  ./chat_driver.py --gui           pMarineViewer up, warp 5, so you watch
+  ./chat_driver.py --gui --step    and it waits for the NEXT_TEST button
+                                   (the viewer's fourth button, also in the
+                                   Action menu) before each test
+  ./chat_driver.py --only 1.1,3.1  a subset, --amt 2 for two boats,
+                                   --keep to leave the fleet up afterwards
+
+ANTHROPIC_API_KEY must be exported: pLLMAgent reads it, the driver never
+sees it. Each run copies the mission into test/runs/<stamp>/ (ignored by
+git), launches abe, ben, cal on ports 9101.. with the shoreside on 9100
+(so a mission of your own on 9000 can stay up), and writes results.md
+and results.json there beside the run's LOG_ and XLOG_ directories.
+
+How it works. The driver types each test's line into the chat by
+posting LLM_CHAT_IN with uPokeDB; the chat pane shows such a line as
+"uPokeDB> ...". It then reads the shoreside alog as it grows: a
+proposal is an LLM_CHAT_OUT line from pLLMAgent:ask and is answered y
+or n (the test's answer); a plan's Ask is a BT_CHAT line with the ask
+mark and is answered with plan_answer; a plain reply ends the turn.
+Then it waits for the test's wait lines (MISSION_ABE = goto_complete,
+BT_STATE_RED = success ...) as NEW posts, grades the checks listed in
+chat_tests.txt from the log lines since the test's mark (tool calls,
+targets, the proposal's wording, reply length, collisions and near
+misses, closest ranges, plan states, latency, truncation), and posts
+the verdict as a text box at the top left of the map. Nothing older
+than the test's start counts, so a value left by an earlier test never
+satisfies a later wait.
+
+Expectations must allow for the model's variety: "tool goto|route", a
+sentence cap, a question mark, never an exact sentence. A failed test
+names the check that failed and what was seen; the run's XLOG holds the
+full story (LLM_TOOL_CALL, LLM_CHAT_OUT, LLM_USAGE, COLLISION ...).

@@ -1,0 +1,570 @@
+# chat_tests.txt: the tests chat_driver.py types into the m2_alpha_llm
+# chat pane, one block per test, in order. The ids follow chat_test.md.
+# Keys:
+#   say          the line typed into the chat; empty = no turn, pokes only
+#   answer       y (default) or n for a proposal; none = no proposal is
+#                expected (one that appears is declined and fails the test)
+#   before_answer a line typed while the proposal waits, before answering
+#                (the tree / steps read-back)
+#   plan_answer  y or n typed when a running plan's Ask appears
+#   poke         VAR=value posted on the shoreside before the line
+#   wait         VAR = VALUE, or VAR alone: a post NEWER than the test's
+#                start must appear (repeatable, all must be met)
+#   timeout      real seconds to wait for the waits (default 120)
+#   turn_timeout real seconds for the model's turn (default 240)
+#   settle       seconds to let the log catch up before grading (default 4);
+#                also the observation window for a check with no wait
+#   check        one of (expect means the same; observe in front of any
+#                check records the outcome without failing the test):
+#     no_proposal | proposal | proposals N
+#     tool NAME[|NAME]         a tool call named one of these
+#     no_tool
+#     target VNAME             a tool call aimed at that vehicle or team
+#     head_for VNAME           the proposal reads "run_plan for VNAME:"
+#     no_probe                 no run_plan with a junk tree
+#     tree_has TEXT            the run_plan tree contains TEXT
+#     no_collision [A [B]] | collision [A [B]]
+#     no_near_miss [A [B]] | near_miss [A [B]]
+#     reply_sentences <= N     the last plain reply's sentence count
+#     reply_asks               the reply contains a question mark
+#     reply_contains TEXT | chat_contains TEXT | proposal_contains TEXT
+#     state VAR VALUE          the last post of VAR in the window
+#     min_range A B >= N       closest approach of two boats, meters
+#     no_truncation            no "cut off at max_tokens" reply
+#     latency <= N             every model request under N real seconds
+# Three boats: abe (0,-20), ben (30,-20), cal (-30,-20), heading south.
+# Warp 10 headless, 5 with the viewer. Turn alerts on before Phase 5
+# (test 5.0 does).
+
+# ---------------------------------------------------------------
+# Phase 0: reading without acting
+
+[0.1]
+say = where is everyone?
+answer = none
+check = no_proposal
+check = reply_sentences <= 4
+check = no_truncation
+
+[0.2]
+say = what is ben's heading right now?
+answer = none
+check = no_proposal
+check = reply_contains 180
+
+[0.3]
+say = what teams exist?
+answer = none
+check = no_proposal
+check = reply_sentences <= 3
+
+[0.4]
+say = what can you do?
+answer = none
+check = no_proposal
+check = reply_sentences <= 4
+
+# ---------------------------------------------------------------
+# Phase 1: one boat, the helm tools
+
+[1.1]
+say = abe go to 40,-60
+answer = y
+wait = MISSION_ABE = goto_complete
+timeout = 120
+check = tool goto
+check = target abe
+check = proposals 1
+check = no_collision
+
+[1.2]
+say = ben drive a square 60,-40 60,-100 0,-100 0,-40 and stop there
+answer = y
+wait = MISSION_BEN = goto_complete
+timeout = 300
+check = tool route
+check = target ben
+check = proposals 1
+check = no_collision
+
+[1.3]
+say = cal loiter around -40,-80 radius 20
+answer = y
+wait = TASK_CAL = loiter
+timeout = 60
+check = tool loiter
+check = target cal
+check = proposals 1
+check = reply_sentences <= 4
+
+[1.4]
+say = slow abe down to 1
+answer = none
+wait = WPT_UPDATE_ABE
+timeout = 60
+check = tool speed
+check = no_proposal
+
+[1.5]
+say = cal hold heading 90 at 1.5
+answer = y
+wait = TASK_CAL = heading
+timeout = 60
+check = tool hold_heading
+check = target cal
+
+[1.6]
+say = cal keep station at -40,-80
+answer = y
+wait = TASK_CAL = station
+timeout = 60
+settle = 60
+check = tool station_keep
+check = target cal
+
+[1.7]
+say = stop ben
+answer = none
+wait = DEPLOY_BEN = false
+timeout = 60
+check = tool stop
+check = no_proposal
+
+[1.8]
+say = fence abe inside -80,0 80,0 80,-140 -80,-140 and then send it to 120,-100
+answer = y
+wait = OPREGION_UPDATE_ABE
+timeout = 60
+settle = 40
+check = tool op_region
+check = tool goto|run_plan
+check = observe reply_contains fence
+check = observe proposals 1
+
+[1.9]
+say = lift abe's fence and let it continue
+answer = y
+wait = OPREGION_ABE = false
+wait = MISSION_ABE = goto_complete
+timeout = 240
+check = tool op_region_off
+
+[1.10]
+say = abe go to 118,-102
+answer = y
+wait = MISSION_ABE = goto_complete
+timeout = 60
+check = tool goto
+check = observe reply_contains 15
+
+# ---------------------------------------------------------------
+# Phase 2: the map tools, no confirmations
+
+[2.1]
+say = draw a red circle of radius 15 at 20,-80 labelled target
+answer = none
+wait = VIEW_CIRCLE
+timeout = 30
+check = no_proposal
+check = tool draw_circle
+
+[2.2]
+say = put a yellow ring of 20 m around cal
+answer = none
+wait = VIEW_RING
+timeout = 30
+check = no_proposal
+check = tool draw_ring
+
+[2.3]
+say = label 0,0 as home
+answer = none
+wait = VIEW_TEXTBOX
+timeout = 30
+check = no_proposal
+check = tool draw_text
+
+[2.4]
+say = draw a line from home to target
+answer = none
+wait = VIEW_SEGLIST
+timeout = 30
+check = no_proposal
+check = tool draw_line
+check = no_tool get_var
+
+[2.5]
+say = erase target and the line, keep home
+answer = none
+timeout = 30
+check = no_proposal
+check = tool erase
+
+[2.6]
+say = take the ring off cal
+answer = none
+wait = VIEW_RING
+timeout = 30
+check = no_proposal
+check = tool erase_ring
+
+# ---------------------------------------------------------------
+# Phase 3: single-vehicle plans
+
+[3.1]
+say = abe: drive to 40,-60, wait there 30 seconds, then come home
+answer = y
+wait = BT_STATE_ABE = running
+wait = BT_STATE_ABE = success
+timeout = 300
+check = tool run_plan
+check = target abe
+check = head_for abe
+check = no_probe
+check = proposals 1
+check = no_collision
+check = reply_sentences <= 4
+
+[3.2]
+say = cal: go to -60,-100 then -60,-40 and say when each leg is done
+answer = y
+wait = BT_STATE_CAL = running
+wait = BT_CHAT_CAL
+wait = BT_STATE_CAL = success
+timeout = 400
+check = tool run_plan
+check = head_for cal
+check = no_probe
+check = tree_has Say
+
+[3.3]
+say = ben: ask me whether to loiter at 20,-100 for a minute, if I say no come straight home
+answer = y
+plan_answer = n
+wait = BT_STATE_BEN = running
+wait = MISSION_BEN = return_complete
+timeout = 400
+check = tool run_plan
+check = head_for ben
+check = no_probe
+check = tree_has Ask
+check = tree_has Fallback
+
+[3.4]
+say = cal: go to -60,-40 then 0,-60
+before_answer = steps
+answer = y
+wait = BT_STATE_CAL = running
+timeout = 60
+check = chat_contains plan steps for cal
+check = head_for cal
+check = no_probe
+
+[3.5]
+say = halt cal's plan
+answer = y
+wait = BT_STATE_CAL = halted
+timeout = 60
+check = tool halt_plan
+
+[3.6]
+say = abe: go to 40,-60 then 0,-60 then 40,-100
+answer = y
+wait = BT_STATE_ABE = running
+timeout = 60
+check = head_for abe
+check = no_probe
+
+[3.7]
+say = abe go to 0,-40
+answer = y
+wait = BT_STATE_ABE = halted
+wait = MISSION_ABE = goto_complete
+timeout = 200
+check = tool goto
+check = observe reply_contains plan
+
+[3.8]
+say = where is abe in its plan?
+answer = none
+check = no_proposal
+check = reply_sentences <= 3
+
+# ---------------------------------------------------------------
+# Phase 4: teams and formations. Every plan that forms a new team
+# must be ONE run_plan call with a real tree.
+
+[4.1]
+say = form a team called red from abe and ben, line them up 25 m apart and take them to 40,-100
+answer = y
+wait = BT_STATE_RED = running
+wait = BT_STATE_RED = success
+timeout = 400
+check = tool run_plan
+check = target red
+check = head_for red
+check = no_probe
+check = proposals 1
+check = tree_has TeamForm
+check = no_near_miss abe ben
+check = min_range abe ben >= 15
+check = reply_sentences <= 4
+
+[4.2]
+say = what is red doing?
+answer = none
+check = no_proposal
+check = reply_sentences <= 3
+
+[4.3]
+say = red: switch to a column and move to -40,-100
+answer = y
+wait = BT_STATE_RED = running
+wait = BT_STATE_RED = success
+timeout = 400
+check = proposals 1
+check = no_probe
+check = tree_has column
+check = observe no_near_miss abe ben
+check = observe min_range abe ben >= 15
+check = no_collision
+
+[4.4]
+say = red: go to 40,-100 then 40,-40 then -40,-40
+answer = y
+wait = BT_STATE_RED = running
+wait = BT_STATE_RED = success
+timeout = 600
+check = proposals 1
+check = no_probe
+check = observe no_near_miss abe ben
+check = observe min_range abe ben >= 15
+check = no_collision
+
+[4.5]
+say = speed red up to 3
+answer = y
+wait = TEAM_CMD
+timeout = 60
+check = tool team_speed
+
+[4.6]
+say = stop red
+answer = y
+wait = TEAM_MISSION_RED = stopped
+timeout = 60
+check = tool team_stop
+
+[4.7]
+say = add cal to red
+answer = y
+timeout = 60
+check = observe tool team_form
+check = reply_sentences <= 4
+
+[4.8]
+say = form team blue from ben and deb
+answer = none
+check = no_proposal
+check = reply_sentences <= 3
+
+[4.9]
+say = ben go to 0,-60
+answer = y
+wait = MISSION_BEN = goto_complete
+timeout = 200
+check = tool goto
+check = observe reply_contains team
+
+[4.10]
+say = release red's formation and disband it
+answer = y
+wait = TEAM_LIST = none
+timeout = 120
+check = tool team_disband|run_plan
+
+# ---------------------------------------------------------------
+# Phase 5: the contact set
+
+[5.0]
+say =
+poke = LLM_ALERTS=on
+check = chat_contains alerts on
+
+[5.1]
+say = ben follow abe 20 m behind while abe drives to 60,-120 and back to 0,-40
+answer = y
+wait = BT_STATE_BEN = running
+wait = MISSION_ABE = goto_complete
+timeout = 400
+check = tool run_plan|follow
+check = no_probe
+check = observe min_range abe ben >= 12
+check = no_collision
+
+[5.2]
+say = cal intercept ben at 3 m/s to within 5 m
+answer = y
+wait = COLLISION
+timeout = 300
+check = tool intercept|run_plan
+check = collision cal ben
+check = chat_contains alert
+
+[5.3]
+say = turn on basic avoidance for everyone
+answer = y
+wait = AVOID_ABE = basic
+wait = AVOID_BEN = basic
+wait = AVOID_CAL = basic
+timeout = 60
+check = tool avoid
+
+[5.4]
+say = cal intercept ben again at 3 m/s to within 5 m
+answer = y
+timeout = 60
+settle = 90
+check = tool intercept|run_plan
+check = no_collision cal ben
+check = observe min_range cal ben >= 7
+
+[5.5]
+say = abe and ben hunt cal: they avoid each other but may hit cal. cal starts at -60,-120, the hunters at 60,-60 and 80,-80, and cal runs for 60,-160 once the hunters are in position
+answer = y
+wait = COLLISION
+timeout = 600
+check = proposals 1
+check = no_probe
+check = head_for cal
+check = tree_has AvoidIgnore
+check = tree_has Report
+check = collision cal
+check = no_near_miss abe ben
+check = reply_sentences <= 4
+
+[5.6]
+say = run that experiment again
+answer = y
+wait = COLLISION
+timeout = 600
+check = proposals 1
+check = no_probe
+check = collision cal
+check = no_near_miss abe ben
+
+[5.7]
+say = let abe heed cal again
+answer = y
+wait = BHV_ABLE_FILTER_ABE
+timeout = 60
+check = tool avoid_heed
+
+[5.8]
+say = ben follow abe 5 m behind
+answer = n
+check = reply_contains 20
+check = no_collision
+
+[5.9]
+say = ben follow ben
+answer = none
+check = no_proposal
+check = reply_sentences <= 3
+
+[5.10]
+say = turn everyone's avoidance off
+answer = y
+wait = AVOID_ABE = off
+wait = AVOID_BEN = off
+wait = AVOID_CAL = off
+timeout = 60
+check = tool avoid
+
+# ---------------------------------------------------------------
+# Phase 6: provocations
+
+[6.1]
+say = go to 50,-50
+answer = none
+check = no_proposal
+check = reply_asks
+
+[6.2]
+say = abe go north and south at the same time
+answer = none
+check = no_proposal
+check = reply_sentences <= 3
+
+[6.3]
+say = abe do a barrel roll
+answer = none
+check = no_proposal
+check = no_tool
+check = reply_sentences <= 3
+
+[6.4]
+say = abe go to 20,-20
+answer = n
+check = proposals 1
+check = chat_contains [declined]
+
+[6.5]
+say = set WPT_UPDATE_ABE to speed=3
+answer = y
+check = observe tool speed
+check = reply_sentences <= 3
+
+[6.6]
+say = everyone: mow the box -80,-40 to 80,-140 in 20 m lanes, each boat a third of it, then come home
+answer = y
+turn_timeout = 400
+timeout = 60
+settle = 20
+check = no_truncation
+check = proposals 1
+check = no_probe
+check = reply_sentences <= 4
+check = latency <= 120
+
+[6.7]
+say = tree
+answer = none
+check = chat_contains plan tree for
+
+[6.8]
+say = what is cal doing right now?
+answer = none
+check = no_proposal
+check = reply_sentences <= 3
+
+[6.9]
+say = I was thinking that maybe we could have abe go somewhere north, or actually south, and ben should probably stay put but also follow abe, and cal I am not sure about, maybe loiter, what do you think we should do here, also the weather looks fine
+answer = none
+check = no_proposal
+check = reply_asks
+check = reply_sentences <= 4
+
+# ---------------------------------------------------------------
+# Phase 7: wrap up
+
+[7.1]
+say = everyone return home
+answer = y
+wait = MISSION_ABE = return_complete
+wait = MISSION_BEN = return_complete
+wait = MISSION_CAL = return_complete
+timeout = 500
+check = tool return
+
+[7.2]
+say = disband every team
+answer = y
+timeout = 60
+check = reply_sentences <= 3
+
+[7.3]
+say = how many collisions and near misses were there?
+answer = none
+check = no_proposal
+check = reply_sentences <= 3

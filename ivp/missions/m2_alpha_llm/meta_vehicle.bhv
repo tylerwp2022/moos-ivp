@@ -338,7 +338,7 @@ Behavior = BHV_AvdColregsV22
   pwt_inner_dist    = 40
   completed_dist    = 80
   min_util_cpa_dist = 10
-  max_util_cpa_dist = 20
+  max_util_cpa_dist = $(STANDOFF)   // the standoff, from launch_vehicle.sh
   pwt_grade         = linear
 
   bearing_line_config     = white:0, green:0.65, yellow:0.8, red:1.0
@@ -366,7 +366,7 @@ Behavior = BHV_AvoidCollision
   pwt_inner_dist    = 40
   completed_dist    = 80
   min_util_cpa_dist = 10
-  max_util_cpa_dist = 20
+  max_util_cpa_dist = $(STANDOFF)   // the standoff, from launch_vehicle.sh
   pwt_grade         = linear
 
   bearing_line_config     = white:0, green:0.65, yellow:0.8, red:1.0

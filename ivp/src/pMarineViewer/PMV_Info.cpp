@@ -170,7 +170,8 @@ void showExampleConfigAndExit()
   blk("  chat_color_llm       = auto    // chat_color_ask (a message    ");
   blk("  chat_color_plan      = auto    // waiting on you)              ");
   blk("  // resize live: drag the bar left of the pane, or Ctrl+] / Ctrl+[");
-  blk("  chat_in_var          = LLM_CHAT_IN                            ");
+  blk("  chat_in_var          = LLM_CHAT_IN // typed here; a line another");
+  blk("                                 // app posts shows as <app>>    ");
   blk("  chat_out_var         = LLM_CHAT_OUT                           ");
   blk("  chat_status_var      = LLM_STATUS                             ");
   blk("                                                                ");

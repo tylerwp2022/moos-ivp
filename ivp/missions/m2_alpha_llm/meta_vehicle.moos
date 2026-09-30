@@ -69,6 +69,7 @@ ProcessConfig = uFldNodeBroker
   bridge = src=BT_LOG,    alias=BT_LOG_%(VNAME)
   bridge = src=BT_REPORT, alias=BT_REPORT_%(VNAME)
   bridge = src=MISSION,   alias=MISSION_%(VNAME)
+  bridge = src=VEHICLE_FACTS, alias=VEHICLE_FACTS_%(VNAME)   // the helm's facts, for pLLMAgent
   bridge = src=IVPHELM_STATE, alias=IVPHELM_STATE_%(VNAME)
   bridge = src=IVPHELM_UPDATE_RESULT, alias=IVPHELM_UPDATE_RESULT_%(VNAME)
 }
@@ -202,6 +203,11 @@ ProcessConfig = pBehaviorTree
   capability_dir = helm      // the same sets and filters as pLLMAgent
   capability_dir = contact   // follow (BHV_Convoy), intercept (BHV_CutRange), avoid
   view_prefix    = bt_$(VNAME)_
+  // What this helm is configured to do, posted as VEHICLE_FACTS for the
+  // shoreside agent: cruise, speed limit, return point and slip radius
+  // come from the helm's own posts; the avoidance standoff is the
+  // .bhv value, typed once in launch_vehicle.sh (STANDOFF)
+  fact           = standoff=$(STANDOFF)
 
   app_logging = true
 }

@@ -32,3 +32,6 @@ ivp/missions/*/*++
 ivp/missions/*/*~+
 *#
 mis
+
+# Claude Code: personal permission settings stay local; .claude/skills/ is shared
+.claude/settings.local.json

@@ -1021,8 +1021,9 @@ void PMV_GUI::addChatLine(string who, string text, string mode)
   string line = who + "> " + text + "\n";
 
   // The color says what the line is, the prefix says who wrote it
+  // (mode "you": another app's line in the operator's color)
   char style = 'B';                       // the model
-  if(who == "you")
+  if((who == "you") || (mode == "you"))
     style = 'A';
   else if(mode == "ask")
     style = 'C';                          // waiting on the operator
