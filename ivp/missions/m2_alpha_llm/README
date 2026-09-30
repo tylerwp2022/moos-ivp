@@ -44,7 +44,8 @@ AVOID flag the two templated blocks condition on. pContactMgrV20 on each
 vehicle spawns those per contact (ignore_type = virtual keeps them off a
 team's leader) and every vehicle starts with AVOID = off; on, the 20 m
 standoff (max_util_cpa_dist) is what a follow or an intercept cannot get
-inside (headless at warp 10: a crossing with it off collided, with it on
+inside, unless avoid_ignore leaves that one contact out (BHV_ABLE_FILTER,
+qbridged; avoid_heed takes it back) (headless at warp 10: a crossing with it off collided, with it on
 passed at 13 to 17 m; a 20 m line formation moved with its members 23 m
 apart and a 20 m follow settled 29 m behind). uFldCollisionDetect on the shoreside counts encounters, near
 misses (8 m) and collisions (4 m) between vehicles: COLLISION and
@@ -67,7 +68,10 @@ name (plans/team_form_line.xml). A team plan starts with a bare <Team> (the whol
 from TEAM_REPORT_<NAME>) and drives no vehicle itself: each Member block,
 or a leaf with a vname, goes down to that vehicle as its own plan and the
 block waits on BT_STATE_<VNAME>; Report lines come back up as
-BT_REPORT_<VNAME> and Signal goes down as BT_SIGNAL; the team leaves
+BT_REPORT_<VNAME>, and back down to every vehicle under that name
+(bridge = src=BT_REPORT_* in the broker block), so two vehicles' own
+plans can wait on each other's milestone instead of a position test that
+goes false the moment the other moves on; Signal goes down as BT_SIGNAL; the team leaves
 (TeamFormation, TeamGoto ...) run on the executor and post TEAM_CMD. The
 team's report shows the plan (plan=, plan_state=). pLLMAgent learns the
 teams from TEAM_LIST too (run_plan vname=red) and the fleet prompt tells

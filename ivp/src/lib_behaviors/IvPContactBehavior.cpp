@@ -752,6 +752,14 @@ bool IvPContactBehavior::applyAbleFilter(string str)
   // Part 2: Check for proper format.
   // ======================================================
 
+  // LOCAL PATCH (local-patches/0002): action=able clears the helm's
+  // per-contact disable blacklist (BehaviorSet::applyAbleFilterMsg)
+  // and asks nothing of a behavior, so it is well-formed here too;
+  // rejecting it raised an "Unhandled BHV_ABLE_FILTER" run warning
+  // on the one post that re-enables a contact for future spawns.
+  if(action == "able")
+    return(true);
+
   // action must be specified and only disable or enable
   if((action != "disable") && (action != "enable") &&
      (action != "expunge"))

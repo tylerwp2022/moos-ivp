@@ -28,7 +28,9 @@
 // command. Modifiers ride on top of any driver, each on its own
 // flag: OPREGION, PERIODIC_SPEED, TURN_LIMIT (op_region and friends),
 // and AVOID = colregs | basic | off picks the collision avoidance
-// (the avoid capability), off at launch.
+// (the avoid capability), off at launch; BHV_ABLE_FILTER =
+// action=disable,contact=<name> leaves one contact out of it
+// (avoid_ignore), enable + able put it back (avoid_heed).
 
 initialize   DEPLOY = false
 initialize   RETURN = false
@@ -309,7 +311,9 @@ Behavior = BHV_MaxSpeed
 // a 15 m pass, the driver's pull taking a third; a maneuver is rated by
 // its closest point of approach, worthless at min_util_cpa_dist and
 // perfect at max_util_cpa_dist, which is the standoff a follow or an
-// intercept cannot get inside while this is on. The ramp starts at
+// intercept cannot get inside while this is on, except against a
+// contact the helm's able filter disabled (can_disable = true below,
+// the avoid_ignore capability). The ramp starts at
 // 70 m because two kayaks closing at 4 m/s need the give-way turn
 // under way by 50 m to pass at 20; from 40 m it was an 8 m pass. The virtual leader
 // of a formation is ignored by type, here and in the manager.

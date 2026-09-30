@@ -63,6 +63,12 @@ ProcessConfig = uFldShoreBroker
   qbridge = NODE_REPORT, NODE_MESSAGE
   qbridge = PLATFORM_COLOR, TRAIL_UPDATE    // uFldTeam: team colors, formation slots
   qbridge = CONVOY_UPDATE, INTERCEPT_UPDATE, INTERCEPT_SPEED_UPDATE, AVOID   // the contact set
+  qbridge = BHV_ABLE_FILTER                 // avoid_ignore / avoid_heed: one contact left out
+
+  // Every vehicle's Report milestone (up as BT_REPORT_<VNAME>) goes
+  // back down to every vehicle under that name, so a plan on one
+  // vehicle can wait on another's milestone instead of its position.
+  bridge = src=BT_REPORT_*
 
   auto_bridge_appcast = true
 }
@@ -283,7 +289,8 @@ ProcessConfig = pLLMAgent
 // vehicle's own plan, BT_TREE_<VNAME>, and the block waits on
 // BT_STATE_<VNAME>; the team leaves (TeamFormation, TeamGoto ...)
 // run here and post TEAM_CMD. Report lines come back up as
-// BT_REPORT_<VNAME>; Signal goes down as BT_SIGNAL. BT_PLAN_<TEAM>
+// BT_REPORT_<VNAME> (and back down to every vehicle under that name,
+// see uFldShoreBroker); Signal goes down as BT_SIGNAL. BT_PLAN_<TEAM>
 // names the running plan, which uFldTeam shows per team. A disbanded
 // team's plan is halted with it. No halt or fail flags: a halt
 // reaches the members through their own executors.
