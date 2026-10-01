@@ -1,24 +1,50 @@
 m2_alpha_llm/test: the scripted chat test
 
-chat_test.md (one directory up) is the conversation to hold with the
-model to exercise every tool, the plans, the teams and the contact set,
-with what to expect of each line. chat_driver.py holds that conversation
-for you against a live fleet and grades it; chat_tests.txt is the same
-script in the form the driver reads.
+chat_tests.txt is the conversation to hold with the model to exercise
+every tool, the plans, the teams and the contact set, with what to expect
+of each line: chat_driver.py holds it for you against a live fleet and
+grades it, and chat_test_md.py writes chat_test.md (one directory up), the
+same script as tables for a person at the keyboard. Edit chat_tests.txt
+only, then run chat_test_md.py (--check says whether the markdown is
+current); the expect and issue lines are its prose columns.
 
   ./chat_driver.py                 headless, warp 10, every test
-  ./chat_driver.py --gui           pMarineViewer up, warp 5, so you watch
-  ./chat_driver.py --gui --step    and it waits for the NEXT_TEST button
-                                   (the viewer's fourth button, also in the
-                                   Action menu) before each test
-  ./chat_driver.py --only 1.1,3.1  a subset, --amt 2 for two boats,
-                                   --keep to leave the fleet up afterwards
+  ./chat_driver.py --gui           pMarineViewer up, warp 5, so you watch;
+                                   after every test it asks you in the chat
+                                   pane whether the boats did what you
+                                   expected (--no-ask skips that)
+  ./chat_driver.py --from 4.1      start there and run to the end; --to ID
+                                   stops after that test
+  ./chat_driver.py --phase 4,5     whole phases (the id's part before the
+                                   dot); --only 1.1,3.1 names tests; --list
+                                   prints the selection and launches nothing
+  ./chat_driver.py --amt 2 --keep  two boats; leave the fleet up afterwards
+
+The NEXT_TEST button (the viewer's fourth button in the run's copy, also
+Action > next_test) always means "move on": pressed while a test waits
+for the model's reply or for the boats, the test is cut short, graded on
+what happened so far and marked "cut" in the results; pressed during the
+settle it just ends the watch. The question after each test reads
+"[test 4.3, auto PASS] Did the boats do what you expected?" where the
+test moves boats, asks about the map where it draws, and "Did the agent
+do what was intended?" otherwise (an `ask` line in the test file sets
+its own): press NEXT_TEST for yes, or type a line starting with # and
+what was off (a no, unless it starts with yes or ok). pLLMAgent logs such a line on
+LLM_CHAT_NOTE and never sends it to the model, so you can annotate any
+live run the same way. Your answer goes in the Operator column of
+results.md; no answer within --ask-timeout (120 s) is recorded as such
+and the run goes on. Alerts are off for the whole run except test 5.10,
+which turns them on for one collision and off again.
 
 ANTHROPIC_API_KEY must be exported: pLLMAgent reads it, the driver never
 sees it. Each run copies the mission into test/runs/<stamp>/ (ignored by
 git), launches abe, ben, cal on ports 9101.. with the shoreside on 9100
 (so a mission of your own on 9000 can stay up), and writes results.md
 and results.json there beside the run's LOG_ and XLOG_ directories.
+
+fleet.sh here launches, inspects and kills a scratch fleet by hand (up,
+alog, down); pairs.py prints every boat pair's range over a window of an
+alog. Both are what the headless-fleet and review-run skills use.
 
 How it works. The driver types each test's line into the chat by
 posting LLM_CHAT_IN with uPokeDB; the chat pane shows such a line as

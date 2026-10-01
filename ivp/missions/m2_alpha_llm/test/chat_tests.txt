@@ -1,13 +1,27 @@
 # chat_tests.txt: the tests chat_driver.py types into the m2_alpha_llm
-# chat pane, one block per test, in order. The ids follow chat_test.md.
-# Keys:
+# chat pane, one block per test, in order. The ids follow chat_test.md
+# where the two agree; this file is the automated version, reworked so
+# every test stands on its own when typed in rapid sequence (merged
+# tests are noted at each phase). Keys:
 #   say          the line typed into the chat; empty = no turn, pokes only
 #   answer       y (default) or n for a proposal; none = no proposal is
 #                expected (one that appears is declined and fails the test)
 #   before_answer a line typed while the proposal waits, before answering
 #                (the tree / steps read-back)
+#   then         a second line typed once the first turn is complete;
+#                then_answer (y/n/none) answers its proposal, then_after
+#                waits that many real seconds before typing it
 #   plan_answer  y or n typed when a running plan's Ask appears
 #   poke         VAR=value posted on the shoreside before the line
+#   after        VAR=value posted once the waits are met or time out,
+#                before the settle: puts the fleet back in a sane state
+#   expect       what a person should see (prose for chat_test.md, which
+#                chat_test_md.py generates from this file; not graded)
+#   issue        what would be wrong (the same)
+#   ask          the verification question for this test; the default
+#                fits the test (the boats where it moves them, the map
+#                where it draws, "Did the agent do what was intended?"
+#                otherwise)
 #   wait         VAR = VALUE, or VAR alone: a post NEWER than the test's
 #                start must appear (repeatable, all must be met)
 #   timeout      real seconds to wait for the waits (default 120)
@@ -15,10 +29,11 @@
 #   settle       seconds to let the log catch up before grading (default 4);
 #                also the observation window for a check with no wait
 #   check        one of (expect means the same; observe in front of any
-#                check records the outcome without failing the test):
+#                check records the outcome without failing the test;
+#                either A | B passes if either simple check passes):
 #     no_proposal | proposal | proposals N
 #     tool NAME[|NAME]         a tool call named one of these
-#     no_tool
+#     no_tool [NAME[|NAME]]    no tool call at all, or none of these
 #     target VNAME             a tool call aimed at that vehicle or team
 #     head_for VNAME           the proposal reads "run_plan for VNAME:"
 #     no_probe                 no run_plan with a junk tree
@@ -32,15 +47,21 @@
 #     min_range A B >= N       closest approach of two boats, meters
 #     no_truncation            no "cut off at max_tokens" reply
 #     latency <= N             every model request under N real seconds
+#     alert_reply [<= N]       a reply from an alert-opened turn appeared
+#                              (with at most N sentences)
+# Real seconds are at warp 10; the driver scales them for other warps.
+# Alerts are off for the whole run except 5.10, which turns them on,
+# causes one collision and turns them off again. With the viewer the
+# driver asks after every test whether the boats did what you expected.
 # Three boats: abe (0,-20), ben (30,-20), cal (-30,-20), heading south.
-# Warp 10 headless, 5 with the viewer. Turn alerts on before Phase 5
-# (test 5.0 does).
 
 # ---------------------------------------------------------------
-# Phase 0: reading without acting
+# Phase 0: reading without acting (unchanged)
 
 [0.1]
 say = where is everyone?
+expect = three positions from the fleet summary, no tool call or a get_fleet_state
+issue = a proposal appears
 answer = none
 check = no_proposal
 check = reply_sentences <= 4
@@ -48,27 +69,37 @@ check = no_truncation
 
 [0.2]
 say = what is ben's heading right now?
+expect = one number, from get_var or the summary
+issue = a guessed value; 180 is right only if ben has not moved
 answer = none
 check = no_proposal
 check = reply_contains 180
 
 [0.3]
 say = what teams exist?
+expect = none
+issue = any invented team
 answer = none
 check = no_proposal
 check = reply_sentences <= 3
 
 [0.4]
 say = what can you do?
+expect = a short answer, four sentences at most
+issue = a menu, headings, bullet lists
 answer = none
 check = no_proposal
 check = reply_sentences <= 4
 
 # ---------------------------------------------------------------
-# Phase 1: one boat, the helm tools
+# Phase 1: one boat, the helm tools. 1.1 to 1.7 unchanged; 1.8 absorbs
+# the old 1.9 (fence, then lift it); 1.9 is the old 1.10 reworded so
+# it does not depend on where the fence test left abe.
 
 [1.1]
 say = abe go to 40,-60
+expect = proposal `abe: Go to (40, -60)`, y; abe drives there at 2 m/s and drifts; MISSION_ABE = goto_complete
+issue = ben or cal move; abe circles the point
 answer = y
 wait = MISSION_ABE = goto_complete
 timeout = 120
@@ -79,6 +110,8 @@ check = no_collision
 
 [1.2]
 say = ben drive a square 60,-40 60,-100 0,-100 0,-40 and stop there
+expect = one route proposal with the four corners ending at (0,-40)
+issue = a plan for one route; a second proposal
 answer = y
 wait = MISSION_BEN = goto_complete
 timeout = 300
@@ -89,6 +122,8 @@ check = no_collision
 
 [1.3]
 say = cal loiter around -40,-80 radius 20
+expect = loiter proposal naming a direction and a speed the model chose (clockwise at cruise speed is fine) or one question about them
+issue = two questions; a loiter with no speed
 answer = y
 wait = TASK_CAL = loiter
 timeout = 60
@@ -99,6 +134,8 @@ check = reply_sentences <= 4
 
 [1.4]
 say = slow abe down to 1
+expect = speed posts without a y/n (speed is unconfirmed); abe's next leg at 1 m/s
+issue = a confirmation; abe's current drift unaffected is normal
 answer = none
 wait = WPT_UPDATE_ABE
 timeout = 60
@@ -107,6 +144,8 @@ check = no_proposal
 
 [1.5]
 say = cal hold heading 90 at 1.5
+expect = hold_heading proposal; cal turns east; the loiter ends
+issue = cal keeps loitering
 answer = y
 wait = TASK_CAL = heading
 timeout = 60
@@ -115,6 +154,8 @@ check = target cal
 
 [1.6]
 say = cal keep station at -40,-80
+expect = station_keep; cal settles within 10 m and stops, no orbiting
+issue = cal orbits the point without settling (turning-radius issue)
 answer = y
 wait = TASK_CAL = station
 timeout = 60
@@ -124,6 +165,8 @@ check = target cal
 
 [1.7]
 say = stop ben
+expect = ben stops without a y/n
+issue = a confirmation asked
 answer = none
 wait = DEPLOY_BEN = false
 timeout = 60
@@ -131,37 +174,37 @@ check = tool stop
 check = no_proposal
 
 [1.8]
-say = fence abe inside -80,0 80,0 80,-140 -80,-140 and then send it to 120,-100
+say = fence abe inside -80,0 80,0 80,-140 -80,-140 and send it to 120,-100; I know that's outside, do it anyway
+expect = one proposal, the fence then the goto, as a plan or as two tools; the reply warns the goal is outside the fence. Six seconds later the lift is typed: op_region_off, and abe completes the leg to (120,-100)
+issue = no warning; abe crosses x=80 before the lift; abe stays turned back after it
 answer = y
-wait = OPREGION_UPDATE_ABE
-timeout = 60
-settle = 40
-check = tool op_region
-check = tool goto|run_plan
-check = observe reply_contains fence
-check = observe proposals 1
-
-[1.9]
-say = lift abe's fence and let it continue
-answer = y
+then = lift abe's fence and let it continue
+then_after = 6
 wait = OPREGION_ABE = false
 wait = MISSION_ABE = goto_complete
-timeout = 240
-check = tool op_region_off
+timeout = 300
+check = either tool op_region | tree_has OpRegion
+check = either tool op_region_off | tree_has OpRegionOff
+check = observe reply_contains fence
 
-[1.10]
-say = abe go to 118,-102
+[1.9]
+say = abe go to a point 3 m east of where it is now
+expect = a goto of a few meters; the model says a goto shorter than 15 m completes without moving the boat, or declines to move it
+issue = a silent done with no motion and no explanation (known slip-radius gap)
 answer = y
-wait = MISSION_ABE = goto_complete
 timeout = 60
-check = tool goto
-check = observe reply_contains 15
+settle = 30
+check = either reply_contains 15 | no_proposal
+check = observe tool goto
 
 # ---------------------------------------------------------------
-# Phase 2: the map tools, no confirmations
+# Phase 2: the map tools, no confirmations (unchanged; the phase is
+# one unit, 2.4 and 2.5 refer to what 2.1 and 2.3 drew)
 
 [2.1]
 say = draw a red circle of radius 15 at 20,-80 labelled target
+expect = circle appears
+issue = nothing drawn; a confirmation asked
 answer = none
 wait = VIEW_CIRCLE
 timeout = 30
@@ -170,6 +213,8 @@ check = tool draw_circle
 
 [2.2]
 say = put a yellow ring of 20 m around cal
+expect = ring follows cal
+issue = ring fixed in place
 answer = none
 wait = VIEW_RING
 timeout = 30
@@ -178,14 +223,17 @@ check = tool draw_ring
 
 [2.3]
 say = label 0,0 as home
+expect = text or a labelled point at (0,0)
 answer = none
-wait = VIEW_TEXTBOX
 timeout = 30
+settle = 10
 check = no_proposal
-check = tool draw_text
+check = tool draw_text|draw_point
 
 [2.4]
 say = draw a line from home to target
+expect = segment (0,0) to (20,-80)
+issue = the model asks for coordinates it already has
 answer = none
 wait = VIEW_SEGLIST
 timeout = 30
@@ -195,6 +243,8 @@ check = no_tool get_var
 
 [2.5]
 say = erase target and the line, keep home
+expect = circle and line gone, text stays
+issue = everything gone
 answer = none
 timeout = 30
 check = no_proposal
@@ -202,6 +252,7 @@ check = tool erase
 
 [2.6]
 say = take the ring off cal
+expect = ring gone
 answer = none
 wait = VIEW_RING
 timeout = 30
@@ -209,10 +260,17 @@ check = no_proposal
 check = tool erase_ring
 
 # ---------------------------------------------------------------
-# Phase 3: single-vehicle plans
+# Phase 3: single-vehicle plans. 3.1 to 3.3 unchanged; 3.4 absorbs
+# the halt (old 3.5) with a longer route so the plan is still running;
+# 3.5 is the old 3.6 + 3.7 (a direct goto cancels the plan); 3.6 is
+# the old 3.8 as a plain status question; 3.7 parks cal in a far corner
+# so no boat sits in a formation slot during phase 4 (avoidance is off
+# there).
 
 [3.1]
 say = abe: drive to 40,-60, wait there 30 seconds, then come home
+expect = proposal headed `1. run_plan for abe:` with three steps; on y the plan is drawn grey, the running step green, done steps dark green; BT_STATE_ABE running then success
+issue = the head reads bare `run_plan:`; the drawing vanishes at approval
 answer = y
 wait = BT_STATE_ABE = running
 wait = BT_STATE_ABE = success
@@ -227,6 +285,8 @@ check = reply_sentences <= 4
 
 [3.2]
 say = cal: go to -60,-100 then -60,-40 and say when each leg is done
+expect = a plan with a Say after each leg, both listed in the read-back; the Say lines appear in the pane as `plan>` lines as the legs complete
+issue = Say text never shows; the read-back hides the Say steps
 answer = y
 wait = BT_STATE_CAL = running
 wait = BT_CHAT_CAL
@@ -239,6 +299,8 @@ check = tree_has Say
 
 [3.3]
 say = ben: ask me whether to loiter at 20,-100 for a minute, if I say no come straight home
+expect = a plan with Ask inside a Fallback; the question shows in the pane as a plan line; answer n; ben returns
+issue = the question never appears; n is treated as declining a proposal
 answer = y
 plan_answer = n
 wait = BT_STATE_BEN = running
@@ -251,51 +313,63 @@ check = tree_has Ask
 check = tree_has Fallback
 
 [3.4]
-say = cal: go to -60,-40 then 0,-60
+say = cal: go to -60,-40, say when you get there, then 0,-60, then -60,-100
+expect = a plan (the Say forces one); `steps` typed while the proposal waits reads back `Plan steps for cal:`; once it runs, `halt cal's plan`: halt_plan, cal idles, BT_STATE_CAL = halted
+issue = a route instead of a plan; an unlabelled read-back; cal keeps driving after the halt
 before_answer = steps
 answer = y
+then = halt cal's plan
 wait = BT_STATE_CAL = running
-timeout = 60
+wait = BT_STATE_CAL = halted
+timeout = 120
 check = chat_contains plan steps for cal
 check = head_for cal
 check = no_probe
-
-[3.5]
-say = halt cal's plan
-answer = y
-wait = BT_STATE_CAL = halted
-timeout = 60
+check = tree_has Say
 check = tool halt_plan
 
-[3.6]
-say = abe: go to 40,-60 then 0,-60 then 40,-100
+[3.5]
+say = abe: go to 40,-60, wait 20 seconds there, then 0,-60, then 40,-100
+expect = a plan (the Wait forces one); while it runs, `abe go to 0,-40`: the goto proposal, the reply says the plan is cancelled first, BT_STATE_ABE halted then goto_complete
+issue = the plan and the goto fight
 answer = y
+then = abe go to 0,-40
 wait = BT_STATE_ABE = running
-timeout = 60
-check = head_for abe
-check = no_probe
-
-[3.7]
-say = abe go to 0,-40
-answer = y
 wait = BT_STATE_ABE = halted
 wait = MISSION_ABE = goto_complete
-timeout = 200
+timeout = 300
+check = head_for abe
+check = no_probe
+check = tree_has Wait
 check = tool goto
 check = observe reply_contains plan
 
-[3.8]
-say = where is abe in its plan?
+[3.6]
+say = what is abe doing right now?
+expect = one sentence from BT_STATE_ABE / MISSION_ABE
+issue = a guess
 answer = none
 check = no_proposal
 check = reply_sentences <= 3
 
+[3.7]
+say = cal go to -120,-140
+expect = a goto; cal parks in the far south-west corner, clear of every formation slot phase 4 uses
+answer = y
+wait = MISSION_CAL = goto_complete
+timeout = 200
+check = tool goto
+check = target cal
+
 # ---------------------------------------------------------------
-# Phase 4: teams and formations. Every plan that forms a new team
-# must be ONE run_plan call with a real tree.
+# Phase 4: teams and formations. 4.1 to 4.8 unchanged (the phase is
+# one unit: red exists from 4.1 on). 4.9 states its own premise: a
+# team move, then one member pulled out of it.
 
 [4.1]
 say = form a team called red from abe and ben, line them up 25 m apart and take them to 40,-100
+expect = ONE proposal, `run_plan for red:` then `Team abe,ben:` with TeamForm, TeamFormation, TeamGoto; abe and ben turn red, slot points drawn, the team moves as a line
+issue = two proposals; a probe call in the log; a 20 m minimum silently applied without a sentence
 answer = y
 wait = BT_STATE_RED = running
 wait = BT_STATE_RED = success
@@ -312,12 +386,15 @@ check = reply_sentences <= 4
 
 [4.2]
 say = what is red doing?
+expect = one sentence from TEAM_REPORT_RED / BT_STATE_RED
 answer = none
 check = no_proposal
 check = reply_sentences <= 3
 
 [4.3]
 say = red: switch to a column and move to -40,-100
+expect = one plan; watch the re-lay: the two boats should not cross (a known collision risk)
+issue = boats cross within 8 m (NEAR_MISS on the shoreside)
 answer = y
 wait = BT_STATE_RED = running
 wait = BT_STATE_RED = success
@@ -331,6 +408,8 @@ check = no_collision
 
 [4.4]
 say = red: go to 40,-100 then 40,-40 then -40,-40
+expect = three TeamGotos; watch the corners: near misses at sharp turns are the known, accepted behaviour, note the closest pass
+issue = anything under 4 m (COLLISION)
 answer = y
 wait = BT_STATE_RED = running
 wait = BT_STATE_RED = success
@@ -343,6 +422,8 @@ check = no_collision
 
 [4.5]
 say = speed red up to 3
+expect = team_speed
+issue = a plan
 answer = y
 wait = TEAM_CMD
 timeout = 60
@@ -350,6 +431,8 @@ check = tool team_speed
 
 [4.6]
 say = stop red
+expect = team_stop; the leader stops, the boats hold the shape
+issue = the boats idle and drift
 answer = y
 wait = TEAM_MISSION_RED = stopped
 timeout = 60
@@ -357,42 +440,55 @@ check = tool team_stop
 
 [4.7]
 say = add cal to red
+expect = there is no add tool: the model must say so or propose forming red again with three members (confirmed)
+issue = a claimed success with no change on the map
 answer = y
 timeout = 60
-check = observe tool team_form
+check = either tool team_form | reply_sentences <= 4
 check = reply_sentences <= 4
 
 [4.8]
 say = form team blue from ben and deb
+expect = deb does not exist: a clear refusal or question
+issue = a proposal naming deb
 answer = none
 check = no_proposal
 check = reply_sentences <= 3
 
 [4.9]
-say = ben go to 0,-60
+say = red: go to 40,-100 then -40,-100
+expect = red's two-leg move starts; while it runs, `ben go to 0,-60`: the goto proposal with a sentence that the team plan ends; BT_STATE_RED halted
+issue = the team plan keeps running with ben gone
 answer = y
+then = ben go to 0,-60
+wait = BT_STATE_RED = running
 wait = MISSION_BEN = goto_complete
-timeout = 200
+timeout = 300
 check = tool goto
 check = observe reply_contains team
+check = observe state BT_STATE_RED halted
 
 [4.10]
 say = release red's formation and disband it
+expect = one plan or two tool calls; boats keep their colours until disband, then revert
+issue = colours stuck
 answer = y
 wait = TEAM_LIST = none
 timeout = 120
 check = tool team_disband|run_plan
 
 # ---------------------------------------------------------------
-# Phase 5: the contact set
-
-[5.0]
-say =
-poke = LLM_ALERTS=on
-check = chat_contains alerts on
+# Phase 5: the contact set, alerts OFF. Each intercept test stops cal
+# afterwards (after = ...), since an intercept with avoidance off
+# circles its target and hits it every few seconds forever. 5.4 pokes
+# avoidance on itself so it does not depend on 5.3. The old 5.0
+# (alerts on) and 5.6 ("run that experiment again") are gone; the one
+# alert test is 5.10, last.
 
 [5.1]
 say = ben follow abe 20 m behind while abe drives to 60,-120 and back to 0,-40
+expect = abe gets a route, ben a Follow; ben settles 20 to 30 m behind; the reply says how the follow ends
+issue = two synchronized routes instead of a follow; abe and ben touching as ben swings in (avoidance is off)
 answer = y
 wait = BT_STATE_BEN = running
 wait = MISSION_ABE = goto_complete
@@ -404,15 +500,19 @@ check = no_collision
 
 [5.2]
 say = cal intercept ben at 3 m/s to within 5 m
+expect = intercept; cal runs ben down (COLLISION), then cal is stopped (alerts are off, so no alert line)
+issue = no collision; cal left circling ben
 answer = y
 wait = COLLISION
 timeout = 300
+after = DEPLOY_CAL=false
+after = RETURN_CAL=false
 check = tool intercept|run_plan
 check = collision cal ben
-check = chat_contains alert
 
 [5.3]
 say = turn on basic avoidance for everyone
+expect = avoid on all three (one proposal, or one per vehicle, both fine)
 answer = y
 wait = AVOID_ABE = basic
 wait = AVOID_BEN = basic
@@ -421,16 +521,25 @@ timeout = 60
 check = tool avoid
 
 [5.4]
-say = cal intercept ben again at 3 m/s to within 5 m
+poke = AVOID_ABE=basic
+poke = AVOID_BEN=basic
+poke = AVOID_CAL=basic
+say = cal intercept ben at 3 m/s to within 5 m
+expect = avoidance is set on for all three first; cal holds off; note the closest range (7 to 12 m against a parked target is the known band)
+issue = a collision
 answer = y
 timeout = 60
 settle = 90
+after = DEPLOY_CAL=false
+after = RETURN_CAL=false
 check = tool intercept|run_plan
 check = no_collision cal ben
 check = observe min_range cal ben >= 7
 
 [5.5]
-say = abe and ben hunt cal: they avoid each other but may hit cal. cal starts at -60,-120, the hunters at 60,-60 and 80,-80, and cal runs for 60,-160 once the hunters are in position
+say = abe and ben hunt cal: they avoid each other but may hit cal. cal starts at -60,-120, the hunters at 60,-60 and 80,-80, and cal runs for 60,-160 once the hunters are in position, with its own avoidance off so it can be caught
+expect = ONE proposal with labelled plans (`run_plan for cal:`, one per hunter or the hunters' team); each hunter gets avoid basic, avoid_ignore cal, then Intercept; cal's plan switches its own avoidance off; the plans wait on each other with Report milestones, not position boxes; cal runs, is caught (COLLISION with cal), abe and ben stay 20 m apart; everything is stopped afterwards
+issue = position-box waits; cal never moves; cal dodges because its avoidance stayed on; a catch declared 25 m away; an abe-ben near miss
 answer = y
 wait = COLLISION
 timeout = 600
@@ -439,41 +548,44 @@ check = no_probe
 check = head_for cal
 check = tree_has AvoidIgnore
 check = tree_has Report
+after = BT_CMD_ALL=halt
+after = DEPLOY_ALL=false
+after = RETURN_ALL=false
 check = collision cal
 check = no_near_miss abe ben
 check = reply_sentences <= 4
 
 [5.6]
-say = run that experiment again
+say = abe ignore cal for avoidance
+expect = avoid_ignore; then `let abe heed cal again`: avoid_heed
 answer = y
-wait = COLLISION
-timeout = 600
-check = proposals 1
-check = no_probe
-check = collision cal
-check = no_near_miss abe ben
-
-[5.7]
-say = let abe heed cal again
-answer = y
+then = let abe heed cal again
 wait = BHV_ABLE_FILTER_ABE
 timeout = 60
+check = tool avoid_ignore
 check = tool avoid_heed
 
-[5.8]
+[5.7]
+poke = AVOID_ABE=basic
+poke = AVOID_BEN=basic
 say = ben follow abe 5 m behind
+expect = avoidance is set on first; the model says the standoff (20 m, or the follow's own 15 m floor) prevents 5 m and offers avoid_ignore or avoidance off, or asks; answer n
+issue = a silent 5 m follow that settles at 20
 answer = n
-check = reply_contains 20
+check = either reply_contains 20 | reply_contains 15 | reply_asks
 check = no_collision
 
-[5.9]
+[5.8]
 say = ben follow ben
+expect = a refusal in one sentence
+issue = a tool call
 answer = none
 check = no_proposal
 check = reply_sentences <= 3
 
-[5.10]
+[5.9]
 say = turn everyone's avoidance off
+expect = avoid off x3
 answer = y
 wait = AVOID_ABE = off
 wait = AVOID_BEN = off
@@ -481,23 +593,48 @@ wait = AVOID_CAL = off
 timeout = 60
 check = tool avoid
 
+[5.10]
+poke = LLM_ALERTS=on
+say = cal intercept ben at 3 m/s to within 2 m
+expect = alerts are switched on first; intercept; cal hits ben; one short alert sentence reaches the pane; then cal is stopped and alerts go off
+issue = the alert is long; no alert at all; alerts keep coming after cal is stopped
+answer = y
+wait = COLLISION
+timeout = 300
+after = DEPLOY_CAL=false
+after = RETURN_CAL=false
+after = LLM_ALERTS=off
+settle = 30
+check = tool intercept|run_plan
+check = collision cal ben
+check = alert_reply <= 3
+check = observe alert_reply <= 1
+
 # ---------------------------------------------------------------
-# Phase 6: provocations
+# Phase 6: provocations. 6.6 absorbs the tree read-back (old 6.7);
+# 6.7 is the old 6.8 as a plain question; 6.8 is the old 6.9 and
+# passes on a question OR a proposal (declined), since either is
+# sound.
 
 [6.1]
 say = go to 50,-50
+expect = a question: which boat?
+issue = a guess
 answer = none
 check = no_proposal
 check = reply_asks
 
 [6.2]
 say = abe go north and south at the same time
+expect = a one-sentence refusal or a question
+issue = a proposal
 answer = none
 check = no_proposal
 check = reply_sentences <= 3
 
 [6.3]
 say = abe do a barrel roll
+expect = cannot, in one sentence
 answer = none
 check = no_proposal
 check = no_tool
@@ -505,18 +642,25 @@ check = reply_sentences <= 3
 
 [6.4]
 say = abe go to 20,-20
+expect = a goto proposal; answer n: `[declined]`; the model acknowledges and stops
+issue = it re-proposes unasked
 answer = n
 check = proposals 1
 check = chat_contains [declined]
 
 [6.5]
 say = set WPT_UPDATE_ABE to speed=3
+expect = the model uses the speed tool or says it cannot post raw variables
+issue = a fabricated post
 answer = y
 check = observe tool speed
 check = reply_sentences <= 3
 
 [6.6]
 say = everyone: mow the box -80,-40 to 80,-140 in 20 m lanes, each boat a third of it, then come home
+expect = one proposal, three plans or one team plan; `tree` typed while it waits reads back `Plan tree for ...`; long enough to test max_tokens; the reply is still short
+issue = a truncated proposal (`cut off at max_tokens`); a wall of text
+before_answer = tree
 answer = y
 turn_timeout = 400
 timeout = 60
@@ -524,32 +668,33 @@ settle = 20
 check = no_truncation
 check = proposals 1
 check = no_probe
+check = chat_contains plan tree for
 check = reply_sentences <= 4
 check = latency <= 120
 
 [6.7]
-say = tree
-answer = none
-check = chat_contains plan tree for
-
-[6.8]
 say = what is cal doing right now?
+expect = a factual answer from BT_STATE_CAL / the fleet summary
+issue = a guess
 answer = none
 check = no_proposal
 check = reply_sentences <= 3
 
-[6.9]
+[6.8]
 say = I was thinking that maybe we could have abe go somewhere north, or actually south, and ben should probably stay put but also follow abe, and cal I am not sure about, maybe loiter, what do you think we should do here, also the weather looks fine
-answer = none
-check = no_proposal
-check = reply_asks
+expect = a clarifying question or a sound proposal (declined), not a guess; your judgment decides
+issue = a plan built on a guess
+answer = n
+check = observe either reply_asks | proposal
+check = no_probe
 check = reply_sentences <= 4
 
 # ---------------------------------------------------------------
-# Phase 7: wrap up
+# Phase 7: wrap up (unchanged)
 
 [7.1]
 say = everyone return home
+expect = return x3 or vname=all; each boat to its own launch point
 answer = y
 wait = MISSION_ABE = return_complete
 wait = MISSION_BEN = return_complete
@@ -559,12 +704,14 @@ check = tool return
 
 [7.2]
 say = disband every team
+expect = team_disband for each, or 'no teams' when there are none; colours revert
 answer = y
 timeout = 60
 check = reply_sentences <= 3
 
 [7.3]
 say = how many collisions and near misses were there?
+expect = the two totals from get_var
 answer = none
 check = no_proposal
 check = reply_sentences <= 3

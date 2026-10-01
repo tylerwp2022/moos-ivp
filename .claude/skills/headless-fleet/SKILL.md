@@ -11,13 +11,13 @@ mission the user has up on 9000.
 
 ## Launch
 
-`fleet.sh` in this skill's directory does the whole thing:
+`ivp/missions/m2_alpha_llm/test/fleet.sh` does the whole thing:
 
 ```
 S=/tmp/claude-1001/.../scratchpad/fleet            # the session scratchpad, or test/runs/<stamp>
-.claude/skills/headless-fleet/fleet.sh up ivp/missions/m2_alpha_llm $S 2 10   # mission, scratch, boats, warp
-.claude/skills/headless-fleet/fleet.sh alog $S      # the shoreside alog path, once pLogger is up
-.claude/skills/headless-fleet/fleet.sh down $S      # kill everything whose cwd is $S
+ivp/missions/m2_alpha_llm/test/fleet.sh up ivp/missions/m2_alpha_llm $S 2 10   # mission, scratch, boats, warp
+ivp/missions/m2_alpha_llm/test/fleet.sh alog $S      # the shoreside alog path, once pLogger is up
+ivp/missions/m2_alpha_llm/test/fleet.sh down $S      # kill everything whose cwd is $S
 ```
 
 `up` copies the meta files, plugs, bhv, launch scripts, plans/ and

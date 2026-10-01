@@ -59,11 +59,11 @@ still inside 8 m at the end of the log has not been reported yet.
 
 Positions: the shoreside's `NODE_REPORT_<V>` keys carry OTHER vehicles'
 reports (uFldNodeComms), so never trust the key, filter on `NAME=`.
-`pairs.py` in this skill's directory does that and prints every boat's
+`ivp/missions/m2_alpha_llm/test/pairs.py` does that and prints every boat's
 position, speed and heading plus every pair's range on a time grid:
 
 ```
-python3 .claude/skills/review-run/pairs.py $A <t0> <t1> [step]
+python3 ivp/missions/m2_alpha_llm/test/pairs.py $A <t0> <t1> [step]
 ```
 
 Use it around every collision, near miss and corner. `TEAM_REPORT_<NAME>`
