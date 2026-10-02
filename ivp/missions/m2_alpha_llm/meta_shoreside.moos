@@ -213,7 +213,7 @@ ProcessConfig = pLLMAgent
   CommsTick = 4
 
   model           = claude-opus-5-5
-  effort          = medium    // how long the model thinks; low is faster and shallower
+  effort          = low       // how long the model thinks; low replied a third faster with the same plans in the chat test
   // The model thinks before it writes and max_tokens caps both, so it
   // bounds one turn (about 60 tokens/s): everyday turns use a few
   // hundred tokens in 5 to 15 s whatever the cap, and a hard one (a

@@ -255,7 +255,7 @@ ProcessConfig = pLLMAgent
   CommsTick = 4
 
   model           = claude-opus-5-5
-  effort          = medium
+  effort          = low
   max_tokens      = 8192      // thinking counts: a turn is bounded to ~2 min
   timeout         = 200       // above the longest turn the cap allows
   confirm_default = true
