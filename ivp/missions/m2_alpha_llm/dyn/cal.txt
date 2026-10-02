@@ -1,0 +1,6 @@
+utc=17909110393.03,mode=pid,speed=0.5,thrust=0,accel_time=1.41,accel_dist=0.38,accel_ok=true,turn_rate=1.33,turn_speed=0.3,radius=12.92,radius_fit=15.18,turn_time=180.1,turn_ok=false,stop_dist=0.56,stop_time=1.61,stop_ok=true
+utc=17909110582.16,mode=pid,speed=1,thrust=0,accel_time=1,accel_dist=0.78,accel_ok=true,turn_rate=5.03,turn_speed=0.694,radius=7.9,radius_fit=7.74,turn_time=67.25,turn_ok=true,stop_dist=1.88,stop_time=4.02,stop_ok=true
+utc=17909110660.45,mode=pid,speed=1.5,thrust=0,accel_time=1,accel_dist=1.16,accel_ok=true,turn_rate=12.19,turn_speed=1.149,radius=5.4,radius_fit=5.11,turn_time=29.71,turn_ok=true,stop_dist=4.31,stop_time=6.02,stop_ok=true
+utc=17909110703.21,mode=pid,speed=2,thrust=0,accel_time=1,accel_dist=1.55,accel_ok=true,turn_rate=23.28,turn_speed=1.576,radius=3.88,radius_fit=4,turn_time=16.06,turn_ok=true,stop_dist=7.74,stop_time=8.03,stop_ok=true
+utc=17909110734.33,mode=pid,speed=3,thrust=0,accel_time=1,accel_dist=2.31,accel_ok=true,turn_rate=45.11,turn_speed=2.647,radius=3.36,radius_fit=2.74,turn_time=7.03,turn_ok=true,stop_dist=17.59,stop_time=12.04,stop_ok=true
+utc=17909110760.43,mode=pid,speed=4,thrust=0,accel_time=1,accel_dist=3.08,accel_ok=true,turn_rate=56.31,turn_speed=3.729,radius=3.79,radius_fit=-1,turn_time=4.02,turn_ok=true,stop_dist=31.45,stop_time=16.06,stop_ok=true

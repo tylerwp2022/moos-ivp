@@ -22,3 +22,6 @@
 [submodule "ivp/src/moos-ivp-team"]
 	path = ivp/src/moos-ivp-team
 	url = git@github.com:tylerwp2022/moos-ivp-team.git
+[submodule "ivp/src/moos-ivp-dyn"]
+	path = ivp/src/moos-ivp-dyn
+	url = git@github.com:tylerwp2022/moos-ivp-dyn.git

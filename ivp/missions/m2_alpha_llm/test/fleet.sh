@@ -27,7 +27,7 @@ case "$cmd" in
     fi
     mkdir -p "$S"
     cp "$M"/meta_*.moos "$M"/plugs.moos "$M"/meta_vehicle.bhv "$M"/launch_vehicle.sh "$M"/launch_shoreside.sh "$S"/ || exit 1
-    rm -rf "$S/plans" "$S/prompts"; cp -r "$M/plans" "$M/prompts" "$S"/
+    rm -rf "$S/plans" "$S/prompts" "$S/dyn"; cp -r "$M/plans" "$M/prompts" "$M/dyn" "$S"/
     VN=""
     for ((i=0; i<AMT; i++)); do
       v=${NAMES[$i]}; VN="${VN:+$VN:}$v"

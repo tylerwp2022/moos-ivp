@@ -37,6 +37,7 @@ ProcessConfig = ANTLER
   Run = pRealm	      @ NewConsole = false
   Run = pLLMAgent     @ NewConsole = false
   Run = pBehaviorTree @ NewConsole = false
+  Run = uDynamicsTest @ NewConsole = false
 }
 
 //------------------------------------------
@@ -320,6 +321,24 @@ ProcessConfig = pBehaviorTree
 
   capability_dir = helm      // the same sets and filters as pLLMAgent
   // capability_drop = turn_limit, turn_limit_off, periodic_speed, periodic_speed_off
+  facts_from     = DYN_FACTS // the measured dynamics (uDynamicsTest)
 
   app_logging = true
+}
+
+//------------------------------------------------------------
+// uDynamicsTest: measures the boat (acceleration, turning radius,
+// stopping distance per speed) when DYN_START is poked, with the helm
+// idle; at launch it posts the statistics of dyn/alpha.txt as
+// DYN_FACTS, which pBehaviorTree folds into VEHICLE_FACTS for
+// pLLMAgent's prompt. Re-measure after a change to the simulator or
+// the PID: uPokeDB alpha.moos DYN_START=1 (see moos-ivp-dyn).
+
+ProcessConfig = uDynamicsTest
+{
+  AppTick   = 5
+  CommsTick = 5
+
+  speeds       = 0.5, 1, 1.5, 2, 3, 4   // up to the helm's speed limit
+  results_file = dyn/alpha.txt
 }

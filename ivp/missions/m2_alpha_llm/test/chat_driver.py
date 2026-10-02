@@ -210,7 +210,7 @@ class Fleet:
         for name in ("meta_shoreside.moos", "meta_vehicle.moos", "meta_vehicle.bhv",
                      "plugs.moos", "launch_vehicle.sh", "launch_shoreside.sh"):
             shutil.copy(os.path.join(self.mission_dir, name), self.scratch)
-        for sub in ("plans", "prompts"):
+        for sub in ("plans", "prompts", "dyn"):
             dst = os.path.join(self.scratch, sub)
             if os.path.isdir(dst):
                 shutil.rmtree(dst)

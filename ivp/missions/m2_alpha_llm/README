@@ -74,9 +74,12 @@ plans can wait on each other's milestone instead of a position test that
 goes false the moment the other moves on; each vehicle's VEHICLE_FACTS
 (cruise, speed limit, return point, slip radius from the helm's own
 posts, the avoidance standoff typed once as STANDOFF in launch_vehicle.sh
-for the .bhv blocks and the executor's fact line) comes up as
-VEHICLE_FACTS_<VNAME> and pLLMAgent puts them in its prompt, so
-prompts/fleet.txt states no number the system publishes; Signal goes down as BT_SIGNAL; the team leaves
+for the .bhv blocks and the executor's fact line, and the measured
+dynamics from uDynamicsTest's dyn/<vname>.txt: turning radius, stopping
+distance, acceleration distance and turn rate per speed, through the
+executor's facts_from) comes up as VEHICLE_FACTS_<VNAME> and pLLMAgent
+puts them in its prompt, so prompts/fleet.txt states no number the
+system publishes; Signal goes down as BT_SIGNAL; the team leaves
 (TeamFormation, TeamGoto ...) run on the executor and post TEAM_CMD. The
 team's report shows the plan (plan=, plan_state=). pLLMAgent learns the
 teams from TEAM_LIST too (run_plan vname=red) and the fleet prompt tells

@@ -33,6 +33,7 @@ ProcessConfig = ANTLER
   Run = pHelmIvP        @ NewConsole = false
   Run = pContactMgrV20  @ NewConsole = false
   Run = pBehaviorTree   @ NewConsole = false
+  Run = uDynamicsTest   @ NewConsole = false
   Run = pRealm          @ NewConsole = false
 }
 
@@ -208,8 +209,28 @@ ProcessConfig = pBehaviorTree
   // come from the helm's own posts; the avoidance standoff is the
   // .bhv value, typed once in launch_vehicle.sh (STANDOFF)
   fact           = standoff=$(STANDOFF)
+  // The measured dynamics (turning radius, stopping distance, ... per
+  // speed) from uDynamicsTest's saved results join the same line
+  facts_from     = DYN_FACTS
 
   app_logging = true
+}
+
+//------------------------------------------------------------
+// uDynamicsTest: measures the boat (acceleration, turning radius,
+// stopping distance per speed) when DYN_START is poked, with the
+// helm idle; at launch it posts the statistics of dyn/$(VNAME).txt
+// as DYN_FACTS, which pBehaviorTree folds into VEHICLE_FACTS for the
+// shoreside agent. Re-measure after a change to the simulator or the
+// PID: uPokeDB targ_$(VNAME).moos DYN_START=1 (see moos-ivp-dyn).
+
+ProcessConfig = uDynamicsTest
+{
+  AppTick   = 5
+  CommsTick = 5
+
+  speeds       = 0.5, 1, 1.5, 2, 3, 4   // up to the helm's speed limit
+  results_file = dyn/$(VNAME).txt
 }
 
 //------------------------------------------
