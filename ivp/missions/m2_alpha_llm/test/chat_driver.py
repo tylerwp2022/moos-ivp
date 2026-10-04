@@ -428,6 +428,12 @@ def grade(test, records, facts):
                and not r[4].startswith("[") and operator_line(r)]
     alert_replies = [r for r in records if r[1] == CHAT_OUT and not r[3].startswith("ask")
                      and not r[4].startswith("[") and not operator_line(r)]
+    # The preview requests the agent sent for its proposals (uPlanPreview's
+    # input): the owners named by the last one in the window
+    preview_reqs = [r for r in records if r[1] == "PLAN_PREVIEW" and r[2] == "pLLMAgent"
+                    and r[4].lstrip().startswith("<preview")]
+    preview_owners = set(re.findall(r'<plan owner="([^"]*)"', preview_reqs[-1][4])) \
+        if preview_reqs else set()
     reply = replies[-1][4] if replies else ""
     events = [r for r in records if r[1] in ("COLLISION", "NEAR_MISS")]
 
@@ -536,6 +542,15 @@ def grade(test, records, facts):
             note = "%s (saw %s)" % (c, "%.1f" % d if d is not None else "no positions")
         elif name == "no_truncation":
             ok = not any("cut off at max_tokens" in r[4] for r in records if r[1] == CHAT_OUT)
+        elif name == "preview":
+            # preview none: no request; preview A, B: the last request named them all
+            seen_s = ",".join(sorted(preview_owners)) or "none"
+            if len(toks) > 1 and toks[1].lower() == "none":
+                ok = not preview_reqs
+            else:
+                wanted = set(x.strip().lower() for x in " ".join(toks[1:]).replace("|", ",").split(",") if x.strip())
+                ok = bool(preview_reqs) and wanted <= preview_owners
+            note = "%s (saw %s)" % (c, seen_s)
         elif name == "alert_reply":
             n = [sentences(r[4]) for r in alert_replies]
             ok = bool(n) and (len(toks) < 3 or max(n) <= int(toks[2]))

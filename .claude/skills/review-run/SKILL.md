@@ -90,6 +90,25 @@ lines exist only when something requested them; the appcast payload's
 line separator is `!@`. `LLM_STATUS` is never logged (pLogger omits
 `*_STATUS`).
 
+## 4b. What went on the map
+
+Drawings and previews are read with one script, never by hand:
+
+```
+python3 ivp/missions/m2_alpha_llm/test/views.py $A [--turn N] [--id N] [--events K]
+```
+
+Per proposal turn it lists the shapes pLLMAgent drew, grouped by owner
+(vehicle or team), with their colors, waypoint numbers and erase time.
+Per preview request it lists the plans the agent sent (owner, color,
+roster), each play's length, the first play's events, every bubble text
+with its time on screen, where the ghosts rested, and flags a ghost that
+never finished. Read the erase posts (`active=false`) and
+`PLAN_PREVIEW_STATE` as the record: the alog thins bursts of one variable,
+so the draw posts, the marker track and the bubble posts are incomplete,
+and the live map is the final check for anything visual. Bubble times are
+log (warped) seconds; divide by the warp for seconds on screen.
+
 ## 5. Report
 
 Lead with a timeline table (turn, request, outcome), then one block per

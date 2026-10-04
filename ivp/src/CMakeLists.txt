@@ -234,6 +234,7 @@ SET(ROBOT_APPS
   moos-ivp-cap/cap_check         moos-ivp-cap/tests
   moos-ivp-llm/pLLMAgent         moos-ivp-llm/tests
   moos-ivp-bt/pBehaviorTree      moos-ivp-bt/tests
+  moos-ivp-bt/uPlanPreview
   moos-ivp-team/uFldTeam         moos-ivp-team/tests
   moos-ivp-dyn/uDynamicsTest     moos-ivp-dyn/tests
 )

@@ -46,6 +46,8 @@
 #     state VAR VALUE          the last post of VAR in the window
 #     min_range A B >= N       closest approach of two boats, meters
 #     no_truncation            no "cut off at max_tokens" reply
+#     preview A[, B] | preview none   the proposal's preview request to
+#                              uPlanPreview named these owners / none was sent
 #     latency <= N             every model request under N real seconds
 #     alert_reply [<= N]       a reply from an alert-opened turn appeared
 #                              (with at most N sentences)
@@ -66,6 +68,7 @@ answer = none
 check = no_proposal
 check = reply_sentences <= 4
 check = no_truncation
+check = preview none
 
 [0.2]
 say = what is ben's heading right now?
@@ -377,6 +380,7 @@ timeout = 400
 check = tool run_plan
 check = target red
 check = head_for red
+check = preview red
 check = no_probe
 check = proposals 1
 check = tree_has TeamForm
@@ -496,6 +500,7 @@ timeout = 400
 check = tool run_plan|follow
 check = no_probe
 check = observe min_range abe ben >= 12
+check = either preview abe, ben | preview red
 check = no_collision
 
 [5.2]
@@ -667,6 +672,7 @@ timeout = 60
 settle = 20
 check = no_truncation
 check = proposals 1
+check = observe preview abe, ben, cal
 check = no_probe
 check = chat_contains plan tree for
 check = reply_sentences <= 4

@@ -56,7 +56,8 @@ Then it waits for the test's wait lines (MISSION_ABE = goto_complete,
 BT_STATE_RED = success ...) as NEW posts, grades the checks listed in
 chat_tests.txt from the log lines since the test's mark (tool calls,
 targets, the proposal's wording, reply length, collisions and near
-misses, closest ranges, plan states, latency, truncation), and posts
+misses, closest ranges, plan states, latency, truncation, the owners the
+proposal's preview request named), and posts
 the verdict as a text box at the top left of the map. Nothing older
 than the test's start counts, so a value left by an earlier test never
 satisfies a later wait.

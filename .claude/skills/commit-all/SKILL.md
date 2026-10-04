@@ -49,9 +49,20 @@ documents changed, and its self-test count when a set grew.
 
 ## 3. The fork
 
-Add the mission files, any upstream-file edit together with its
-`local-patches/NNNN-*.md` and `.patch` record, and the submodule
-pointers (`git -C ~/moos-ivp add ivp/src/moos-ivp-llm ...`). The
+First the territory check, which lists every changed or new file that
+is not the fork's own (an upstream MOOS-IvP file):
+
+```
+~/moos-ivp/.claude/scripts/upstream_check.sh      # exit 1 and the list when any; --list prints the territory
+```
+
+If it names anything, stop and show the user the list: an edit that
+was meant stays only with its `local-patches/NNNN-*.md` and `.patch`
+record, an accidental one is reverted. A new fork-owned path (a new
+submodule, a new mission) is added to the script's TERRITORY list in
+the same commit. Then add the mission files, any upstream-file edit
+together with its `local-patches/NNNN-*.md` and `.patch` record, and
+the submodule pointers (`git -C ~/moos-ivp add ivp/src/moos-ivp-llm ...`). The
 message names each bumped submodule with its new short hash and what
 it brings. Push the branch, then:
 

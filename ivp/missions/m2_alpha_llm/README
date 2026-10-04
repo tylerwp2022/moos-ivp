@@ -93,6 +93,18 @@ reacting to another through the contact variables (BEN_RANGE). A member
 may itself be a team (a team of teams; see the moos-ivp-bt README), which
 this mission keeps out to stay minimal.
 
+uPlanPreview (moos-ivp-bt) also runs on the shoreside: while a proposal
+waits for y/n, pLLMAgent posts it as PLAN_PREVIEW (preview_var) and
+phantom boats play it out on the map from the boats' current positions,
+ten plan seconds per second, a dot per vehicle in its proposal color
+with its name and the words of any step that is not a movement beside
+it ("abe: Say 'done'", "red: waiting for abe"), replayed until the
+proposal resolves. A plan file can be previewed by hand:
+  uPokeDB targ_shoreside.moos 'PLAN_PREVIEW:=<preview><plan owner="red" file="plans/team_box.xml"/></preview>'
+  uPokeDB targ_shoreside.moos PLAN_PREVIEW:=none
+Straight lines and instant turns, no avoidance: it shows the plan's logic
+and geometry, not the helm's dynamics.
+
 Without the model, from this directory:
   uPokeDB targ_shoreside.moos BT_TREE_FILE_ABE=plans/box_goto.xml
   uPokeDB targ_shoreside.moos TASK_BEN=waypoint WPT_UPDATE_BEN=points=40,-40 DEPLOY_BEN=true MOOS_MANUAL_OVERRIDE_BEN=false

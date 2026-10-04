@@ -25,7 +25,19 @@ prompts/, then launches abe (9101/9301), ben (9102/9302), cal, deb and
 the shoreside (9100/9300, `--nogui`, `--auto`) with the API key removed
 from the environment (`--key` keeps it; pLLMAgent then calls the model).
 Ports 9000/9200 stay free for the user. Launch can take up to 150 s
-real before every helm reports; wait, do not relaunch.
+real before every helm reports; wait, do not relaunch. Three more
+commands cover the chores between `up` and the test:
+
+```
+ivp/missions/m2_alpha_llm/test/fleet.sh ready $S            # waits for every helm, the node reports and facts on the shoreside, the agent idle; names what held it up on a timeout
+ivp/missions/m2_alpha_llm/test/fleet.sh run $S uPlanPreview "capability_dir = helm" "rate = 10"   # an app outside pAntler: writes uPlanPreview_side.moos with the port, warp and datum, logs to uPlanPreview.out
+ivp/missions/m2_alpha_llm/test/fleet.sh chat $S "go to 40,-60" n   # pokes the line, waits, prints the reply or proposal, answers n (y, or - to leave it pending)
+```
+
+Use `ready` instead of a grep on the log (a grep on node reports fires
+before the helms are up); `run` instead of a hand-written side file (a
+missing MOOSTimeWarp makes the app's log timestamps garbage); `chat` for
+a one-line check, the chat-test driver for a scripted run.
 
 Rules that cost time when broken:
 - One launch per subshell with its own `cd`: a backgrounded `cd X && a &`

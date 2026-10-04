@@ -34,6 +34,7 @@ ProcessConfig = ANTLER
 #endif
   Run = pLLMAgent       @ NewConsole = false
   Run = pBehaviorTree   @ NewConsole = false
+  Run = uPlanPreview    @ NewConsole = false
   Run = uFldTeam        @ NewConsole = false
   Run = uFldCollisionDetect @ NewConsole = false
 }
@@ -274,6 +275,7 @@ ProcessConfig = pLLMAgent
   capability_dir = contact
   capability_drop = turn_limit, turn_limit_off, periodic_speed, periodic_speed_off
   view_color = orange, yellow, magenta, cyan, dodger_blue, white
+  preview_var = PLAN_PREVIEW   // uPlanPreview plays the proposal out on phantom boats
 
   app_logging = true
 }
@@ -334,4 +336,26 @@ ProcessConfig = uFldTeam
   contact_max_age = 30
 
   app_logging = true
+}
+
+//------------------------------------------------------------
+// uPlanPreview config block: while a proposal waits for y/n, phantom
+// boats play it out on the map (pLLMAgent's preview_var sends it).
+// The same capability sets as pLLMAgent and pBehaviorTree, so every
+// leaf a plan may use is known here with its ghost line.
+
+ProcessConfig = uPlanPreview
+{
+  AppTick   = 4
+  CommsTick = 4
+
+  request_var = PLAN_PREVIEW
+  capability_dir = helm
+  capability_dir = team
+  capability_dir = contact
+  capability_drop = turn_limit, turn_limit_off, periodic_speed, periodic_speed_off
+
+  rate       = 10     // plan seconds per MOOS second
+  loop       = true   // replay while the proposal waits
+  loop_pause = 5
 }

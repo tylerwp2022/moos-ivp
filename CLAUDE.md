@@ -74,4 +74,4 @@ Rules: `ANTHROPIC_API_KEY` comes from the environment and never goes in a missio
 
 ## Skills
 
-`.claude/skills/` holds the repo's procedures as Claude Code skills, invoked by name: `fix-review` (how a review and its fixes are run), `review-run` (read a live run's logs), `headless-fleet` (scratch fleet on the 9100 ports, with `fleet.sh`), `commit-all` (submodules first, fork last, no attribution lines, then CI), `chat-test` (the scripted chat test, headless or with the viewer). Prefer them over re-deriving the steps.
+`.claude/skills/` holds the repo's procedures as Claude Code skills, invoked by name: `fix-review` (how a review and its fixes are run), `review-run` (read a live run's logs), `headless-fleet` (scratch fleet on the 9100 ports, with `fleet.sh`), `commit-all` (submodules first, fork last, no attribution lines, then CI), `chat-test` (the scripted chat test, headless or with the viewer). Prefer them over re-deriving the steps. `.claude/hooks/` holds the hooks `.claude/settings.json` enables: `fleet_check.sh` (Stop) refuses to end a turn while a scratch fleet is still up on the 9100 ports, until it is shut down or the reply says why it stays up.
