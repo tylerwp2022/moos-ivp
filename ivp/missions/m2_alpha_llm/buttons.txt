@@ -1,8 +1,11 @@
-// Buttons of this mission: what uButtonPanel shows and what a press
-// posts. pLLMAgent writes the blocks the make_button tool makes (a
-// block with an owner and a tree, pressed through LLM_BUTTON) and
-// re-reads the file when it changes; blocks may also be written by
-// hand, with any posts, like the one below. One block per button.
+// Buttons and plays of this mission. A Button block is what
+// uButtonPanel shows and what a press posts; a Play block is a saved
+// plan with no panel button, run by name (the agent's run_play tool:
+// "run play alpha"). pLLMAgent writes the blocks the make_button tool
+// makes (a block with an owner and a tree, pressed through LLM_BUTTON
+// or by name) and re-reads the file when it changes; blocks may also
+// be written by hand, with any posts, like the first one below. One
+// block per button or play.
 
 Button = STOP ALL
 {
@@ -15,11 +18,17 @@ Button = STOP ALL
 
 Button = LEAPFROG
 {
-  desc  = Team abe,ben: | 1) Form team leap from abe:ben, colored auto | 2) At the same time: | 2a) abe: Go to ($(px((NAV_X+BEN_X)/2,(NAV_Y+BEN_Y)/2,10,bearing((NAV_X+BEN_X)/2,(NAV_Y+BEN_Y)/2,150,-150)-90)), $(py((NAV_X+BEN_X)/2,(NAV_Y+BEN_Y)/2,10,bearing((NAV_X+BEN_X)/2,(NAV_Y+BEN_Y)/2,150,-150)-90))) | ...
+  desc  = Team leap: abe and ben line up beside each other, then take turns hopping past one another toward the target (TX, TY) and settle on it together
   post  = LLM_BUTTON = LEAPFROG
   owner = leap
   members = abe,ben
-  tree  = <root BTCPP_format="4" main_tree_to_execute="leapfrog_to_target">   <BehaviorTree ID="leapfrog_to_target">     <Team>       <Sequence>         <TeamForm team="leap" members="abe:ben" color="auto"/>         <Parallel name="line_up_side_by_side">           <Member vname="abe">             <Goto x="$(px((NAV_X+BEN_X)/2,(NAV_Y+BEN_Y)/2,10,bearing((NAV_X+BEN_X)/2,(NAV_Y+BEN_Y)/2,150,-150)-90))" y="$(py((NAV_X+BEN_X)/2,(NAV_Y+BEN_Y)/2,10,bearing((NAV_X+BEN_X)/2,(NAV_Y+BEN_Y)/2,150,-150)-90))"/>           </Member>           <Member vname="ben">             <Goto x="$(px((NAV_X+ABE_X)/2,(NAV_Y+ABE_Y)/2,10,bearing((NAV_X+ABE_X)/2,(NAV_Y+ABE_Y)/2,150,-150)+90))" y="$(py((NAV_X+ABE_X)/2,(NAV_Y+ABE_Y)/2,10,bearing((NAV_X+ABE_X)/2,(NAV_Y+ABE_Y)/2,150,-150)+90))"/>           </Member>         </Parallel>         <RetryUntilSuccessful num_attempts="40" name="leapfrog_hops">           <Sequence>             <Member vname="abe" name="abe_hops_past_ben">               <Goto x="$(px(px(BEN_X,BEN_Y,min(30,dist(BEN_X,BEN_Y,150,-150)),bearing(NAV_X,NAV_Y,150,-150)),py(BEN_X,BEN_Y,min(30,dist(BEN_X,BEN_Y,150,-150)),bearing(NAV_X,NAV_Y,150,-150)),20,bearing(NAV_X,NAV_Y,150,-150)-90))" y="$(py(px(BEN_X,BEN_Y,min(30,dist(BEN_X,BEN_Y,150,-150)),bearing(NAV_X,NAV_Y,150,-150)),py(BEN_X,BEN_Y,min(30,dist(BEN_X,BEN_Y,150,-150)),bearing(NAV_X,NAV_Y,150,-150)),20,bearing(NAV_X,NAV_Y,150,-150)-90))"/>             </Member>             <Member vname="ben" name="ben_hops_past_abe">               <Goto x="$(px(px(ABE_X,ABE_Y,min(30,dist(ABE_X,ABE_Y,150,-150)),bearing(NAV_X,NAV_Y,150,-150)),py(ABE_X,ABE_Y,min(30,dist(ABE_X,ABE_Y,150,-150)),bearing(NAV_X,NAV_Y,150,-150)),20,bearing(NAV_X,NAV_Y,150,-150)+90))" y="$(py(px(ABE_X,ABE_Y,min(30,dist(ABE_X,ABE_Y,150,-150)),bearing(NAV_X,NAV_Y,150,-150)),py(ABE_X,ABE_Y,min(30,dist(ABE_X,ABE_Y,150,-150)),bearing(NAV_X,NAV_Y,150,-150)),20,bearing(NAV_X,NAV_Y,150,-150)+90))"/>             </Member>             <Condition name="both_near_target" cond="ABE_X &gt; 120 and ABE_X &lt; 180 and ABE_Y &gt; -180 and ABE_Y &lt; -120 and BEN_X &gt; 120 and BEN_X &lt; 180 and BEN_Y &gt; -180 and BEN_Y &lt; -120"/>           </Sequence>         </RetryUntilSuccessful>         <TeamGoto team="leap" x="150" y="-150" name="settle_on_target"/>         <Say msg="leapfrog done at 150 -150"/>       </Sequence>     </Team>   </BehaviorTree> </root>
+  param = TX : number : 150 : east coordinate of the target, m
+  param = TY : number : -150 : north coordinate of the target, m
+  param = HOP : number : 30 : 5..100 : longest hop past the other boat, m
+  param = SIDE : number : 20 : 5..60 : sideways offset of a hop from the other boat, m
+  param = GAP : number : 10 : 2..40 : half the line-up spacing before the first hop, m
+  param = NEAR : number : 30 : 5..100 : both boats within this of the target end the hops, m
+  tree  = <root BTCPP_format="4" main_tree_to_execute="leapfrog_to_target">   <BehaviorTree ID="leapfrog_to_target">     <Team>       <Sequence>         <TeamForm team="leap" members="abe:ben" color="auto"/>         <Parallel name="line_up_side_by_side">           <Member vname="abe">             <Goto x="$(px((NAV_X+BEN_X)/2,(NAV_Y+BEN_Y)/2,GAP,bearing((NAV_X+BEN_X)/2,(NAV_Y+BEN_Y)/2,TX,TY)-90))" y="$(py((NAV_X+BEN_X)/2,(NAV_Y+BEN_Y)/2,GAP,bearing((NAV_X+BEN_X)/2,(NAV_Y+BEN_Y)/2,TX,TY)-90))"/>           </Member>           <Member vname="ben">             <Goto x="$(px((NAV_X+ABE_X)/2,(NAV_Y+ABE_Y)/2,GAP,bearing((NAV_X+ABE_X)/2,(NAV_Y+ABE_Y)/2,TX,TY)+90))" y="$(py((NAV_X+ABE_X)/2,(NAV_Y+ABE_Y)/2,GAP,bearing((NAV_X+ABE_X)/2,(NAV_Y+ABE_Y)/2,TX,TY)+90))"/>           </Member>         </Parallel>         <RetryUntilSuccessful num_attempts="40" name="leapfrog_hops">           <Sequence>             <Member vname="abe" name="abe_hops_past_ben">               <Goto x="$(px(px(BEN_X,BEN_Y,min(HOP,dist(BEN_X,BEN_Y,TX,TY)),bearing(NAV_X,NAV_Y,TX,TY)),py(BEN_X,BEN_Y,min(HOP,dist(BEN_X,BEN_Y,TX,TY)),bearing(NAV_X,NAV_Y,TX,TY)),SIDE,bearing(NAV_X,NAV_Y,TX,TY)-90))" y="$(py(px(BEN_X,BEN_Y,min(HOP,dist(BEN_X,BEN_Y,TX,TY)),bearing(NAV_X,NAV_Y,TX,TY)),py(BEN_X,BEN_Y,min(HOP,dist(BEN_X,BEN_Y,TX,TY)),bearing(NAV_X,NAV_Y,TX,TY)),SIDE,bearing(NAV_X,NAV_Y,TX,TY)-90))"/>             </Member>             <Member vname="ben" name="ben_hops_past_abe">               <Goto x="$(px(px(ABE_X,ABE_Y,min(HOP,dist(ABE_X,ABE_Y,TX,TY)),bearing(NAV_X,NAV_Y,TX,TY)),py(ABE_X,ABE_Y,min(HOP,dist(ABE_X,ABE_Y,TX,TY)),bearing(NAV_X,NAV_Y,TX,TY)),SIDE,bearing(NAV_X,NAV_Y,TX,TY)+90))" y="$(py(px(ABE_X,ABE_Y,min(HOP,dist(ABE_X,ABE_Y,TX,TY)),bearing(NAV_X,NAV_Y,TX,TY)),py(ABE_X,ABE_Y,min(HOP,dist(ABE_X,ABE_Y,TX,TY)),bearing(NAV_X,NAV_Y,TX,TY)),SIDE,bearing(NAV_X,NAV_Y,TX,TY)+90))"/>             </Member>             <Condition name="both_near_target" cond="ABE_X &gt; $(TX-NEAR) and ABE_X &lt; $(TX+NEAR) and ABE_Y &gt; $(TY-NEAR) and ABE_Y &lt; $(TY+NEAR) and BEN_X &gt; $(TX-NEAR) and BEN_X &lt; $(TX+NEAR) and BEN_Y &gt; $(TY-NEAR) and BEN_Y &lt; $(TY+NEAR)"/>           </Sequence>         </RetryUntilSuccessful>         <TeamGoto team="leap" x="$(TX)" y="$(TY)" name="settle_on_target"/>         <Say msg="leapfrog done at $(TX) $(TY)"/>       </Sequence>     </Team>   </BehaviorTree> </root>
 }
 
 Button = WEAVE
@@ -38,4 +47,13 @@ Button = RANDOM SHAPE
   owner = leap
   members = abe,ben
   tree  = <root BTCPP_format="4" main_tree_to_execute="random_shape">   <BehaviorTree ID="random_shape">     <Team>       <Sequence>         <Let var="B" val="$(rand(0,360))"/>         <Let var="CX" val="$(px(BEN_X,BEN_Y,40,B))"/>         <Let var="CY" val="$(py(BEN_X,BEN_Y,40,B))"/>         <Let var="R" val="$(rand(20,40))"/>         <Let var="ROT" val="$(rand(0,360))"/>         <Let var="K" val="$(rand(0,4))"/>         <Let var="D" val="$(dist(ABE_X,ABE_Y,CX,CY))"/>         <Let var="NEAR" val="$(max(0,sign(R+25-D)))"/>         <IfThenElse name="pick_corners">           <Condition cond="K &lt; 1"/>           <Let var="N" val="3"/>           <IfThenElse>             <Condition cond="K &lt; 2"/>             <Let var="N" val="4"/>             <IfThenElse>               <Condition cond="K &lt; 3"/>               <Let var="N" val="5"/>               <Let var="N" val="6"/>             </IfThenElse>           </IfThenElse>         </IfThenElse>         <DrawPolygon points="format=radial,x=$(CX),y=$(CY),radius=$(R),pts=$(N),rot=$(ROT)" label="rand_shape" color="yellow" note="true"/>         <IfThenElse name="abe_clear_if_near">           <Condition cond="NEAR = 1"/>           <Member vname="abe">             <Sequence>               <Goto x="$(px(CX,CY,R+40,bearing(CX,CY,NAV_X,NAV_Y)))" y="$(py(CX,CY,R+40,bearing(CX,CY,NAV_X,NAV_Y)))"/>               <Report msg="clear"/>             </Sequence>           </Member>         </IfThenElse>         <Member vname="ben">           <Route points="format=radial,x=$(CX),y=$(CY),radius=$(R),pts=$(N),rot=$(ROT)"/>         </Member>         <Stop vname="all"/>         <Erase label="rand_shape"/>         <Say msg="random shape done"/>       </Sequence>     </Team>   </BehaviorTree> </root>
+}
+
+// A play: no button, run by name. The plan file is read at each run,
+// so an edit reaches the next one.
+Play = alpha
+{
+  desc  = abe surveys the box at x 40..80, y -100..-60, then returns home
+  owner = abe
+  file  = plans/box_goto.xml
 }

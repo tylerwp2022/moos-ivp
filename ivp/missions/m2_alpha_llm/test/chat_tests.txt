@@ -726,7 +726,11 @@ check = reply_sentences <= 3
 # Phase 8: the button panel (added 2026-10-05). The model saves a
 # button to the run's copy of buttons.txt, a poke stands in for the
 # press (the panel posts the same LLM_BUTTON line), the model lists
-# and removes it. 8.2 types nothing: pokes only.
+# and removes it. 8.2 types nothing: pokes only. 8.3c, 8.5, 8.6 and
+# 8.7 (added 2026-10-06) are the model's own presses through run_play:
+# a plan button, the shipped play alpha (buttons.txt, no panel button),
+# the fixed STOP ALL button, and alpha run for another boat than its
+# saved owner.
 
 [8.1]
 say = make a button labelled BOX that sends abe around 40,-60 then 80,-60 then 80,-100 then 40,-100 and then home
@@ -768,7 +772,20 @@ issue = a guess from the fleet line, a proposal, or a remove
 answer = none
 check = tool make_button
 check = no_proposal
-check = reply_contains home
+check = either reply_contains home | reply_contains launch
+
+[8.3c]
+say = press the BOX button for me
+expect = one run_play call naming BOX (not the tree resent through run_plan), a proposal "press the button BOX; its plan runs for abe:" with the two steps, and after y "[approved, posted: button BOX pressed: posted BT_TREE_ABE=<behavior tree, ...>; its plan runs for abe]" as abe sets off; the driver halts abe afterwards
+issue = run_plan with the saved tree; a make_button call; no proposal; nothing runs
+answer = y
+wait = BT_STATE_ABE = running
+timeout = 60
+after = BT_CMD_ABE=halt
+check = tool run_play
+check = no_tool run_plan|make_button
+check = proposal_contains press the button BOX
+check = chat_contains button BOX pressed
 
 [8.4]
 say = remove the BOX button
@@ -779,6 +796,41 @@ check = tool make_button
 check = proposal_contains remove the button BOX
 check = chat_contains button BOX removed
 ask = Did BOX leave the panel while STOP ALL stayed?
+
+[8.5]
+say = run play alpha
+expect = one run_play call naming alpha, the play shipped in buttons.txt with no panel button (the fleet line lists it under plays), a proposal "run the play alpha for abe:" with the box survey steps from plans/box_goto.xml; n declines it and nothing moves
+issue = "no such button"; the plan file resent through run_plan; a make_button call; abe moves
+answer = n
+check = tool run_play
+check = no_tool run_plan|make_button
+check = proposal_contains run the play alpha for abe
+check = chat_contains declined
+
+[8.6]
+say = press STOP ALL
+expect = one run_play call naming STOP ALL, a proposal "press the button STOP ALL; it posts BT_CMD_ALL=halt, DEPLOY_ALL=false, RETURN_ALL=false"; after y the agent posts those three lines itself (the panel is not involved) and every plan halts
+issue = a stop or halt_plan tool instead; the lines not posted
+answer = y
+wait = DEPLOY_ALL = false
+timeout = 30
+check = tool run_play
+check = no_tool stop|halt_plan
+check = proposal_contains press the button STOP ALL
+check = chat_contains STOP ALL pressed
+
+[8.7]
+say = run play alpha for ben instead of abe
+expect = one run_play call naming alpha with owner ben, a proposal "run the play alpha for ben (saved for abe):" with the box survey steps; after y the plan goes to ben ("[approved, posted: play alpha pressed: posted BT_TREE_BEN=<behavior tree, ...>; its plan runs for ben]") and ben sets off; the driver halts ben afterwards
+issue = the plan sent to abe; run_plan with the file's tree; "alpha is saved for abe" as a refusal
+answer = y
+wait = BT_STATE_BEN = running
+timeout = 60
+after = BT_CMD_BEN=halt
+check = tool run_play
+check = no_tool run_plan|make_button
+check = proposal_contains run the play alpha for ben (saved for abe)
+check = chat_contains its plan runs for ben
 
 # ---------------------------------------------------------------
 # Phase 9: planning mode (added 2026-10-05). The mode is switched by

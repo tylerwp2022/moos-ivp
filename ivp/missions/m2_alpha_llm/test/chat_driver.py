@@ -433,7 +433,7 @@ def grade(test, records, facts):
     proposals = [r for r in records if r[1] == CHAT_OUT and r[3].startswith("ask")
                  and operator_line(r)]
     replies = [r for r in records if r[1] == CHAT_OUT and not r[3].startswith("ask")
-               and not r[4].startswith("[") and operator_line(r)]
+               and not r[4].startswith("[") and "interim" not in r[3] and operator_line(r)]
     alert_replies = [r for r in records if r[1] == CHAT_OUT and not r[3].startswith("ask")
                      and not r[4].startswith("[") and not operator_line(r)]
     # The preview requests the agent sent for its proposals (uPlanPreview's
@@ -654,6 +654,10 @@ def follow_turn(fleet, alog, test, text, answer, facts, first, pressed, gone):
                 if val.startswith("[error"):
                     facts["turn_error"] = val
                     facts["turn_done"] = True
+                elif "interim" in aux:
+                    # a sentence the model wrote before its tool calls: the
+                    # turn goes on (pLLMAgent tags it in the aux)
+                    log("   (interim: " + val[:80].replace("!@#", " ") + ")")
                 elif not val.startswith("["):
                     facts["turn_done"] = True
                     log("   reply: " + val[:100].replace("!@#", " "))

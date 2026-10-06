@@ -134,7 +134,11 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 | 8.2 | set first: LLM_BUTTON=BOX; (nothing typed) | a press (here a poke of LLM_BUTTON=BOX) runs the saved plan with no model call: "[button BOX: posted BT_TREE_ABE=<behavior tree, ...>]" and abe drives the box, then home | nothing happens, or the model is called |
 | 8.3 | `what buttons do I have on the panel?` | STOP ALL (fixed) and BOX, from the fleet line, no tool call | a guess, or a tool call to find out |
 | 8.3b | `what exactly does the BOX button do? read its saved plan` | one make_button call with show=true (no proposal, nothing posted) and a reply describing the saved plan: the route and the return home | a guess from the fleet line, a proposal, or a remove |
+| 8.3c | `press the BOX button for me`; afterwards: BT_CMD_ABE=halt | one run_play call naming BOX (not the tree resent through run_plan), a proposal "press the button BOX; its plan runs for abe:" with the two steps, and after y "[approved, posted: button BOX pressed: posted BT_TREE_ABE=<behavior tree, ...>; its plan runs for abe]" as abe sets off; the driver halts abe afterwards | run_plan with the saved tree; a make_button call; no proposal; nothing runs |
 | 8.4 | `remove the BOX button` | a make_button proposal "remove the button BOX"; after y "[approved, posted: button BOX removed]" and the panel loses it, STOP ALL stays | the button stays; STOP ALL gone too |
+| 8.5 | `run play alpha` | one run_play call naming alpha, the play shipped in buttons.txt with no panel button (the fleet line lists it under plays), a proposal "run the play alpha for abe:" with the box survey steps from plans/box_goto.xml; n declines it and nothing moves | "no such button"; the plan file resent through run_plan; a make_button call; abe moves |
+| 8.6 | `press STOP ALL` | one run_play call naming STOP ALL, a proposal "press the button STOP ALL; it posts BT_CMD_ALL=halt, DEPLOY_ALL=false, RETURN_ALL=false"; after y the agent posts those three lines itself (the panel is not involved) and every plan halts | a stop or halt_plan tool instead; the lines not posted |
+| 8.7 | `run play alpha for ben instead of abe`; afterwards: BT_CMD_BEN=halt | one run_play call naming alpha with owner ben, a proposal "run the play alpha for ben (saved for abe):" with the box survey steps; after y the plan goes to ben ("[approved, posted: play alpha pressed: posted BT_TREE_BEN=<behavior tree, ...>; its plan runs for ben]") and ben sets off; the driver halts ben afterwards | the plan sent to abe; run_plan with the file's tree; "alpha is saved for abe" as a refusal |
 
 ## Phase 9: planning mode
 
@@ -225,7 +229,11 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 | 8.2 | | |
 | 8.3 | | |
 | 8.3b | | |
+| 8.3c | | |
 | 8.4 | | |
+| 8.5 | | |
+| 8.6 | | |
+| 8.7 | | |
 | 9.1 | | |
 | 9.2 | | |
 | 10.1 | | |

@@ -154,8 +154,10 @@ if want("plans"):
         elif var in ("BUTTON_PRESS", "LLM_BUTTON_DEF"):
             label = val
             if var == "BUTTON_PRESS" and "button=" in aux:
-                # the panel's source aux is button=<label>, and a label with a
-                # space splits the line oddly: the label is the aux's, repeated
+                # the panel's source aux is button=<label>; in logs before
+                # 2026-10-06 a label with a space split the line oddly (the
+                # aux now writes the spaces as underscores): the label is the
+                # aux's, repeated
                 full = (aux + " " + val).split("button=", 1)[1]
                 half = len(full) // 2
                 if full[:half] == full[half + 1:]:
