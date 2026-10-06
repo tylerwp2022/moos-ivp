@@ -43,8 +43,15 @@ git), launches abe, ben, cal on ports 9101.. with the shoreside on 9100
 and results.json there beside the run's LOG_ and XLOG_ directories.
 
 fleet.sh here launches, inspects and kills a scratch fleet by hand (up,
-alog, down); pairs.py prints every boat pair's range over a window of an
-alog. Both are what the headless-fleet and review-run skills use.
+ready, run, chat, plan, team, dump, alog, down): plan copies a plan file
+in, pokes it on a boat or a team and waits for its end; team creates a
+team and waits for its plan slot; dump prints review.py's tables on the
+run so far. review.py turns a shoreside alog into the tables a review
+reads (chat, requests and cost, plan states, Say lines, problems,
+drawings with what is still on the map, first-step waits); views.py reads
+the proposal drawings and previews; pairs.py prints every boat pair's
+range over a window of an alog. These are what the headless-fleet and
+review-run skills use.
 
 How it works. The driver types each test's line into the chat by
 posting LLM_CHAT_IN with uPokeDB; the chat pane shows such a line as

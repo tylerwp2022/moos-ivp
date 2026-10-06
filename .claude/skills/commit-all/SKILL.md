@@ -11,6 +11,16 @@ submodule pointers: submodules first, fork last.
 
 ## 1. See what is pending
 
+First the one-shot check of everything below that can be checked
+mechanically; it prints a line per item and refuses with the list when
+anything is off:
+
+```
+~/moos-ivp/.claude/scripts/precommit.sh     # territory, submodule branches, build-check, four self-tests, chat_test.md current, 9100 ports free
+```
+
+Then the pending changes themselves:
+
 ```
 git -C ~/moos-ivp status --short | grep -vE '^\?\? ivp/missions/.*/(MOOSLog|LOG|XLOG)_'
 for m in moos-ivp-llm moos-ivp-bt moos-ivp-cap moos-ivp-team; do echo "-- $m"; git -C ~/moos-ivp/ivp/src/$m status -sb | head -1; git -C ~/moos-ivp/ivp/src/$m status --short; done

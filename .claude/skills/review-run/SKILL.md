@@ -24,6 +24,25 @@ The user launches live runs at time warp 5 (`./launch.sh --amt=3 5`).
 Alog timestamps and chat gaps are warped seconds; `LLM_USAGE latency=`
 is real seconds. Divide a gap by the warp before calling a turn slow.
 
+## 1b. One command first
+
+```
+python3 ivp/missions/m2_alpha_llm/test/review.py $A            # every table below, in order
+python3 ivp/missions/m2_alpha_llm/test/review.py $A --only usage,problems,drawings
+```
+
+`review.py` prints the run's record as the tables this skill asks for:
+the chat with tool-call bodies left out and arithmetic-heavy step lines
+trimmed, one line per request with its cost and a flag when the history
+was rewritten into the cache or the request was a cold start, the plan
+state changes with team events and button presses, the Say lines and
+collisions, the problems (steps that could not start, first-value waits,
+rejected trees and conditions, cut-off and error replies), every drawing
+by variable and label with when it was erased or STILL ON THE MAP when
+the log ended, and each plan load's wait before its first step. Read it
+first; the greps below are the detail behind each table, for digging
+into one thing.
+
 ## 2. The chat, in order
 
 ```

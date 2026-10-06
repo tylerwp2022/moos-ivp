@@ -42,6 +42,21 @@ before the helms are up); `run` instead of a hand-written side file (a
 missing MOOSTimeWarp makes the app's log timestamps garbage); `chat` for
 a one-line check, the chat-test driver for a scripted run.
 
+A plan under test is three lines, not a script:
+
+```
+ivp/missions/m2_alpha_llm/test/fleet.sh plan $S /path/to/plan.xml abe        # copies it into $S/plans/, checks it, pokes it, waits for success/failure/halted, exit 0 on success
+ivp/missions/m2_alpha_llm/test/fleet.sh team $S pair abe:ben                  # a team and its plan slot, for a team plan
+ivp/missions/m2_alpha_llm/test/fleet.sh plan $S /path/to/team_plan.xml pair
+ivp/missions/m2_alpha_llm/test/fleet.sh dump $S                                # review.py's plan tables on the run so far: states, Say lines, problems, drawings (STILL ON THE MAP), first-step waits
+ivp/missions/m2_alpha_llm/test/fleet.sh dump $S usage,chat                     # or any of review.py's sections
+```
+
+`plan` reports "never ran" when the owner is not a boat or an existing
+team, and a plan that `pBehaviorTree --check` rejects before poking it.
+`dump` reads the shoreside alog; a vehicle's own log (`$S/LOG_<V>_*`)
+is still the final word on timing, since the alog thins event bursts.
+
 Rules that cost time when broken:
 - One launch per subshell with its own `cd`: a backgrounded `cd X && a &`
   followed by `b &` runs `b` in the ORIGINAL directory, inside the real

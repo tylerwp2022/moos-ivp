@@ -4,6 +4,9 @@
 #   fleet.sh ready <scratch_dir> [timeout_s=180]   wait for helms, reports, facts, agent idle
 #   fleet.sh run   <scratch_dir> <app> ["config line" ...]   an app outside pAntler, on 9100
 #   fleet.sh chat  <scratch_dir> "<line>" [y|n|-] [timeout_s=120]   type, wait, answer, print
+#   fleet.sh plan  <scratch_dir> <plan.xml> <vname|team> [timeout_s=240]   copy the plan in, poke it, wait for its end
+#   fleet.sh team  <scratch_dir> <name> <a:b[:c]>   create a team and wait for its slot
+#   fleet.sh dump  <scratch_dir> [sections]   the run's record so far (review.py: plans,says,problems,drawings,holds)
 #   fleet.sh down  <scratch_dir>
 #   fleet.sh alog  <scratch_dir>          the newest shoreside alog, or nothing yet
 # up copies the mission files and launches each app in its own subshell
@@ -13,7 +16,14 @@
 # port, time warp and datum plus the config lines given, and logs the
 # console to <app>.out. chat pokes LLM_CHAT_IN, waits for a proposal or
 # a reply, answers y or n if asked (- leaves it pending), and prints
-# what the agent said. down kills everything whose cwd is the scratch dir.
+# what the agent said. plan copies the file into <scratch>/plans/ (a path
+# already there is used as is), posts BT_TREE_FILE_<OWNER>=plans/<file>
+# on the shoreside, waits for running and then for success, failure or
+# halted, and prints the outcome with the time it took; exit 0 on success.
+# team posts TEAM_CMD create and waits for the team's plan slot to open.
+# dump prints review.py's tables for the shoreside alog so far, the plan
+# sections by default or the comma list given. down kills everything whose
+# cwd is the scratch dir.
 set -u
 BIN=/home/tyler/moos-ivp/bin
 NAMES=(abe ben cal deb)
@@ -148,7 +158,78 @@ case "$cmd" in
       echo "answered $ANSWER:"; show $N1
     fi
     ;;
+  plan)
+    S=$1; PLAN=$2; OWNER=$(echo "$3" | tr a-z A-Z); LIMIT=${4:-240}; SH=$S/targ_shoreside.moos
+    [ -f "$SH" ] || { echo "no $SH yet: fleet.sh up first"; exit 1; }
+    WARP=$(grep -m1 "^MOOSTimeWarp" "$SH" 2>/dev/null | tr -dc '0-9.'); WARP=${WARP:-1}
+    mkdir -p "$S/plans"
+    NAME=$(basename "$PLAN")
+    if [ -f "$PLAN" ] && [ "$(readlink -f "$PLAN")" != "$(readlink -f "$S/plans/$NAME")" ]; then cp "$PLAN" "$S/plans/$NAME"; fi
+    [ -f "$S/plans/$NAME" ] || { echo "no such plan: $PLAN"; exit 1; }
+    # a boat's plan checks as such; anything else is a team, checked
+    # with the fleet's boats as the roster
+    BOATS=$(ls "$S"/targ_*.moos 2>/dev/null | xargs -r -n1 basename | sed 's/targ_//; s/.moos//' | grep -v shoreside | tr '\n' ',' | sed 's/,$//')
+    CHECK=""
+    echo ",$BOATS," | grep -q ",$(echo $OWNER | tr A-Z a-z)," || CHECK="--team --roster=$BOATS"
+    $BIN/pBehaviorTree --check="$S/plans/$NAME" $CHECK >/dev/null 2>&1 || { echo "plan does not check: pBehaviorTree --check=$S/plans/$NAME $CHECK"; exit 1; }
+    # The outcome is read from the shoreside log, not polled from the
+    # DB: a plan that ends within one tick is running too briefly for a
+    # poll to see, and the DB's current value may be an earlier plan's
+    A=$(ls "$S"/XLOG_SHORESIDE_*/*.alog 2>/dev/null | tail -1)
+    [ -z "$A" ] && { echo "no shoreside log yet"; exit 1; }
+    T0=$(date +%s)
+    $BIN/uPokeDB "$SH" "BT_TREE_FILE_$OWNER=plans/$NAME" >/dev/null 2>&1
+    END=""; RAN=""
+    while true; do
+      # the poke's own line gives the log time it landed; states after it are this plan's
+      LT=$(grep -E "^\S+\s+BT_TREE_FILE_$OWNER\s" "$A" | tail -1 | awk '{print $1}')
+      if [ -n "$LT" ]; then
+        STATES=$(awk -v lt="$LT" -v v="BT_STATE_$OWNER" '$2==v && $1>=lt {print $4}' "$A" | tr '\n' ' ')
+        case " $STATES" in *" running"*) RAN=1;; esac
+        for st in success failure halted; do case " $STATES" in *" $st"*) END=$st;; esac; done
+        case " $STATES" in *"error="*) END=$(echo "$STATES" | tr ' ' '\n' | grep -m1 error=);; esac
+      fi
+      [ -n "$END" ] && break
+      NOW=$(( $(date +%s) - T0 ))
+      if [ $NOW -ge $LIMIT ]; then break; fi
+      sleep 1
+    done
+    DT=$(( $(date +%s) - T0 ))
+    V=$(echo $OWNER | tr A-Z a-z)
+    if [ -z "$END" ] && [ -z "$RAN" ]; then
+      echo "plan $NAME on $V: never ran within ${DT}s (is the owner a boat or an existing team?)"; exit 1
+    fi
+    echo "plan $NAME on $V: ${END:-still running} after ${DT}s real ($((DT*${WARP%.*})) warped)"
+    [ "$END" = "success" ]
+    ;;
+  team)
+    S=$1; NAME=$2; MEMBERS=$3; SH=$S/targ_shoreside.moos
+    [ -f "$SH" ] || { echo "no $SH yet: fleet.sh up first"; exit 1; }
+    WARP=$(grep -m1 "^MOOSTimeWarp" "$SH" 2>/dev/null | tr -dc '0-9.'); WARP=${WARP:-1}
+    $BIN/uPokeDB "$SH" "TEAM_CMD:=action=create,name=$NAME,members=$MEMBERS" >/dev/null 2>&1
+    UP=$(echo "$NAME" | tr a-z A-Z)
+    if timeout 30 $BIN/uQueryDB "$SH" --condition="BT_STATE_$UP = idle" --wait=$((20*WARP)) >/dev/null 2>&1; then
+      echo "team $NAME ($MEMBERS) created, plan slot open"
+    else
+      echo "team $NAME: no plan slot after 20 s (uFldTeam or the team executor not up?)"; exit 1
+    fi
+    ;;
+  dump)
+    S=$1; SECTIONS=${2:-plans,says,problems,drawings,holds}
+    A=$(ls "$S"/XLOG_SHORESIDE_*/*.alog 2>/dev/null | tail -1)
+    [ -z "$A" ] && { echo "no shoreside log yet"; exit 1; }
+    python3 "$(dirname "$0")/review.py" "$A" --only "$SECTIONS"
+    # A boat's events never reach the shoreside log: its first-step
+    # wait is read from its own alog (load -> running -> first event)
+    case ",$SECTIONS," in *,holds,*)
+      for V in "$S"/LOG_*_*/*.alog; do
+        [ -f "$V" ] || continue
+        vn=$(basename "$V" | sed -E 's/^LOG_([A-Za-z0-9]+)_.*/\1/' | tr A-Z a-z)
+        awk -v vn="$vn" '($2=="BT_TREE_FILE"||$2=="BT_TREE")&&$1!=last{last=$1; lt=$1; rt=""; et=""} $2=="BT_STATE"&&$4=="running"&&lt!=""&&rt==""{rt=$1} $2=="BT_EVENT"&&rt!=""&&et==""&&$1>=rt{et=$1; printf "%9.1f %8s running +%.2f s, first event +%.2f s (own log)\n", lt, vn, rt-lt, et-rt; lt=""}' "$V"
+      done;;
+    esac
+    ;;
   *)
-    sed -n 2,16p "$0"; exit 2
+    sed -n 2,19p "$0"; exit 2
     ;;
 esac
