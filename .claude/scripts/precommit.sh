@@ -3,7 +3,10 @@
 # in one run. Exit 1 and the list of failures when anything is off.
 #   territory   no change outside the fork's territory (upstream_check.sh)
 #   submodules  each fork submodule on main tracking origin/main, not behind
-#   build       build-check.sh finds every expected binary
+#   build       the incremental build in build/ivp relinks anything stale (an
+#               app not rebuilt after a lib_* change would pass the next
+#               check and run old code: the empty panel of 2026-10-06),
+#               then build-check.sh finds every expected binary
 #   selftests   cap, bt, llm, team self-tests: 0 failures
 #   chat test   chat_test.md is current with test/chat_tests.txt
 #   fleet       no scratch fleet on the 9100 ports
@@ -25,7 +28,17 @@ for m in moos-ivp-llm moos-ivp-bt moos-ivp-cap moos-ivp-team moos-ivp-dyn moos-i
 done
 [ -z "$(echo "$fails" | grep '^submodules')" ] && say submodules "six on main, none behind"
 
-if out=$("$REPO/build-check.sh" 2>&1); then say build "ok"; else fail build "$(echo "$out" | grep -i missing | head -1)"; fi
+if [ -d "$REPO/build/ivp" ]; then
+  if out=$(make -C "$REPO/build/ivp" -j8 2>&1); then
+    n=$(echo "$out" | grep -c 'Linking CXX')
+    say build "incremental make ok, $n target$([ "$n" = 1 ] || echo s) relinked"
+  else
+    fail build "make: $(echo "$out" | grep -iE 'error' | head -1)"
+  fi
+else
+  fail build "build/ivp is missing: run ./build-ivp.sh first"
+fi
+if out=$("$REPO/build-check.sh" 2>&1); then say build "every expected binary present"; else fail build "$(echo "$out" | grep -i missing | head -1)"; fi
 
 for t in cap bt llm team; do
   if [ -x "$REPO/bin/${t}_selftest" ]; then
