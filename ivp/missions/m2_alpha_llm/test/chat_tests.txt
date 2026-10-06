@@ -761,6 +761,15 @@ check = no_proposal
 check = reply_contains BOX
 check = reply_sentences <= 3
 
+[8.3b]
+say = what exactly does the BOX button do? read its saved plan
+expect = one make_button call with show=true (no proposal, nothing posted) and a reply describing the saved plan: the route and the return home
+issue = a guess from the fleet line, a proposal, or a remove
+answer = none
+check = tool make_button
+check = no_proposal
+check = reply_contains home
+
 [8.4]
 say = remove the BOX button
 expect = a make_button proposal "remove the button BOX"; after y "[approved, posted: button BOX removed]" and the panel loses it, STOP ALL stays

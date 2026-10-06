@@ -133,6 +133,7 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 | 8.1 | `make a button labelled BOX that sends abe around 40,-60 then 80,-60 then 80,-100 then 40,-100 and then home` | one make_button proposal reading "button BOX for abe, saved with the mission; each press runs:" with two steps (the route, return); after y "[approved, posted: button BOX saved to buttons.txt ...]" and the panel shows BOX | a run_plan or route instead of a button (abe would move now); no steps shown; the button missing from the panel |
 | 8.2 | set first: LLM_BUTTON=BOX; (nothing typed) | a press (here a poke of LLM_BUTTON=BOX) runs the saved plan with no model call: "[button BOX: posted BT_TREE_ABE=<behavior tree, ...>]" and abe drives the box, then home | nothing happens, or the model is called |
 | 8.3 | `what buttons do I have on the panel?` | STOP ALL (fixed) and BOX, from the fleet line, no tool call | a guess, or a tool call to find out |
+| 8.3b | `what exactly does the BOX button do? read its saved plan` | one make_button call with show=true, no proposal, nothing posted; the reply describes the saved plan (the route, then home) | a guess from the fleet line, a proposal, or a remove |
 | 8.4 | `remove the BOX button` | a make_button proposal "remove the button BOX"; after y "[approved, posted: button BOX removed]" and the panel loses it, STOP ALL stays | the button stays; STOP ALL gone too |
 
 ## Phase 9: planning mode
@@ -223,6 +224,7 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 | 8.1 | | |
 | 8.2 | | |
 | 8.3 | | |
+| 8.3b | | |
 | 8.4 | | |
 | 9.1 | | |
 | 9.2 | | |

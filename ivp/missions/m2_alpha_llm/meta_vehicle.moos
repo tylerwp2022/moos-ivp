@@ -199,7 +199,7 @@ ProcessConfig = pBehaviorTree
   fail_flag = DEPLOY=false
   fail_flag = RETURN=false
 
-  watch = DEPLOY, RETURN, TASK, MISSION, IVPHELM_STATE, NAV_X, NAV_Y, NAV_SPEED
+  watch = DEPLOY, RETURN, TASK, MISSION, IVPHELM_STATE, NAV_X, NAV_Y, NAV_SPEED, NAV_HEADING
 
   capability_dir = helm      // the same sets and filters as pLLMAgent
   capability_dir = contact   // follow (BHV_Convoy), intercept (BHV_CutRange), avoid
