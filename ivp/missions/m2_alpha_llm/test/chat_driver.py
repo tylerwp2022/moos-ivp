@@ -215,6 +215,14 @@ class Fleet:
             if os.path.isdir(dst):
                 shutil.rmtree(dst)
             shutil.copytree(os.path.join(self.mission_dir, sub), dst)
+        # The button panel's file: pLLMAgent writes to the copy, never
+        # to the mission's own
+        if os.path.isfile(os.path.join(self.mission_dir, "buttons.txt")):
+            shutil.copy(os.path.join(self.mission_dir, "buttons.txt"), self.scratch)
+        # Who owns this fleet, for the Stop hook (.claude/hooks/fleet_check.sh):
+        # a fleet whose driver is still running passes, a leftover blocks
+        with open(os.path.join(self.scratch, ".driver"), "w") as f:
+            f.write("%d\n" % os.getpid())
         # The viewer's fourth button becomes NEXT_TEST, and
         # the Action menu gets the same entry
         p = os.path.join(self.scratch, "meta_shoreside.moos")

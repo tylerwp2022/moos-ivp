@@ -174,6 +174,11 @@ void showExampleConfigAndExit()
   blk("                                 // app posts shows as <app>>    ");
   blk("  chat_out_var         = LLM_CHAT_OUT                           ");
   blk("  chat_status_var      = LLM_STATUS                             ");
+  blk("  chat_font_size       = 12         // 8..32 points; Ctrl+= and ");
+  blk("                                    // Ctrl+- change it live     ");
+  blk("  chat_mode_var        = LLM_MODE   // the agent's mode beside   ");
+  blk("                                    // the status; planning tints");
+  blk("                                    // the line amber; off = none");
   blk("                                                                ");
   blk("  realmcast_show_source        = true  // {TRUE,false}          ");
   blk("  realmcast_show_community     = true  // {TRUE,false}          ");

@@ -51,6 +51,7 @@ PMV_MOOSApp::PMV_MOOSApp()
   m_chat_in_var        = "LLM_CHAT_IN";
   m_chat_out_var       = "LLM_CHAT_OUT";
   m_chat_status_var    = "LLM_STATUS";
+  m_chat_mode_var      = "LLM_MODE";
   m_chat_plan_var      = "BT_CHAT";
 
   VarDataPair pair1("HELM_MAP_CLEAR", 0);
@@ -265,6 +266,8 @@ void PMV_MOOSApp::registerVariables()
   Register(m_chat_out_var, 0);
   Register(m_chat_in_var, 0);      // lines other apps type, echoed
   Register(m_chat_status_var, 0);
+  if(m_chat_mode_var != "")
+    Register(m_chat_mode_var, 0);
   if(m_chat_plan_var != "") {
     // BT_CHAT_* takes a fleet's per-vehicle copies (BT_CHAT_ABE, ...)
     // and the bare BT_CHAT of a local executor as well
@@ -423,6 +426,10 @@ void PMV_MOOSApp::handleNewMail(const MOOS_event & e)
     }
     else if(key == m_chat_status_var) {
       m_gui->setChatStatus(sval);
+      handled = true;
+    }
+    else if((m_chat_mode_var != "") && (key == m_chat_mode_var)) {
+      m_gui->setChatMode(sval);
       handled = true;
     }
       
@@ -955,6 +962,8 @@ void PMV_MOOSApp::handleStartUp(const MOOS_event & e) {
       handled = m_gui->setChatWidth(value);
     else if(param == "chat_input_lines")
       handled = m_gui->setChatInputLines(value);
+    else if(param == "chat_font_size")
+      handled = m_gui->setChatFontSize(value);
     else if(param == "chat_in_var") {
       handled = setNonWhiteVarOnString(m_chat_in_var, value);
       m_gui->setChatInVar(m_chat_in_var);
@@ -963,6 +972,14 @@ void PMV_MOOSApp::handleStartUp(const MOOS_event & e) {
       handled = setNonWhiteVarOnString(m_chat_out_var, value);
     else if(param == "chat_status_var")
       handled = setNonWhiteVarOnString(m_chat_status_var, value);
+    else if(param == "chat_mode_var") {
+      if(tolower(value) == "off") {
+	m_chat_mode_var = "";
+	handled = true;
+      }
+      else
+	handled = setNonWhiteVarOnString(m_chat_mode_var, value);
+    }
     else if(param == "chat_plan_var") {
       if(tolower(value) == "off") {
 	m_chat_plan_var = "";

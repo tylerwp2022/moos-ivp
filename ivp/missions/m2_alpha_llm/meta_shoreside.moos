@@ -31,6 +31,7 @@ ProcessConfig = ANTLER
   Run = uFldNodeComms   @ NewConsole = false
 #ifndef NOGUI
   Run = pMarineViewer   @ NewConsole = false
+  Run = uButtonPanel    @ NewConsole = false
 #endif
   Run = pLLMAgent       @ NewConsole = false
   Run = pBehaviorTree   @ NewConsole = false
@@ -179,6 +180,7 @@ ProcessConfig = pMarineViewer
   chat_viewable        = true
   chat_width           = 28
   chat_input_lines     = 6
+  chat_font_size       = 12       // Ctrl+= / Ctrl+- change it live
   chat_plan_var        = BT_CHAT_*
 
   // No mouse context: the vehicles are driven from the chat, the
@@ -204,6 +206,25 @@ ProcessConfig = pMarineViewer
 }
 
 //------------------------------------------
+// uButtonPanel config block: the operator's button panel, its own
+// window. One button per block of buttons.txt: the fixed ones the
+// mission wrote by hand, and the ones pLLMAgent's make_button tool
+// saves there (those post LLM_BUTTON=<label> and pLLMAgent runs the
+// saved plan). The file is re-read whenever it changes on disk.
+
+ProcessConfig = uButtonPanel
+{
+  AppTick   = 4
+  CommsTick = 4
+
+  buttons_file  = buttons.txt   // the file pLLMAgent writes too
+  columns       = 2
+  button_height = 40
+  width         = 320
+  height        = 160
+}
+
+//------------------------------------------
 // pLLMAgent config block
 // The API key is read from the ANTHROPIC_API_KEY environment
 // variable of the shell that runs launch.sh; it is never stored here.
@@ -222,7 +243,15 @@ ProcessConfig = pLLMAgent
   // 8192 keeps a turn under about two minutes; the timeout must sit
   // above that or a good reply is dropped and retried.
   max_tokens      = 8192
-  timeout         = 200
+  timeout         = 300
+  planning_max_tokens = 16384 // planning turns may think longer (~4.5 min at most, hence timeout 300)
+  planning_effort = medium    // and deeper; mission mode keeps effort low for tempo
+
+  // What the run costs, on the appcast and as LLM_COST: the prices
+  // default to claude-opus-5-5's (price_* lines override them as they
+  // change); budget is dollars for this run, left = budget - spent,
+  // this agent's requests only, never the account's balance.
+  budget = 20                 // edit to your allowance; 0 = none
   confirm_default = true
 
   // The fleet: every capability whose file names no receivers takes a
@@ -274,8 +303,19 @@ ProcessConfig = pLLMAgent
   capability_dir = team
   capability_dir = contact
   capability_drop = turn_limit, turn_limit_off, periodic_speed, periodic_speed_off
-  view_color = orange, yellow, magenta, cyan, dodger_blue, white
+  view_color = orange, magenta, cyan, dodger_blue, white, yellow   // yellow last: a running plan step is yellow
   preview_var = PLAN_PREVIEW   // uPlanPreview plays the proposal out on phantom boats
+
+  // The operator's button panel (uButtonPanel shows the same file):
+  // the make_button tool saves a button here with the plan it runs,
+  // a press posts its label on LLM_BUTTON and the plan goes out as an
+  // approved run_plan would, with no model call.
+  buttons_file = buttons.txt
+
+  // mission: act at once, short replies (a live run). planning: ask
+  // before proposing, answer at length (designing a button or a plan
+  // to keep). Type planning or mission in the chat to switch.
+  mode = mission
 
   app_logging = true
 }

@@ -29,7 +29,7 @@ cd ivp/src_unit_tests && ./alltest.sh               # runs every dir that has a 
 cd ivp/src_unit_tests/testConvexHull && utest cases.utf -v   # one test
 ```
 
-The framework is homegrown: the `utest` runner drives table-driven `cases.utf` files; a `.skip_test` marker makes a dir non-fatal. No gtest/catch2. CI (`.github/workflows/build.yml`) runs `build.sh`, `build-check.sh`, `build-utests.sh`, and `alltest.sh` on Ubuntu 24.04 and macOS for pushes to `main` and `llm-integration`. It checks out submodules recursively; the private ones need the repository secret `SUBMODULE_TOKEN`, a fine-grained PAT with contents read access to the fork and to `moos-ivp-llm`, `moos-ivp-bt`, `moos-ivp-cap` and `moos-ivp-team` (a submodule the PAT does not cover fails every job at checkout with a 403). The offline self-tests `bin/cap_selftest`, `bin/bt_selftest`, `bin/llm_selftest` and `bin/team_selftest` are not run by CI.
+The framework is homegrown: the `utest` runner drives table-driven `cases.utf` files; a `.skip_test` marker makes a dir non-fatal. No gtest/catch2. CI (`.github/workflows/build.yml`) runs `build.sh`, `build-check.sh`, `build-utests.sh`, and `alltest.sh` on Ubuntu 24.04 and macOS for pushes to `main` and `llm-integration`. It checks out submodules recursively; the private ones need the repository secret `SUBMODULE_TOKEN`, a fine-grained PAT with contents read access to the fork and to `moos-ivp-llm`, `moos-ivp-bt`, `moos-ivp-cap`, `moos-ivp-team`, `moos-ivp-dyn` and `moos-ivp-panel` (a submodule the PAT does not cover fails every job at checkout with a 403). The offline self-tests `bin/cap_selftest`, `bin/bt_selftest`, `bin/llm_selftest` and `bin/team_selftest` are not run by CI.
 
 ## Architecture
 
@@ -52,11 +52,13 @@ The framework is homegrown: the `utest` runner drives table-driven `cases.utf` f
 
 ## LLM integration (branch `llm-integration`)
 
-Four submodules under `ivp/src/`, each with the README that is its reference:
+Six submodules under `ivp/src/`, each with the README that is its reference:
 - `moos-ivp-llm`: `lib_llm` and `pLLMAgent`, the operator-chat agent (tool grammar, MOOS interface, confirmation flow, prompt and tool-count briefing in its README).
 - `moos-ivp-bt`: `lib_bt` and `pBehaviorTree`, the plan executor, per vehicle and in team mode on the shoreside; `pBehaviorTree --check=<file> [--team --roster=abe,ben]` validates a plan offline.
 - `moos-ivp-cap`: the capability files, one per tool and plan leaf, in sets a mission picks with `capability_dir` / `capability_keep` / `capability_drop`.
 - `moos-ivp-team`: `lib_team` and `uFldTeam`, teams as objects with formations around a virtual leader.
+- `moos-ivp-dyn`: `lib_dyn` and `uDynamicsTest`, the measured vehicle dynamics that reach the agent's prompt as facts.
+- `moos-ivp-panel`: `uButtonPanel`, the operator's button panel (its own FLTK window) over the mission's `buttons.txt`; the `make_button` tool (in moos-ivp-bt's capabilities) saves buttons there and pLLMAgent runs their plans on a press. The file's reader and writer, `ButtonFile`, is in `lib_cap`.
 
 Fork-side: the pMarineViewer chat pane (the only upstream edits besides `ivp/src/CMakeLists.txt`; `local-patches/` records any other deliberate upstream edit), `ivp/missions/s1_alpha_llm/` (one vehicle) and `ivp/missions/m2_alpha_llm/` (fleet, teams, contact set; its README explains the bridging and the roster variables; `test/` holds the scripted chat test).
 
@@ -74,4 +76,4 @@ Rules: `ANTHROPIC_API_KEY` comes from the environment and never goes in a missio
 
 ## Skills
 
-`.claude/skills/` holds the repo's procedures as Claude Code skills, invoked by name: `fix-review` (how a review and its fixes are run), `review-run` (read a live run's logs), `headless-fleet` (scratch fleet on the 9100 ports, with `fleet.sh`), `commit-all` (submodules first, fork last, no attribution lines, then CI), `chat-test` (the scripted chat test, headless or with the viewer). Prefer them over re-deriving the steps. `.claude/hooks/` holds the hooks `.claude/settings.json` enables: `fleet_check.sh` (Stop) refuses to end a turn while a scratch fleet is still up on the 9100 ports, until it is shut down or the reply says why it stays up.
+`.claude/skills/` holds the repo's procedures as Claude Code skills, invoked by name: `fix-review` (how a review and its fixes are run), `review-run` (read a live run's logs), `headless-fleet` (scratch fleet on the 9100 ports, with `fleet.sh`), `commit-all` (submodules first, fork last, no attribution lines, then CI), `chat-test` (the scripted chat test, headless or with the viewer). Prefer them over re-deriving the steps. `.claude/hooks/` holds the hooks `.claude/settings.json` enables: `fleet_check.sh` (Stop) refuses to end a turn while a scratch fleet is still up on the 9100 ports with no running test owning it (`fleet.sh up` and the chat driver record their owner's PID in the scratch dir's `.driver`), until it is shut down or the reply says why it stays up.

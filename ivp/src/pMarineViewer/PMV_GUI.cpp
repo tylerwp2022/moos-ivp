@@ -72,7 +72,8 @@ PMV_GUI::PMV_GUI(int g_w, int g_h, const char *g_l)
   m_chat_disp->buffer(m_chat_buff);
   m_chat_disp->wrap_mode(Fl_Text_Display::WRAP_AT_BOUNDS, 0);
   m_chat_disp->textfont(FL_COURIER);
-  m_chat_disp->textsize(12);
+  m_chat_font_size = 12;
+  m_chat_disp->textsize(m_chat_font_size);
   m_chat_disp->box(FL_DOWN_BOX);
   m_chat_disp->clear_visible_focus();
 
@@ -85,15 +86,19 @@ PMV_GUI::PMV_GUI(int g_w, int g_h, const char *g_l)
     m_chat_colors[i]       = "auto";
     m_chat_styles[i].color = FL_BLACK;
     m_chat_styles[i].font  = FL_COURIER;
-    m_chat_styles[i].size  = 12;
+    m_chat_styles[i].size  = m_chat_font_size;
     m_chat_styles[i].attr  = 0;
   }
   m_chat_disp->highlight_data(m_chat_style, m_chat_styles, 4, 'A', 0, 0);
 
   m_chat_status = new Fl_Output(0, 0, 1, 1);
-  m_chat_status->textsize(11);
+  m_chat_status->textsize(m_chat_font_size - 1);
   m_chat_status->value("llm: idle");
   m_chat_status->clear_visible_focus();
+  m_chat_status_text = "idle";
+  m_chat_mode        = "mission";
+  m_chat_status_back = FL_BACKGROUND_COLOR;
+  m_chat_status_fore = FL_FOREGROUND_COLOR;
 
   m_chat_input = new PMV_ChatInput(0, 0, 1, 1);
   m_chat_input->textfont(FL_COURIER);
@@ -307,6 +312,10 @@ void PMV_GUI::augmentMenu()
 		 (Fl_Callback*)PMV_GUI::cb_ChatToggle, (void*)0, 0);
   m_menubar->add("InfoCasting/    Chat Pane Wider", FL_CTRL+']',
 		 (Fl_Callback*)PMV_GUI::cb_ChatWidth, (void*)1, 0);
+  m_menubar->add("InfoCasting/    Chat Text Larger", FL_CTRL+'=',
+		 (Fl_Callback*)PMV_GUI::cb_ChatFont, (void*)1, 0);
+  m_menubar->add("InfoCasting/    Chat Text Smaller", FL_CTRL+'-',
+		 (Fl_Callback*)PMV_GUI::cb_ChatFont, (void*)2, 0);
   m_menubar->add("InfoCasting/    Chat Pane Narrower", FL_CTRL+'[',
 		 (Fl_Callback*)PMV_GUI::cb_ChatWidth, (void*)2,
 		 FL_MENU_DIVIDER);
@@ -982,6 +991,65 @@ void PMV_GUI::cb_ChatWidth(Fl_Widget* o, int v)
 }
 
 //----------------------------------------------------------
+// Procedure: cb_ChatFont / setChatFontSize / adjustChatFontSize / applyChatFontSize
+//   Purpose: The chat pane's text size, 8 to 32 points: the config
+//            line chat_font_size, and Ctrl+= / Ctrl+- at run time.
+//            The transcript's four styles, the input box and the
+//            status line follow; the pane is laid out again since
+//            the input's height depends on the font.
+
+inline void PMV_GUI::cb_ChatFont_i(int v)
+{
+  if(v == 1)
+    adjustChatFontSize(2);
+  else if(v == 2)
+    adjustChatFontSize(-2);
+}
+
+void PMV_GUI::cb_ChatFont(Fl_Widget* o, int v)
+{
+  ((PMV_GUI*)(o->parent()->user_data()))->cb_ChatFont_i(v);
+}
+
+bool PMV_GUI::setChatFontSize(string s)
+{
+  s = stripBlankEnds(s);
+  if(!isNumber(s))
+    return(false);
+  int n = atoi(s.c_str());
+  if((n < 8) || (n > 32))
+    return(false);
+  m_chat_font_size = n;
+  applyChatFontSize();
+  return(true);
+}
+
+void PMV_GUI::adjustChatFontSize(int delta)
+{
+  int n = m_chat_font_size + delta;
+  if(n < 8)
+    n = 8;
+  if(n > 32)
+    n = 32;
+  if(n == m_chat_font_size)
+    return;
+  m_chat_font_size = n;
+  applyChatFontSize();
+}
+
+void PMV_GUI::applyChatFontSize()
+{
+  m_chat_disp->textsize(m_chat_font_size);
+  for(unsigned int i=0; i<4; i++)
+    m_chat_styles[i].size = m_chat_font_size;
+  m_chat_disp->highlight_data(m_chat_style, m_chat_styles, 4, 'A', 0, 0);
+  m_chat_input->textsize(m_chat_font_size);
+  m_chat_status->textsize((m_chat_font_size > 9) ? (m_chat_font_size - 1) : m_chat_font_size);
+  resizeWidgets();
+  redraw();
+}
+
+//----------------------------------------------------------
 // Procedure: cb_ChatDrag
 //   Purpose: The splitter is being dragged; the pane's left edge
 //            follows the mouse.
@@ -1114,8 +1182,37 @@ void PMV_GUI::applyChatColors(Fl_Color back, Fl_Color text)
 
 void PMV_GUI::setChatStatus(string status)
 {
-  string s = "llm: " + status;
+  m_chat_status_text = status;
+  renderChatStatus();
+}
+
+//----------------------------------------------------------
+// Procedure: setChatMode / renderChatStatus
+//   Purpose: The agent's mode (pLLMAgent posts it on LLM_MODE) beside
+//            its status. Planning mode, where the agent asks before
+//            it proposes, tints the line amber so it is seen from
+//            across the room; mission mode leaves the pane's colors.
+
+void PMV_GUI::setChatMode(string mode)
+{
+  m_chat_mode = tolower(stripBlankEnds(mode));
+  renderChatStatus();
+}
+
+void PMV_GUI::renderChatStatus()
+{
+  bool planning = (m_chat_mode == "planning");
+  string s = "llm: " + m_chat_status_text + (planning ? " | planning" : "");
   m_chat_status->value(s.c_str());
+  if(planning) {
+    m_chat_status->color(fl_rgb_color(255, 214, 120));
+    m_chat_status->textcolor(FL_BLACK);
+  }
+  else {
+    m_chat_status->color(m_chat_status_back);
+    m_chat_status->textcolor(m_chat_status_fore);
+  }
+  m_chat_status->redraw();
 }
 
 //----------------------------------------------------------
@@ -3557,8 +3654,9 @@ void PMV_GUI::resizeWidgets()
     m_chat_disp->color(color_back);
     m_chat_disp->textcolor(color_text);
     applyChatColors(color_back, color_text);
-    m_chat_status->color(color_back);
-    m_chat_status->textcolor(color_text);
+    m_chat_status_back = color_back;
+    m_chat_status_fore = color_text;
+    renderChatStatus();
     m_chat_input->color(color_back);
     m_chat_input->textcolor(color_text);
     m_chat_input->cursor_color(color_text);

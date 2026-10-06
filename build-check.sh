@@ -252,6 +252,7 @@ if [ "${MIN_ROBOT}" = "no" ] ; then
     if [ ! -e bin/uMACView ];    then  MISSING+="uMACView,"; fi
     if [ ! -e bin/uPlotViewer ]; then  MISSING+="uPlotViewer,"; fi
     if [ ! -e bin/uCommand ];    then  MISSING+="uCommand,"; fi
+    if [ ! -e bin/uButtonPanel ]; then  MISSING+="uButtonPanel,"; fi
 fi
 
 if [[ "$MISSING" == *, ]]; then

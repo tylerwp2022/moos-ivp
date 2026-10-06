@@ -1,0 +1,14 @@
+// Buttons of this mission: what uButtonPanel shows and what a press
+// posts. pLLMAgent writes the blocks the make_button tool makes (a
+// block with an owner and a tree, pressed through LLM_BUTTON) and
+// re-reads the file when it changes; blocks may also be written by
+// hand, with any posts, like the one below. One block per button.
+
+Button = STOP
+{
+  desc  = Halt the plan and idle the helm
+  color = red
+  post  = BT_CMD = halt
+  post  = DEPLOY = false
+  post  = RETURN = false
+}

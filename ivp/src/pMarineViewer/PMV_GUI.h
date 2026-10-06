@@ -91,10 +91,15 @@ public:
   bool  setChatColor(std::string role, std::string color);
   void  applyChatColors(Fl_Color back, Fl_Color text);
   void  setChatStatus(std::string);
+  void  setChatMode(std::string);        // mission | planning: shown beside the status, planning tinted
+  void  renderChatStatus();
   bool  setChatViewable(std::string);
   bool  setChatWidth(std::string);
   bool  setChatInputLines(std::string);
   bool  adjustChatWidth(double delta_pct);
+  bool  setChatFontSize(std::string);     // 8..32 points for the transcript, input and status
+  void  adjustChatFontSize(int delta);
+  void  applyChatFontSize();
   void  setChatInVar(std::string s) {m_chat_in_var=s;}
 
  public: // Window title bar preferences
@@ -170,6 +175,8 @@ public: // InfoCast Related Functions
   static void cb_ChatToggle(Fl_Widget*);
   inline void cb_ChatWidth_i(int);
   static void cb_ChatWidth(Fl_Widget*, int);
+  inline void cb_ChatFont_i(int);
+  static void cb_ChatFont(Fl_Widget*, int);
   inline void cb_ChatDrag_i();
   static void cb_ChatDrag(Fl_Widget*);
   static void cb_ChatGrow(void*);
@@ -286,7 +293,12 @@ public: // InfoCast Related Functions
   std::string      m_chat_colors[4];  // "auto" or a color name, same order
   PMV_ChatInput   *m_chat_input;
   Fl_Output       *m_chat_status;
+  std::string      m_chat_status_text;  // the agent's status word(s)
+  std::string      m_chat_mode;         // mission | planning
+  Fl_Color         m_chat_status_back;  // the pane's colors, restored out of planning mode
+  Fl_Color         m_chat_status_fore;
   bool             m_chat_viewable;
+  int              m_chat_font_size;
   double           m_chat_width;    // fraction of window width
   PMV_ChatSplitter *m_chat_split;
   std::string      m_chat_in_var;

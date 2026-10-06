@@ -36,6 +36,7 @@ case "$cmd" in
     mkdir -p "$S"
     cp "$M"/meta_*.moos "$M"/plugs.moos "$M"/meta_vehicle.bhv "$M"/launch_vehicle.sh "$M"/launch_shoreside.sh "$S"/ || exit 1
     rm -rf "$S/plans" "$S/prompts" "$S/dyn"; cp -r "$M/plans" "$M/prompts" "$M/dyn" "$S"/
+    [ -f "$M/buttons.txt" ] && cp "$M/buttons.txt" "$S"/   # the button panel's file, pLLMAgent writes to the copy
     VN=""
     for ((i=0; i<AMT; i++)); do
       v=${NAMES[$i]}; VN="${VN:+$VN:}$v"
@@ -46,6 +47,10 @@ case "$cmd" in
     NOGUI="--nogui"; [ -n "$GUI" ] && NOGUI=""
     (cd "$S" && PATH=$BIN:$PATH $KEYENV setsid nohup ./launch_shoreside.sh --auto $NOGUI --mport=9100 --pshare=9300 \
        --vnames=$VN $WARP > shore.log 2>&1 &)
+    # Who owns this fleet: the script that called up. The Stop hook
+    # (.claude/hooks/fleet_check.sh) lets a fleet whose owner is still
+    # running pass, and complains about one whose owner is gone.
+    echo $PPID > "$S/.driver"
     echo "launched $VN at warp $WARP in $S (shoreside 9100${GUI:+, with the viewer})"
     ;;
   down)
@@ -62,6 +67,7 @@ case "$cmd" in
       [ "$(readlink /proc/$pid/cwd 2>/dev/null)" = "$S" ] && kill -9 $pid 2>/dev/null
     done
     sleep 1
+    rm -f "$S/.driver"
     n=0; for p in /proc/[0-9]*; do [ "$(readlink $p/cwd 2>/dev/null)" = "$S" ] && n=$((n+1)); done
     echo "processes left in $S: $n"; ss -ltnu 2>/dev/null | grep -E ':9(10[0-4]|30[0-4])\b' || echo "tcp 9100-9104 and udp 9300-9304 free"
     ;;

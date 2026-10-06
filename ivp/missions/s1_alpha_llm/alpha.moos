@@ -39,6 +39,7 @@ ProcessConfig = ANTLER
   Run = pBehaviorTree @ NewConsole = false
   Run = uPlanPreview  @ NewConsole = false
   Run = uDynamicsTest @ NewConsole = false
+  Run = uButtonPanel  @ NewConsole = false
 }
 
 //------------------------------------------
@@ -188,6 +189,7 @@ ProcessConfig = pMarineViewer
   chat_viewable        = true
   chat_width           = 28       // drag the divider or Ctrl+] / Ctrl+[ to resize
   chat_input_lines     = 6        // the input grows to this many lines, then scrolls
+  chat_font_size       = 12       // Ctrl+= / Ctrl+- change it live
 
   // Map clicks post the same flags as the goto and return tools:
   // left click drives alpha to that point, right click brings it home.
@@ -240,6 +242,25 @@ ProcessConfig = pNodeReporter
 
 
 //------------------------------------------
+// uButtonPanel config block: the operator's button panel, its own
+// window. One button per block of buttons.txt: the fixed ones the
+// mission wrote by hand, and the ones pLLMAgent's make_button tool
+// saves there (those post LLM_BUTTON=<label> and pLLMAgent runs the
+// saved plan). The file is re-read whenever it changes on disk.
+
+ProcessConfig = uButtonPanel
+{
+  AppTick   = 4
+  CommsTick = 4
+
+  buttons_file  = buttons.txt   // the file pLLMAgent writes too
+  columns       = 2
+  button_height = 40
+  width         = 320
+  height        = 160
+}
+
+//------------------------------------------
 // pLLMAgent config block
 // The API key is read from the ANTHROPIC_API_KEY environment
 // variable of the shell that runs launch.sh; it is never stored here.
@@ -259,7 +280,15 @@ ProcessConfig = pLLMAgent
   model           = claude-opus-5-5
   effort          = low
   max_tokens      = 8192      // thinking counts: a turn is bounded to ~2 min
-  timeout         = 200       // above the longest turn the cap allows
+  timeout         = 300       // above the longest turn either cap allows
+  planning_max_tokens = 16384 // planning turns may think longer (~4.5 min at most, hence timeout 300)
+  planning_effort = medium    // and deeper; mission mode keeps effort low for tempo
+
+  // What the run costs, on the appcast and as LLM_COST: the prices
+  // default to claude-opus-5-5's (price_* lines override them as they
+  // change); budget is dollars for this run, left = budget - spent,
+  // this agent's requests only, never the account's balance.
+  budget = 20                 // edit to your allowance; 0 = none
   confirm_default = true
 
 
@@ -293,10 +322,19 @@ ProcessConfig = pLLMAgent
   // running (tool_cancels_plan, BT_CMD).
   // Proposals draw their shapes on the map until approved or
   // declined, each part in the next color.
-  view_color = orange, yellow, magenta, cyan, dodger_blue, white
+  view_color = orange, magenta, cyan, dodger_blue, white, yellow   // yellow last: a running plan step is yellow
   preview_var = PLAN_PREVIEW   // uPlanPreview plays the proposal out on a phantom boat
 
+  // The operator's button panel (uButtonPanel shows the same file):
+  // the make_button tool saves a button here with the plan it runs,
+  // a press posts its label on LLM_BUTTON and the plan goes out as an
+  // approved run_plan would, with no model call.
+  buttons_file = buttons.txt
 
+  // mission: act at once, short replies (a live run). planning: ask
+  // before proposing, answer at length (designing a button or a plan
+  // to keep). Type planning or mission in the chat to switch.
+  mode = mission
 
   app_logging = true
 }

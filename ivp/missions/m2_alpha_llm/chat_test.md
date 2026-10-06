@@ -126,6 +126,28 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 | 7.2 | `disband every team` | team_disband for each, or 'no teams' when there are none; colours revert |  |
 | 7.3 | `how many collisions and near misses were there?` | the two totals from get_var |  |
 
+## Phase 8: the button panel
+
+| ID | Type | Expect | Issue if |
+|---|---|---|---|
+| 8.1 | `make a button labelled BOX that sends abe around 40,-60 then 80,-60 then 80,-100 then 40,-100 and then home` | one make_button proposal reading "button BOX for abe, saved with the mission; each press runs:" with two steps (the route, return); after y "[approved, posted: button BOX saved to buttons.txt ...]" and the panel shows BOX | a run_plan or route instead of a button (abe would move now); no steps shown; the button missing from the panel |
+| 8.2 | set first: LLM_BUTTON=BOX; (nothing typed) | a press (here a poke of LLM_BUTTON=BOX) runs the saved plan with no model call: "[button BOX: posted BT_TREE_ABE=<behavior tree, ...>]" and abe drives the box, then home | nothing happens, or the model is called |
+| 8.3 | `what buttons do I have on the panel?` | STOP ALL (fixed) and BOX, from the fleet line, no tool call | a guess, or a tool call to find out |
+| 8.4 | `remove the BOX button` | a make_button proposal "remove the button BOX"; after y "[approved, posted: button BOX removed]" and the panel loses it, STOP ALL stays | the button stays; STOP ALL gone too |
+
+## Phase 9: planning mode
+
+| ID | Type | Expect | Issue if |
+|---|---|---|---|
+| 9.1 | set first: LLM_MODE=planning; `I want a button that sends both boats to 150,-150 by lining them up next to each other 20 m apart and then weaving so their routes cross` | in planning mode a question or two back (where they start, how many crossings ...), no proposal, a longer reply allowed | a proposal at once; a reply of guesses |
+| 9.2 | set first: LLM_MODE=mission; `I want a button that sends both boats to 150,-150 by lining them up next to each other 20 m apart and then weaving so their routes cross` | in mission mode the same words get a make_button proposal at once (declined here) with a Starts line | a question instead of a proposal |
+
+## Phase 10: arithmetic in a plan
+
+| ID | Type | Expect | Issue if |
+|---|---|---|---|
+| 10.1 | set first: LLM_MODE=mission; `make a button called STEP that has abe move 30 m toward 150,-150 from wherever it happens to be when I press it` | a make_button proposal whose Goto uses $( ... ) with NAV_X, NAV_Y and bearing(...), Starts: from wherever the boats are; declined here | a fixed point computed from abe's position now (Starts: abe goes to (x, y) first) |
+
 ## After the run: what to pull from the shoreside log
 
     A=XLOG_SHORESIDE_<date>/XLOG_SHORESIDE_<date>.alog
@@ -198,3 +220,10 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 | 7.1 | | |
 | 7.2 | | |
 | 7.3 | | |
+| 8.1 | | |
+| 8.2 | | |
+| 8.3 | | |
+| 8.4 | | |
+| 9.1 | | |
+| 9.2 | | |
+| 10.1 | | |

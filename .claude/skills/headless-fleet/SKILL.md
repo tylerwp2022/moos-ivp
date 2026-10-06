@@ -20,8 +20,11 @@ ivp/missions/m2_alpha_llm/test/fleet.sh alog $S      # the shoreside alog path, 
 ivp/missions/m2_alpha_llm/test/fleet.sh down $S      # kill everything whose cwd is $S
 ```
 
-`up` copies the meta files, plugs, bhv, launch scripts, plans/ and
-prompts/, then launches abe (9101/9301), ben (9102/9302), cal, deb and
+`up` copies the meta files, plugs, bhv, launch scripts, plans/, prompts/,
+dyn/ and buttons.txt (pLLMAgent writes to the copy, never the mission's),
+writes the calling script's PID to `<scratch>/.driver` (the Stop hook
+lets a fleet pass while that script runs; a background test script
+therefore never trips it, a leftover does), then launches abe (9101/9301), ben (9102/9302), cal, deb and
 the shoreside (9100/9300, `--nogui`, `--auto`) with the API key removed
 from the environment (`--key` keeps it; pLLMAgent then calls the model).
 Ports 9000/9200 stay free for the user. Launch can take up to 150 s

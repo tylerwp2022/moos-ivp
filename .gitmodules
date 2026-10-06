@@ -25,3 +25,6 @@
 [submodule "ivp/src/moos-ivp-dyn"]
 	path = ivp/src/moos-ivp-dyn
 	url = git@github.com:tylerwp2022/moos-ivp-dyn.git
+[submodule "ivp/src/moos-ivp-panel"]
+	path = ivp/src/moos-ivp-panel
+	url = git@github.com:tylerwp2022/moos-ivp-panel.git

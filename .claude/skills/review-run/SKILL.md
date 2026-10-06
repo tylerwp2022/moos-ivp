@@ -109,6 +109,17 @@ so the draw posts, the marker track and the bubble posts are incomplete,
 and the live map is the final check for anything visual. Bubble times are
 log (warped) seconds; divide by the warp for seconds on screen.
 
+Buttons (the panel, uButtonPanel): a press is `BUTTON_PRESS` from the
+panel with the label, and for an agent button `LLM_BUTTON` with the same
+label followed by pLLMAgent's posts with source aux `button=<label>` and a
+chat line `[button <label>: posted ...]`; a button made or removed in the
+chat is a `make_button` tool call and an `LLM_BUTTON_DEF` post.
+
+```
+grep -E " (BUTTON_PRESS|LLM_BUTTON|LLM_BUTTON_DEF) " $A | grep -v APPCAST
+grep "button=" $A | grep -v APPCAST | awk '{print $1, $2, $3}'
+```
+
 ## 5. Report
 
 Lead with a timeline table (turn, request, outcome), then one block per

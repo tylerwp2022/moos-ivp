@@ -105,6 +105,23 @@ proposal resolves. A plan file can be previewed by hand:
 Straight lines and instant turns, no avoidance: it shows the plan's logic
 and geometry, not the helm's dynamics.
 
+uButtonPanel (moos-ivp-panel) is the operator's button panel, its own
+window beside the viewer: one button per block of buttons.txt in this
+directory. STOP ALL is written by hand there and posts the same flags as
+the viewer's button; the rest are the agent's. Asked for a button in the
+chat ("make a button called GO HOME that sends abe home"), the model
+calls make_button with a label, an owner and a plan; the proposal shows
+the plan's steps, and on y pLLMAgent writes the block to buttons.txt
+(buttons_file in its config block), the panel re-reads the file and shows
+it, and each press posts LLM_BUTTON=GO HOME, on which pLLMAgent posts the
+saved plan to abe's executor as an approved run_plan would, no model
+call. The same label again replaces the button, "remove the GO HOME
+button" deletes it, and the file is plain text to edit by hand (both
+apps re-read it when it changes); the buttons stay from launch to launch
+and belong to this mission. Without the model a saved button still
+works, from the panel or by hand:
+  uPokeDB targ_shoreside.moos 'LLM_BUTTON:=GO HOME'
+
 Without the model, from this directory:
   uPokeDB targ_shoreside.moos BT_TREE_FILE_ABE=plans/box_goto.xml
   uPokeDB targ_shoreside.moos TASK_BEN=waypoint WPT_UPDATE_BEN=points=40,-40 DEPLOY_BEN=true MOOS_MANUAL_OVERRIDE_BEN=false
