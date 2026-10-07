@@ -832,6 +832,34 @@ check = no_tool run_plan|make_button
 check = proposal_contains run the play alpha for ben (saved for abe)
 check = chat_contains its plan runs for ben
 
+[8.8]
+say = run LEAPFROG with 50 meter hops toward 200,-50
+expect = one run_play call naming LEAPFROG with args HOP=50,TX=200,TY=-50 straight from the prompt's catalogue of parameters (no show call first), a proposal "press the button LEAPFROG; its plan runs for leap with TX=200, TY=-50, HOP=50 (saved 150, -150, 30):"; after y the plan runs on leap; the driver halts it
+issue = a make_button show call before running (the catalogue should make it unnecessary); run_plan with the tree; a wrong or missing value
+answer = y
+wait = BT_STATE_LEAP = running
+timeout = 90
+after = BT_CMD_ALL=halt
+after = BT_CMD_LEAP=halt
+check = tool run_play
+check = no_tool run_plan|make_button
+check = proposal_contains HOP=50
+check = proposal_contains TX=200, TY=-50
+check = chat_contains BT_TREE_LEAP
+
+[8.9]
+say = run play alpha with the box 20 meters further east
+expect = one run_play call naming alpha with args X0=60 (the catalogue says X0 is the box's north-west corner, default 40), the proposal "run the play alpha for abe with X0=60 (saved 40):"; after y abe sets off for (60,-60); the driver halts it
+issue = a show call first; run_plan; the default corner kept; Y0 or SIDE changed
+answer = y
+wait = BT_STATE_ABE = running
+timeout = 60
+after = BT_CMD_ABE=halt
+check = tool run_play
+check = no_tool run_plan|make_button
+check = proposal_contains with X0=60 (saved 40)
+check = chat_contains BT_TREE_ABE
+
 # ---------------------------------------------------------------
 # Phase 9: planning mode (added 2026-10-05). The mode is switched by
 # poking LLM_MODE (what a panel button would post); the same wording

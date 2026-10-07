@@ -139,6 +139,8 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 | 8.5 | `run play alpha` | one run_play call naming alpha, the play shipped in buttons.txt with no panel button (the fleet line lists it under plays), a proposal "run the play alpha for abe:" with the box survey steps from plans/box_goto.xml; n declines it and nothing moves | "no such button"; the plan file resent through run_plan; a make_button call; abe moves |
 | 8.6 | `press STOP ALL` | one run_play call naming STOP ALL, a proposal "press the button STOP ALL; it posts BT_CMD_ALL=halt, DEPLOY_ALL=false, RETURN_ALL=false"; after y the agent posts those three lines itself (the panel is not involved) and every plan halts | a stop or halt_plan tool instead; the lines not posted |
 | 8.7 | `run play alpha for ben instead of abe`; afterwards: BT_CMD_BEN=halt | one run_play call naming alpha with owner ben, a proposal "run the play alpha for ben (saved for abe):" with the box survey steps; after y the plan goes to ben ("[approved, posted: play alpha pressed: posted BT_TREE_BEN=<behavior tree, ...>; its plan runs for ben]") and ben sets off; the driver halts ben afterwards | the plan sent to abe; run_plan with the file's tree; "alpha is saved for abe" as a refusal |
+| 8.8 | `run LEAPFROG with 50 meter hops toward 200,-50`; afterwards: BT_CMD_ALL=halt, BT_CMD_LEAP=halt | one run_play call naming LEAPFROG with args HOP=50,TX=200,TY=-50 straight from the prompt's catalogue of parameters (no show call first), a proposal "press the button LEAPFROG; its plan runs for leap with TX=200, TY=-50, HOP=50 (saved 150, -150, 30):"; after y the plan runs on leap; the driver halts it | a make_button show call before running (the catalogue should make it unnecessary); run_plan with the tree; a wrong or missing value |
+| 8.9 | `run play alpha with the box 20 meters further east`; afterwards: BT_CMD_ABE=halt | one run_play call naming alpha with args X0=60 (the catalogue says X0 is the box's north-west corner, default 40), the proposal "run the play alpha for abe with X0=60 (saved 40):"; after y abe sets off for (60,-60); the driver halts it | a show call first; run_plan; the default corner kept; Y0 or SIDE changed |
 
 ## Phase 9: planning mode
 
@@ -234,6 +236,8 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 | 8.5 | | |
 | 8.6 | | |
 | 8.7 | | |
+| 8.8 | | |
+| 8.9 | | |
 | 9.1 | | |
 | 9.2 | | |
 | 10.1 | | |

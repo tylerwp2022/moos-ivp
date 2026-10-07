@@ -1,0 +1,19 @@
+<!-- The play alpha: abe surveys a square box and returns home. The
+     corners come from the parameters the buttons.txt block declares
+     (X0, Y0 the north-west corner, SIDE the side): pLLMAgent hands them
+     to the plan as Let steps at every run, the defaults or the values a
+     run_play call names. Poked directly (BT_TREE_FILE_ABE=...) the names
+     have no values; box_goto.xml is the literal twin for that. -->
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence>
+      <Say msg="surveying the box from $(X0) $(Y0), side $(SIDE)"/>
+      <Goto x="$(X0)" y="$(Y0)" timeout="300"/>
+      <Goto x="$(X0+SIDE)" y="$(Y0)" timeout="300"/>
+      <Goto x="$(X0+SIDE)" y="$(Y0-SIDE)" timeout="300"/>
+      <Goto x="$(X0)" y="$(Y0-SIDE)" timeout="300"/>
+      <Say msg="box done, heading home"/>
+      <Return/>
+    </Sequence>
+  </BehaviorTree>
+</root>

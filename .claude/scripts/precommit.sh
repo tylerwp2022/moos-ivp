@@ -7,6 +7,8 @@
 #               app not rebuilt after a lib_* change would pass the next
 #               check and run old code: the empty panel of 2026-10-06),
 #               then build-check.sh finds every expected binary
+#   plays       pBehaviorTree --check-plays accepts every saved plan in the
+#               missions' buttons files (parameters at their defaults)
 #   selftests   cap, bt, llm, team self-tests: 0 failures
 #   chat test   chat_test.md is current with test/chat_tests.txt
 #   fleet       no scratch fleet on the 9100 ports
@@ -39,6 +41,17 @@ else
   fail build "build/ivp is missing: run ./build-ivp.sh first"
 fi
 if out=$("$REPO/build-check.sh" 2>&1); then say build "every expected binary present"; else fail build "$(echo "$out" | grep -i missing | head -1)"; fi
+
+# Every saved plan in each mission's buttons file, with its parameters at
+# their defaults, through the executor's own checker
+for bf in ivp/missions/m2_alpha_llm/buttons.txt ivp/missions/s1_alpha_llm/buttons.txt; do
+  [ -f "$REPO/$bf" ] || continue
+  if out=$("$REPO/bin/pBehaviorTree" --check-plays="$REPO/$bf" --vnames=abe,ben,cal,deb 2>&1); then
+    say plays "$(basename "$(dirname "$bf")"): $(echo "$out" | tail -1)"
+  else
+    fail plays "$bf: $(echo "$out" | grep -i rejected | head -1)"
+  fi
+done
 
 for t in cap bt llm team; do
   if [ -x "$REPO/bin/${t}_selftest" ]; then

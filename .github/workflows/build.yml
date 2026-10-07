@@ -66,3 +66,10 @@ jobs:
       working-directory: ./ivp/src_unit_tests/
       run: ./alltest.sh
 
+    # Every saved plan in the LLM missions' buttons files, with its
+    # parameters at their defaults, through the executor's own checker
+    - name: Check saved plays
+      run: |
+        bin/pBehaviorTree --check-plays=ivp/missions/m2_alpha_llm/buttons.txt --vnames=abe,ben,cal,deb
+        bin/pBehaviorTree --check-plays=ivp/missions/s1_alpha_llm/buttons.txt --vnames=abe
+
