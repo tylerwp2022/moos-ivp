@@ -32,7 +32,9 @@ its own): press NEXT_TEST for yes, or type a line starting with # and
 what was off (a no, unless it starts with yes or ok). pLLMAgent logs such a line on
 LLM_CHAT_NOTE and never sends it to the model, so you can annotate any
 live run the same way. Your answer goes in the Operator column of
-results.md; no answer within --ask-timeout (120 s) is recorded as such
+results.md, and every # line typed during the run, answer or not, is
+listed in a Notes table under the results table by the test it landed
+in; no answer within --ask-timeout (120 s) is recorded as such
 and the run goes on. Alerts are off for the whole run except test 5.10,
 which turns them on for one collision and off again.
 

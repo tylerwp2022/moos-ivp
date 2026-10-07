@@ -71,8 +71,10 @@ user's own on 9000 can stay up. The driver copies the mission to
 
 `test/runs/<stamp>/results.md` is the table (id, pass, the operator's
 answer, typed line, what happened or which check failed and what was
-seen); `results.json`
-has the reply, proposals, tool calls and events per test. The driver's
+seen), then a Notes table: every `#` line typed in the chat pane during
+the run, by the test it landed in, the one that answered the question
+marked; `results.json`
+has the reply, proposals, tool calls, events and notes per test. The driver's
 stdout is the running narrative. Time per test: a few seconds of model
 plus the boats' motion; the five-test subset takes about 80 s real at
 warp 10.
@@ -92,7 +94,8 @@ Blocks in `chat_tests.txt`: `say`, `answer` (y, n, none),
 `before_answer`, `then` (a second line typed once the first turn is
 complete, with `then_answer` and `then_after`), `plan_answer`, `poke`,
 `after` (pokes once the waits are met, to put the fleet back in a sane
-state), `wait` (a NEW post after the test's mark, so stale values never
+state), `finally` (pokes after the settle, for a watch that must see the
+boats still going), `wait` (a NEW post after the test's mark, so stale values never
 count), `timeout`, `settle`, and `check` lines (the list is at the top
 of the file; `observe` in front records without failing; `either A | B`
 passes on either). Every test must stand on its own: state the full

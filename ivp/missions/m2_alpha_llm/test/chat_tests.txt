@@ -15,6 +15,8 @@
 #   poke         VAR=value posted on the shoreside before the line
 #   after        VAR=value posted once the waits are met or time out,
 #                before the settle: puts the fleet back in a sane state
+#   finally      VAR=value posted after the settle, the last thing the test
+#                does: a halt that must not cut a watched chase short (5.4)
 #   expect       what a person should see (prose for chat_test.md, which
 #                chat_test_md.py generates from this file; not graded)
 #   issue        what would be wrong (the same)
@@ -136,11 +138,17 @@ check = proposals 1
 check = reply_sentences <= 4
 
 [1.4]
+poke = MOOS_MANUAL_OVERRIDE_ABE=false
+poke = RETURN_ABE=false
+poke = TASK_ABE=waypoint
+poke = WPT_UPDATE_ABE=points=0,-220 # speed=2
+poke = DEPLOY_ABE=true
 say = slow abe down to 1
-expect = speed posts without a y/n (speed is unconfirmed); abe's next leg at 1 m/s
-issue = a confirmation; abe's current drift unaffected is normal
+expect = abe is underway south at 2 m/s first (poked, the goto tool's own posts); speed posts without a y/n (speed is unconfirmed); abe slows to 1 m/s on the leg
+issue = a confirmation; no change in abe's pace
+ask = Abe was sent south at 2 m/s before the line. Did abe slow to 1 m/s on its leg?
 answer = none
-wait = WPT_UPDATE_ABE
+wait = HEADING_SPEED_UPDATE_ABE
 timeout = 60
 check = tool speed
 check = no_proposal
@@ -425,17 +433,20 @@ check = observe min_range abe ben >= 15
 check = no_collision
 
 [4.5]
+poke = TEAM_CMD=action=goto,name=red,x=-120,y=-140
 say = speed red up to 3
-expect = team_speed
+expect = red is underway to -120,-140 first (poked); team_speed; the boats pick up to 3 m/s on the way
 issue = a plan
+ask = Red was sent toward -120,-140 before the line. Did the boats pick up to 3 m/s on the way?
 answer = y
-wait = TEAM_CMD
+wait = TEAM_CMD = action=speed,name=red,speed=3
 timeout = 60
 check = tool team_speed
 
 [4.6]
+poke = TEAM_CMD=action=goto,name=red,x=60,y=-140
 say = stop red
-expect = team_stop; the leader stops, the boats hold the shape
+expect = red is underway to 60,-140 first (poked); team_stop; the leader stops, the boats hold the shape
 issue = the boats idle and drift
 answer = y
 wait = TEAM_MISSION_RED = stopped
@@ -483,9 +494,11 @@ check = tool team_disband|run_plan
 
 # ---------------------------------------------------------------
 # Phase 5: the contact set, alerts OFF. Each intercept test stops cal
-# afterwards (after = ...), since an intercept with avoidance off
-# circles its target and hits it every few seconds forever. 5.4 pokes
-# avoidance on itself so it does not depend on 5.3. The old 5.0
+# afterwards (after = ..., or finally = ... in 5.4, whose 90 s settle
+# watches the chase and must not be cut short), since an intercept with
+# avoidance off circles its target and hits it every few seconds
+# forever. 5.4 pokes avoidance on itself so it does not depend on 5.3,
+# and sends ben off on a leg first so cal chases a moving target. The old 5.0
 # (alerts on) and 5.6 ("run that experiment again") are gone; the one
 # alert test is 5.10, last.
 
@@ -529,14 +542,21 @@ check = tool avoid
 poke = AVOID_ABE=basic
 poke = AVOID_BEN=basic
 poke = AVOID_CAL=basic
+poke = MOOS_MANUAL_OVERRIDE_BEN=false
+poke = RETURN_BEN=false
+poke = TASK_BEN=waypoint
+poke = WPT_UPDATE_BEN=points=120,-160 # speed=2
+poke = DEPLOY_BEN=true
 say = cal intercept ben at 3 m/s to within 5 m
-expect = avoidance is set on for all three first; cal holds off; note the closest range (7 to 12 m against a parked target is the known band)
+expect = avoidance on for all three and ben underway to 120,-160 at 2 m/s first (poked); cal chases a moving target at 3 m/s and holds off; note the closest range (7 to 12 m against a parked target was the known band)
 issue = a collision
 answer = y
 timeout = 60
 settle = 90
-after = DEPLOY_CAL=false
-after = RETURN_CAL=false
+finally = DEPLOY_CAL=false
+finally = RETURN_CAL=false
+finally = DEPLOY_BEN=false
+finally = RETURN_BEN=false
 check = tool intercept|run_plan
 check = no_collision cal ben
 check = observe min_range cal ben >= 7
@@ -563,6 +583,7 @@ check = reply_sentences <= 4
 [5.6]
 say = abe ignore cal for avoidance
 expect = avoid_ignore; then `let abe heed cal again`: avoid_heed
+ask = Nothing moves in this test, it only changes an avoidance setting. Did the agent do what was intended?
 answer = y
 then = let abe heed cal again
 wait = BHV_ABLE_FILTER_ABE
@@ -591,6 +612,7 @@ check = reply_sentences <= 3
 [5.9]
 say = turn everyone's avoidance off
 expect = avoid off x3
+ask = Nothing moves in this test, it only changes an avoidance setting. Did the agent do what was intended?
 answer = y
 wait = AVOID_ABE = off
 wait = AVOID_BEN = off
@@ -827,6 +849,7 @@ answer = y
 wait = BT_STATE_BEN = running
 timeout = 60
 after = BT_CMD_BEN=halt
+ask = The driver halts the play once it has started, on purpose. Did alpha start right for ben (the proposal, ben's first moves toward the box)?
 check = tool run_play
 check = no_tool run_plan|make_button
 check = proposal_contains run the play alpha for ben (saved for abe)
@@ -841,6 +864,7 @@ wait = BT_STATE_LEAP = running
 timeout = 90
 after = BT_CMD_ALL=halt
 after = BT_CMD_LEAP=halt
+ask = The driver halts the play once it has started, on purpose. Did LEAPFROG start right (leap formed, the first hop toward 200,-50)?
 check = tool run_play
 check = no_tool run_plan|make_button
 check = proposal_contains HOP=50
@@ -855,6 +879,7 @@ answer = y
 wait = BT_STATE_ABE = running
 timeout = 60
 after = BT_CMD_ABE=halt
+ask = The driver halts the play once it has started, on purpose. Did alpha start right for abe (heading for the box at 60,-60)?
 check = tool run_play
 check = no_tool run_plan|make_button
 check = proposal_contains with X0=60 (saved 40)

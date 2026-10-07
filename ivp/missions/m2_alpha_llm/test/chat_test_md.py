@@ -95,6 +95,8 @@ def type_cell(t):
         s += "; then: `%s`" % t["then"]
     if t["after"]:
         s += "; afterwards: " + ", ".join(t["after"])
+    if t["finally"]:
+        s += "; at the end: " + ", ".join(t["finally"])
     return cell(s)
 
 

@@ -27,7 +27,9 @@ pressed during the settle it just ends the watch. With the viewer the
 driver then asks in the chat pane whether the boats did what you
 expected: NEXT_TEST answers yes, a line typed with a leading # is your
 words (a no, unless it starts with yes or ok); the answer goes in the
-Operator column of results.md. The question fits the test (the boats
+Operator column of results.md. Every # line typed during the run, not
+only the answers, is listed in a Notes table under the results table,
+by the test it landed in. The question fits the test (the boats
 where it moves them, the map where it draws, the agent otherwise; an
 `ask` line in the test file sets its own). Nobody answering within
 --ask-timeout counts as "no answer" and the run goes on.
@@ -82,7 +84,7 @@ def parse_tests(path):
             if m:
                 cur = {"id": m.group(1).strip(), "say": "", "answer": "y",
                        "plan_answer": "", "before_answer": "", "pokes": [],
-                       "then": "", "then_answer": "y", "then_after": 0.0, "after": [], "ask": "",
+                       "then": "", "then_answer": "y", "then_after": 0.0, "after": [], "finally": [], "ask": "",
                        "expect": "", "issue": "",
                        "waits": [], "timeout": 120.0,
                        "turn_timeout": 240.0, "settle": 4.0, "checks": []}
@@ -111,6 +113,8 @@ def parse_tests(path):
                 cur["then_after"] = float(val)
             elif key == "after":
                 cur["after"].append(val)
+            elif key == "finally":
+                cur["finally"].append(val)
             elif key == "ask":
                 cur["ask"] = val
             elif key in ("expect", "issue"):
@@ -688,12 +692,29 @@ def question_for(test):
         return test["ask"]
     waits = [w.split("=")[0].strip() for w in test["waits"]]
     checks = " ".join(test["checks"])
-    if any(MOTION_RX.match(w) for w in waits) or test["after"] \
+    if any(MOTION_RX.match(w) for w in waits) or test["after"] or test["finally"] \
             or re.search(r"\b(min_range|collision|near_miss|head_for)\b", checks):
         return "Did the boats do what you expected?"
     if any(w.startswith("VIEW_") for w in waits) or re.search(r"tool (draw|erase)", checks):
         return "Did the map show what you expected?"
     return "Did the agent do what was intended?"
+
+
+def notes_in(records, answer=""):
+    """Every # line the operator typed in this stretch of the log, as
+    pLLMAgent logged it on LLM_CHAT_NOTE, in order; the one that answered
+    the after-test question (answer is the Operator column) is marked."""
+    ans = answer.split(": ", 1)[1].strip() if answer.startswith(("yes: ", "no: ")) else None
+    out = []
+    for r in records:
+        note = r[4].strip()
+        if r[1] != NOTE_VAR or not note:
+            continue
+        if ans is not None and note == ans:
+            note += " (the answer)"
+            ans = None
+        out.append(note)
+    return out
 
 
 def ask_operator(fleet, test, verdict, timeout):
@@ -849,6 +870,12 @@ def run_test(fleet, test):
                 log("   NEXT_TEST pressed: settle cut short")
             break
         time.sleep(0.5)
+    # The last thing the test does: a halt that must not cut the watch
+    # short goes here rather than in after
+    for pk in test["finally"]:
+        var, val = [x.strip() for x in pk.split("=", 1)]
+        log("   finally: poke " + var + " = " + val)
+        fleet.poke(var, val)
     alog.poll()
     passed, fails, detail = grade(test, alog.records, facts)
     if fleet.dead:
@@ -949,11 +976,19 @@ def main():
     time.sleep(3)
 
     results = []
+
+    def gather_notes():
+        # The next test's mark trims the log, so the notes typed during
+        # a test (and after its question) are collected before that
+        if results:
+            fleet.alog.poll()
+            results[-1]["notes"] = notes_in(fleet.alog.records, results[-1]["operator"])
     try:
         for test in tests:
+            gather_notes()
             passed, fails, detail = run_test(fleet, test)
             results.append({"id": test["id"], "say": test["say"], "passed": passed,
-                            "fails": fails, "detail": detail, "operator": ""})
+                            "fails": fails, "detail": detail, "operator": "", "notes": []})
             if detail.get("dead"):
                 log("the shoreside stopped answering: ending the run with the results so far")
                 break
@@ -974,6 +1009,7 @@ def main():
     except KeyboardInterrupt:
         log("interrupted")
     finally:
+        gather_notes()
         write_results(scratch, results)
         if not args.keep:
             fleet.kill()
@@ -1002,6 +1038,11 @@ def write_results(scratch, results):
         verdict = "yes" if r["passed"] else ("cut" if r["detail"].get("cut") else "NO")
         md.append("| %s | %s | %s | %s | %s |" % (r["id"], verdict, r.get("operator", "").replace("|", "/"),
                                                r["say"].replace("|", "/"), what.replace("|", "/")))
+    notes = [(r["id"], n) for r in results for n in r.get("notes", [])]
+    if notes:
+        md += ["", "Notes typed in the chat pane (# lines), by the test they landed in:", "",
+               "| During | Note |", "|---|---|"]
+        md += ["| %s | %s |" % (i, n.replace("|", "/")) for i, n in notes]
     open(os.path.join(scratch, "results.md"), "w").write("\n".join(md) + "\n")
     open(os.path.join(scratch, "results.json"), "w").write(json.dumps(results, indent=1))
     print("\n".join(md))
