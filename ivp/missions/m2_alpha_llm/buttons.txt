@@ -63,3 +63,20 @@ Play = alpha
   param = SIDE : number : 40 : 10..200 : the box's side, m
   file  = plans/alpha_box.xml
 }
+
+Button = spiral
+{
+  desc  = 1) Set speed to $(SPEED) m/s | 2) Go to ($(px(CX,CY,R0,B0)), $(py(CX,CY,R0,B0))) | 3) Repeat until stopped (a failure is ignored): | 3a) Check that K < STEPS | 3b) Go to ($(px(CX,CY,R0+RS*DR*KK,B0+DIR*30*KK)), $(py(CX,CY,R0+RS*DR*KK,B0+DIR*30*KK))) | 4) If DIR > 0: | ...
+  post  = LLM_BUTTON = spiral
+  owner = abe
+  param = CX : number : 60 : east coordinate of the spiral center, m
+  param = CY : number : -80 : north coordinate of the spiral center, m
+  param = INWARD : boolean : true : true spirals in from OUTER to INNER, false spirals out
+  param = CLOCKWISE : boolean : true : true clockwise, false counterclockwise
+  param = OUTER : number : 40 : 10..300 : outer radius, m
+  param = INNER : number : 5 : 3..100 : inner radius, default the tightest turn, m
+  param = GAP : number : 10 : 2..50 : space between loops, used when TURNS is 0, m
+  param = TURNS : integer : 0 : 0..20 : number of turns, 0 means use GAP
+  param = SPEED : number : 2 : 0.5..4 : speed, m/s
+  tree  = <root BTCPP_format="4" main_tree_to_execute="spiral">   <BehaviorTree ID="spiral">     <Sequence>       <Speed speed="$(SPEED)"/>       <DrawPoint x="$(CX)" y="$(CY)" label="spiral_center" color="yellow"/>       <Let var="DIR" val="$(CLOCKWISE*2-1)"/>       <Let var="RS" val="$(1-2*INWARD)"/>       <Let var="SPAN" val="$(max(OUTER-INNER,1))"/>       <Let var="NT" val="$(sign(TURNS)*TURNS+(1-sign(TURNS))*max(OUTER-INNER,1)/max(GAP,1))"/>       <Let var="STEPS" val="$(max(NT*12,1))"/>       <Let var="DR" val="$(SPAN/max(STEPS,1))"/>       <Let var="R0" val="$(INWARD*OUTER+(1-INWARD)*INNER)"/>       <Let var="RF" val="$(INWARD*INNER+(1-INWARD)*OUTER)"/>       <Let var="B0" val="$(bearing(CX,CY,NAV_X,NAV_Y))"/>       <Goto name="to_spiral_start" x="$(px(CX,CY,R0,B0))" y="$(py(CX,CY,R0,B0))"/>       <Let var="K" val="0"/>       <ForceSuccess>         <Repeat num_cycles="-1">           <Sequence name="next_spiral_point">             <Condition cond="K &lt; STEPS"/>             <Let var="K" val="$(K+1)"/>             <Let var="KK" val="$(min(K,STEPS))"/>             <Goto x="$(px(CX,CY,R0+RS*DR*KK,B0+DIR*30*KK))" y="$(py(CX,CY,R0+RS*DR*KK,B0+DIR*30*KK))"/>           </Sequence>         </Repeat>       </ForceSuccess>       <IfThenElse name="circle_final_radius">         <Condition cond="DIR > 0"/>         <Loiter x="$(CX)" y="$(CY)" radius="$(RF)" clockwise="true" speed="$(SPEED)"/>         <Loiter x="$(CX)" y="$(CY)" radius="$(RF)" clockwise="false" speed="$(SPEED)"/>       </IfThenElse>     </Sequence>   </BehaviorTree> </root>
+}
