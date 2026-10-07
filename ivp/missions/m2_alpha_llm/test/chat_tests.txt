@@ -798,7 +798,7 @@ check = either reply_contains home | reply_contains launch
 
 [8.3c]
 say = press the BOX button for me
-expect = one run_play call naming BOX (not the tree resent through run_plan), a proposal "press the button BOX; its plan runs for abe:" with the two steps, and after y "[approved, posted: button BOX pressed: posted BT_TREE_ABE=<behavior tree, ...>; its plan runs for abe]" as abe sets off; the driver halts abe afterwards
+expect = one run_play call naming BOX (not the tree resent through run_plan), a proposal "press the button BOX; its plan runs for abe:" with the two steps, and after y "[approved, posted: button BOX pressed: posted BT_TREE_ABE=<behavior tree, ...>; sent to abe's executor, and the console says when it starts]" then "[BOX: running for abe]" as abe sets off; the driver halts abe afterwards
 issue = run_plan with the saved tree; a make_button call; no proposal; nothing runs
 answer = y
 wait = BT_STATE_ABE = running
@@ -843,7 +843,7 @@ check = chat_contains STOP ALL pressed
 
 [8.7]
 say = run play alpha for ben instead of abe
-expect = one run_play call naming alpha with owner ben, a proposal "run the play alpha for ben (saved for abe):" with the box survey steps; after y the plan goes to ben ("[approved, posted: play alpha pressed: posted BT_TREE_BEN=<behavior tree, ...>; its plan runs for ben]") and ben sets off; the driver halts ben afterwards
+expect = one run_play call naming alpha with owner ben, a proposal "run the play alpha for ben (saved for abe):" with the box survey steps; after y the plan goes to ben ("[approved, posted: play alpha pressed: posted BT_TREE_BEN=<behavior tree, ...>; sent to ben's executor, and the console says when it starts]", then "[alpha: running for ben]") and ben sets off; the driver halts ben afterwards
 issue = the plan sent to abe; run_plan with the file's tree; "alpha is saved for abe" as a refusal
 answer = y
 wait = BT_STATE_BEN = running
@@ -884,6 +884,26 @@ check = tool run_play
 check = no_tool run_plan|make_button
 check = proposal_contains with X0=60 (saved 40)
 check = chat_contains BT_TREE_ABE
+
+[8.10]
+say = as one plan: run LEAPFROG to 0,0, then WEAVE to 100,100, then send both boats home
+expect = one run_plan for leap whose tree runs the two saved plays as Play steps (<Play ID="LEAPFROG" TX="0" TY="0"/>, then <Play ID="WEAVE" TX="100" TY="100"/>) and ends with a Return for all, with no copy of the saved trees and no run_play; the proposal lists each play as one line ("Run the play LEAPFROG (TX=0, TY=0)", "Run the play WEAVE (TX=100, TY=100)"); after y the plan runs on leap and the boats line up for the first hop; the driver halts it
+issue = run_play for one play alone; the saved trees pasted into the plan step by step; the proposal spelling out the plays' inner steps
+poke = TEAM_CMD=action=create,name=leap,members=abe:ben,color=auto
+answer = y
+wait = BT_STATE_LEAP = running
+timeout = 90
+after = BT_CMD_ALL=halt
+after = BT_CMD_LEAP=halt
+ask = The driver halts the plan once it has started, on purpose. Did the plan start right (the proposal naming the two plays as single lines, then the line-up for the leapfrog toward 0,0)?
+check = tool run_plan
+check = no_tool run_play
+check = tree_has <Play
+check = tree_has ID="LEAPFROG"
+check = tree_has ID="WEAVE"
+check = proposal_contains Run the play LEAPFROG
+check = proposal_contains Run the play WEAVE
+check = chat_contains BT_TREE_LEAP
 
 # ---------------------------------------------------------------
 # Phase 9: planning mode (added 2026-10-05). The mode is switched by

@@ -131,6 +131,9 @@ if want("usage"):
             note = f"history rewritten (read {cr} < previous total {prev_total})"
         if o >= 16000:
             note = (note + "; " if note else "") + "cut off at the token cap?"
+        tries = re.search(r'tries=(\S+)', val)
+        if int(float(u.get("attempts", 1))) > 1:
+            note = (note + "; " if note else "") + "retried: " + (tries.group(1) if tries else u.get("attempts"))
         print(f"{t:9.1f} {i_:6d} {o:6d} {cr:11d} {cc:12d} {lat:7.1f}s {cost:6.3f}  {note}")
         prev_total = cr + cc
         n += 1
