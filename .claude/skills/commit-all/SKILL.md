@@ -1,6 +1,6 @@
 ---
 name: commit-all
-description: Commit and push a change that spans the fork and its submodules (moos-ivp-llm, moos-ivp-bt, moos-ivp-cap, moos-ivp-team) in the right order, without attribution lines, then check CI. Use only when the user has said to commit or push; never on your own initiative.
+description: Commit and push a change that spans the fork and its submodules (moos-ivp-llm, moos-ivp-bt, moos-ivp-cap, moos-ivp-squad) in the right order, without attribution lines, then check CI. Use only when the user has said to commit or push; never on your own initiative.
 ---
 
 # Commit and push across the repos
@@ -23,7 +23,7 @@ Then the pending changes themselves:
 
 ```
 git -C ~/moos-ivp status --short | grep -vE '^\?\? ivp/missions/.*/(MOOSLog|LOG|XLOG)_'
-for m in moos-ivp-llm moos-ivp-bt moos-ivp-cap moos-ivp-team; do echo "-- $m"; git -C ~/moos-ivp/ivp/src/$m status -sb | head -1; git -C ~/moos-ivp/ivp/src/$m status --short; done
+for m in moos-ivp-llm moos-ivp-bt moos-ivp-cap moos-ivp-squad; do echo "-- $m"; git -C ~/moos-ivp/ivp/src/$m status -sb | head -1; git -C ~/moos-ivp/ivp/src/$m status --short; done
 ```
 
 Every submodule must be on `main` tracking `origin/main` (a detached
@@ -32,7 +32,7 @@ branch is `llm-integration` (LLM work) or `main`. Untracked log
 directories under `ivp/missions` are never added. A test run directory
 (`ivp/missions/m2_alpha_llm/test/runs/`) is ignored.
 
-## 2. Each submodule that changed, in order llm, bt, cap, team
+## 2. Each submodule that changed, in order llm, bt, cap, squad
 
 ```
 D=~/moos-ivp/ivp/src/moos-ivp-llm

@@ -104,8 +104,8 @@ from an alert turn is never the test's reply; the driver declines a
 proposal an alert turn makes and notes it. Expectations must allow for the model's
 variety: `tool goto|route`, a sentence cap, `reply_asks`, never an
 exact sentence. Waits use variables the shoreside logs: `MISSION_<V> =
-goto_complete`, `BT_STATE_<V|TEAM> = running|success|failure|halted`,
-`TEAM_MISSION_<T> = stopped`, `TEAM_LIST = none`, `AVOID_<V> = basic`,
+goto_complete`, `BT_STATE_<V|SQUAD> = running|success|failure|halted`,
+`SQUAD_MISSION_<T> = stopped`, `SQUAD_LIST = none`, `AVOID_<V> = basic`,
 `COLLISION`, `VIEW_CIRCLE`; `LLM_STATUS` is never logged. Test ids are
 the test file's own (chat_test.md is generated from it). Validate a new
 file by parsing it:

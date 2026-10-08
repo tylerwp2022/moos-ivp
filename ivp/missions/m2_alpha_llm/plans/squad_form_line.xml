@@ -1,0 +1,21 @@
+<!-- A plan that forms its own squad: no squad red exists when this is
+     posted, so the executor opens the slot for it on the strength of the
+     SquadForm first step, uFldSquad lists the squad a moment later, and the
+     rest runs as any squad plan. From the shoreside:
+       uPokeDB targ_shoreside.moos BT_TREE_FILE_RED=plans/squad_form_line.xml
+     pLLMAgent does the same when the model sends run_plan vname=red with
+     this shape, so forming and running are one approval. -->
+<root BTCPP_format="4" main_tree_to_execute="form_and_line">
+  <BehaviorTree ID="form_and_line">
+    <Squad>
+      <Sequence>
+        <SquadForm squad="red" members="abe:ben" color="auto"/>
+        <Say msg="squad red formed, taking up a line"/>
+        <SquadFormation squad="red" shape="line" spacing="20" orient="travel"/>
+        <SquadGoto squad="red" x="40" y="-120"/>
+        <SquadFormationOff squad="red"/>
+        <Say msg="line moved, formation released"/>
+      </Sequence>
+    </Squad>
+  </BehaviorTree>
+</root>

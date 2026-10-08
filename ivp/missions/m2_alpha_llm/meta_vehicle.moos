@@ -162,7 +162,7 @@ ProcessConfig = pNodeReporter
 // templated blocks in meta_vehicle.bhv, AVOID = colregs | basic):
 // each template asks for its own alert at helm start, so no alert
 // lines here. The other vehicles reach this one as NODE_REPORT
-// through the shoreside. A team's virtual leader (<team>_lead, type
+// through the shoreside. A squad's virtual leader (<squad>_lead, type
 // virtual) is a contact too, and must never be dodged.
 
 ProcessConfig = pContactMgrV20

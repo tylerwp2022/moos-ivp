@@ -680,7 +680,7 @@ def follow_turn(fleet, alog, test, text, answer, facts, first, pressed, gone):
         log("   no reply within %.0f s" % test["turn_timeout"])
 
 
-MOTION_RX = re.compile(r"^(MISSION_|BT_STATE_|TASK_|DEPLOY_|RETURN_|TEAM_MISSION|COLLISION|"
+MOTION_RX = re.compile(r"^(MISSION_|BT_STATE_|TASK_|DEPLOY_|RETURN_|SQUAD_MISSION|COLLISION|"
                        r"NEAR_MISS|CONVOY|INTERCEPT|OPREGION|WPT_)")
 
 

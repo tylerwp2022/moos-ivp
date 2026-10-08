@@ -192,7 +192,7 @@ for rid, plays in by_id.items():
                 print("      ... %d more" % (len(ev) - events_k))
     final = plays[max(plays)][-1][2]
     for o, (st, x, y) in final.items():
-        where = ("at %s,%s" % (x, y)) if x is not None else "(team)"
+        where = ("at %s,%s" % (x, y)) if x is not None else "(squad)"
         flag = ""
         if st == "running":
             flag = "   <-- never finished"

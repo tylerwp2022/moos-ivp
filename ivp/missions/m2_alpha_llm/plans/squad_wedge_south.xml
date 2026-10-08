@@ -1,0 +1,27 @@
+<!--
+  squad_wedge_south.xml: a plan for a squad that acts as a body. The bare
+  <Squad> means the whole squad the executor's slot is for (its members
+  come from uFldSquad's SQUAD_REPORT_<NAME>). The squad leaves run on the
+  shoreside executor itself: SquadFormation until uFldSquad reports the
+  squad formed, SquadGoto until the move is complete; a halt posts a
+  squad_stop. The BehaviorTree ID is what BT_PLAN_<SQUAD> and the squad
+  table show while it runs.
+
+  Create the squad first, then send the plan to its slot:
+    uPokeDB targ_shoreside.moos SQUAD_CMD:=action=create,name=red,members=abe:ben
+    uPokeDB targ_shoreside.moos BT_TREE_FILE_RED=plans/squad_wedge_south.xml
+  Check it offline:
+    pBehaviorTree --check=plans/squad_wedge_south.xml --squad --roster=abe,ben
+-->
+<root BTCPP_format="4" main_tree_to_execute="wedge_south">
+  <BehaviorTree ID="wedge_south">
+    <Squad>
+      <Sequence>
+        <Say msg="red: forming a wedge, then moving south"/>
+        <SquadFormation squad="red" shape="wedge" spacing="30" orient="travel" timeout="300"/>
+        <SquadGoto squad="red" x="60" y="-160" timeout="600"/>
+        <Say msg="red: wedge at the goal"/>
+      </Sequence>
+    </Squad>
+  </BehaviorTree>
+</root>

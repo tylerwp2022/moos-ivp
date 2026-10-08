@@ -36,7 +36,7 @@ ProcessConfig = ANTLER
   Run = pLLMAgent       @ NewConsole = false
   Run = pBehaviorTree   @ NewConsole = false
   Run = uPlanPreview    @ NewConsole = false
-  Run = uFldTeam        @ NewConsole = false
+  Run = uFldSquad        @ NewConsole = false
   Run = uFldCollisionDetect @ NewConsole = false
 }
 
@@ -63,7 +63,7 @@ ProcessConfig = uFldShoreBroker
   qbridge = TURN_LIMIT, TURN_LIMIT_UPDATE
   qbridge = BT_TREE, BT_TREE_FILE, BT_CMD, BT_REPLY, BT_SIGNAL
   qbridge = NODE_REPORT, NODE_MESSAGE
-  qbridge = PLATFORM_COLOR, TRAIL_UPDATE    // uFldTeam: team colors, formation slots
+  qbridge = PLATFORM_COLOR, TRAIL_UPDATE    // uFldSquad: squad colors, formation slots
   qbridge = CONVOY_UPDATE, INTERCEPT_UPDATE, INTERCEPT_SPEED_UPDATE, AVOID   // the contact set
   qbridge = BHV_ABLE_FILTER                 // avoid_ignore / avoid_heed: one contact left out
 
@@ -192,7 +192,7 @@ ProcessConfig = pMarineViewer
   scope = RETURN_ALL
   scope = MVIEWER_LCLICK
 
-  // BT_CMD_ALL reaches every team plan on the shoreside executor and,
+  // BT_CMD_ALL reaches every squad plan on the shoreside executor and,
   // through the qbridge, every vehicle's own plan; then the helm flags.
   button_one   = STOP_ALL # BT_CMD_ALL=halt # DEPLOY_ALL=false # RETURN_ALL=false
   button_two   = RETURN_ALL # BT_CMD_ALL=cancel # DEPLOY_ALL=true # RETURN_ALL=true # MOOS_MANUAL_OVERRIDE_ALL=false
@@ -261,20 +261,20 @@ ProcessConfig = pLLMAgent
   receivers = all:vname
   vnames    = $(VNAMES_CSV)      // the roster before the first NODE_REPORT
 
-  // The teams uFldTeam keeps are the plan executor's slots, addressed
+  // The squads uFldSquad keeps are the plan executor's slots, addressed
   // like a vehicle by the plan tools: run_plan vname=red posts
-  // BT_TREE_RED. The names come from TEAM_LIST as teams are formed and
-  // disbanded, the members from TEAM_REPORT_<NAME>.
-  teams_var = TEAM_LIST
+  // BT_TREE_RED. The names come from SQUAD_LIST as squads are formed and
+  // disbanded, the members from SQUAD_REPORT_<NAME>.
+  squads_var = SQUAD_LIST
 
   // What comes back from each vehicle, renamed with its name by its
-  // uFldNodeBroker, and from each team's plan slot; a * registers a
+  // uFldNodeBroker, and from each squad's plan slot; a * registers a
   // wildcard.
   watch = BT_STATE_*, BT_ACTIVE_*, BT_LOG_*, MISSION_*
   watch = BT_REPORT_*, BT_MEMBERS_*, BT_PLAN_*
   watch = IVPHELM_STATE_*, IVPHELM_UPDATE_RESULT_*
   watch = DEPLOY_ALL, RETURN_ALL
-  watch = TEAM_LIST, TEAM_EVENT, TEAM_REPORT_*, TEAM_MISSION_*   // uFldTeam
+  watch = SQUAD_LIST, SQUAD_EVENT, SQUAD_REPORT_*, SQUAD_MISSION_*   // uFldSquad
   watch = COLLISION_TOTAL, NEAR_MISS_TOTAL   // uFldCollisionDetect's counts
   watch = AVOID_*                             // each vehicle's avoidance mode, as last set here
 
@@ -291,16 +291,16 @@ ProcessConfig = pLLMAgent
   bt_tree_var        = BT_TREE
   system_prompt_file = prompts/fleet.txt
 
-  // helm: the single-vehicle drivers and modifiers; team: the
-  // uFldTeam tools (team_form, team_goto, team_formation ...), which
-  // take a team argument and post TEAM_CMD here (receivers = local).
+  // helm: the single-vehicle drivers and modifiers; squad: the
+  // uFldSquad tools (squad_form, squad_goto, squad_formation ...), which
+  // take a squad argument and post SQUAD_CMD here (receivers = local).
   // One directory per line. contact: follow (one vehicle trails
   // another along its track), intercept (chase and close on one) and
   // avoid (collision avoidance, off at launch). The towed-sensor and
   // energy-saving pairs have no role here; every tool costs prompt
   // tokens each turn.
   capability_dir = helm
-  capability_dir = team
+  capability_dir = squad
   capability_dir = contact
   capability_drop = turn_limit, turn_limit_off, periodic_speed, periodic_speed_off
   view_color = orange, magenta, cyan, dodger_blue, white, yellow   // yellow last: a running plan step is yellow
@@ -321,20 +321,20 @@ ProcessConfig = pLLMAgent
 }
 
 //------------------------------------------
-// pBehaviorTree config block: the team plan executor
-// One plan slot per team uFldTeam keeps (teams_var = TEAM_LIST): a
-// team's variables carry its suffix, so a plan reaches red as
+// pBehaviorTree config block: the squad plan executor
+// One plan slot per squad uFldSquad keeps (squads_var = SQUAD_LIST): a
+// squad's variables carry its suffix, so a plan reaches red as
 // BT_TREE_RED the way a vehicle's reaches abe as BT_TREE_ABE, and two
-// teams run two plans at once. A team plan starts with a bare <Team>
-// (the whole team, from TEAM_REPORT_<NAME>) and drives no vehicle
+// squads run two plans at once. A squad plan starts with a bare <Squad>
+// (the whole squad, from SQUAD_REPORT_<NAME>) and drives no vehicle
 // itself: each Member block (or leaf with a vname) goes down as that
 // vehicle's own plan, BT_TREE_<VNAME>, and the block waits on
-// BT_STATE_<VNAME>; the team leaves (TeamFormation, TeamGoto ...)
-// run here and post TEAM_CMD. Report lines come back up as
+// BT_STATE_<VNAME>; the squad leaves (SquadFormation, SquadGoto ...)
+// run here and post SQUAD_CMD. Report lines come back up as
 // BT_REPORT_<VNAME> (and back down to every vehicle under that name,
-// see uFldShoreBroker); Signal goes down as BT_SIGNAL. BT_PLAN_<TEAM>
-// names the running plan, which uFldTeam shows per team. A disbanded
-// team's plan is halted with it. No halt or fail flags: a halt
+// see uFldShoreBroker); Signal goes down as BT_SIGNAL. BT_PLAN_<SQUAD>
+// names the running plan, which uFldSquad shows per squad. A disbanded
+// squad's plan is halted with it. No halt or fail flags: a halt
 // reaches the members through their own executors.
 
 ProcessConfig = pBehaviorTree
@@ -342,29 +342,29 @@ ProcessConfig = pBehaviorTree
   AppTick   = 4
   CommsTick = 4
 
-  teams_var = TEAM_LIST
+  squads_var = SQUAD_LIST
   vnames    = $(VNAMES_CSV)      // the fleet, before the first NODE_REPORT
 
   capability_dir = helm          // the same leaves the vehicles have
-  capability_dir = team          // the team leaves, run on this executor
+  capability_dir = squad          // the squad leaves, run on this executor
   capability_dir = contact       // follow, intercept, avoid, dispatched to the vehicle
-  view_prefix    = bt_           // shapes labelled bt_<team>_...
+  view_prefix    = bt_           // shapes labelled bt_<squad>_...
   contacts       = true          // ABE_BEN_RANGE and friends for conditions
 
   app_logging = true
 }
 
 //------------------------------------------
-// uFldTeam config block: teams as objects
-// TEAM_CMD creates and disbands teams of these vehicles and moves
-// them: "move red to x,y" moves the team's centroid there, every
+// uFldSquad config block: squads as objects
+// SQUAD_CMD creates and disbands squads of these vehicles and moves
+// them: "move red to x,y" moves the squad's centroid there, every
 // member keeping its offset, or holding a slot of a formation. Each
-// team's centroid, spread and state come out as TEAM_REPORT_<NAME>
-// and TEAM_<NAME>_X/_Y/...; members take the team color on the map.
+// squad's centroid, spread and state come out as SQUAD_REPORT_<NAME>
+// and SQUAD_<NAME>_X/_Y/...; members take the squad color on the map.
 // Vehicles are driven through the same posts the goto, speed and
 // stop tools make, bridged down by uFldShoreBroker.
 
-ProcessConfig = uFldTeam
+ProcessConfig = uFldSquad
 {
   AppTick   = 4
   CommsTick = 4
@@ -391,7 +391,7 @@ ProcessConfig = uPlanPreview
 
   request_var = PLAN_PREVIEW
   capability_dir = helm
-  capability_dir = team
+  capability_dir = squad
   capability_dir = contact
   capability_drop = turn_limit, turn_limit_off, periodic_speed, periodic_speed_off
 

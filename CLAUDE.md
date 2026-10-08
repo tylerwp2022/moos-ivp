@@ -29,7 +29,7 @@ cd ivp/src_unit_tests && ./alltest.sh               # runs every dir that has a 
 cd ivp/src_unit_tests/testConvexHull && utest cases.utf -v   # one test
 ```
 
-The framework is homegrown: the `utest` runner drives table-driven `cases.utf` files; a `.skip_test` marker makes a dir non-fatal. No gtest/catch2. CI (`.github/workflows/build.yml`) runs `build.sh`, `build-check.sh`, `build-utests.sh`, and `alltest.sh` on Ubuntu 24.04 and macOS for pushes to `main` and `llm-integration`. It checks out submodules recursively; the private ones need the repository secret `SUBMODULE_TOKEN`, a fine-grained PAT with contents read access to the fork and to `moos-ivp-llm`, `moos-ivp-bt`, `moos-ivp-cap`, `moos-ivp-team`, `moos-ivp-dyn` and `moos-ivp-panel` (a submodule the PAT does not cover fails every job at checkout with a 403). The offline self-tests `bin/cap_selftest`, `bin/bt_selftest`, `bin/llm_selftest` and `bin/team_selftest` are not run by CI.
+The framework is homegrown: the `utest` runner drives table-driven `cases.utf` files; a `.skip_test` marker makes a dir non-fatal. No gtest/catch2. CI (`.github/workflows/build.yml`) runs `build.sh`, `build-check.sh`, `build-utests.sh`, and `alltest.sh` on Ubuntu 24.04 and macOS for pushes to `main` and `llm-integration`. It checks out submodules recursively; the private ones need the repository secret `SUBMODULE_TOKEN`, a fine-grained PAT with contents read access to the fork and to `moos-ivp-llm`, `moos-ivp-bt`, `moos-ivp-cap`, `moos-ivp-squad`, `moos-ivp-dyn` and `moos-ivp-panel` (a submodule the PAT does not cover fails every job at checkout with a 403). The offline self-tests `bin/cap_selftest`, `bin/bt_selftest`, `bin/llm_selftest` and `bin/squad_selftest` are not run by CI.
 
 ## Architecture
 
@@ -54,15 +54,15 @@ The framework is homegrown: the `utest` runner drives table-driven `cases.utf` f
 
 Six submodules under `ivp/src/`, each with the README that is its reference:
 - `moos-ivp-llm`: `lib_llm` and `pLLMAgent`, the operator-chat agent (tool grammar, MOOS interface, confirmation flow, prompt and tool-count briefing in its README).
-- `moos-ivp-bt`: `lib_bt` and `pBehaviorTree`, the plan executor, per vehicle and in team mode on the shoreside; `pBehaviorTree --check=<file> [--team --roster=abe,ben]` validates a plan offline.
+- `moos-ivp-bt`: `lib_bt` and `pBehaviorTree`, the plan executor, per vehicle and in squad mode on the shoreside; `pBehaviorTree --check=<file> [--squad --roster=abe,ben]` validates a plan offline.
 - `moos-ivp-cap`: the capability files, one per tool and plan leaf, in sets a mission picks with `capability_dir` / `capability_keep` / `capability_drop`.
-- `moos-ivp-team`: `lib_team` and `uFldTeam`, teams as objects with formations around a virtual leader.
+- `moos-ivp-squad`: `lib_squad` and `uFldSquad`, squads as objects with formations around a virtual leader.
 - `moos-ivp-dyn`: `lib_dyn` and `uDynamicsTest`, the measured vehicle dynamics that reach the agent's prompt as facts.
 - `moos-ivp-panel`: `uButtonPanel`, the operator's button panel (its own FLTK window) over the mission's `buttons.txt`; the `make_button` tool (in moos-ivp-bt's capabilities) saves buttons there and pLLMAgent runs their plans on a press. The file's reader and writer, `ButtonFile`, is in `lib_cap`.
 
-Fork-side: the pMarineViewer chat pane (the only upstream edits besides `ivp/src/CMakeLists.txt`; `local-patches/` records any other deliberate upstream edit), `ivp/missions/s1_alpha_llm/` (one vehicle) and `ivp/missions/m2_alpha_llm/` (fleet, teams, contact set; its README explains the bridging and the roster variables; `test/` holds the scripted chat test).
+Fork-side: the pMarineViewer chat pane (the only upstream edits besides `ivp/src/CMakeLists.txt`; `local-patches/` records any other deliberate upstream edit), `ivp/missions/s1_alpha_llm/` (one vehicle) and `ivp/missions/m2_alpha_llm/` (fleet, squads, contact set; its README explains the bridging and the roster variables; `test/` holds the scripted chat test).
 
-Rules: `ANTHROPIC_API_KEY` comes from the environment and never goes in a mission file. Keep a mission's tool set to what it needs: every tool costs prompt tokens each turn and the API marks at most 20 tools strict. Offline checks: `bin/llm_selftest`, `bin/bt_selftest`, `bin/cap_selftest`, `bin/team_selftest` (not run by CI), then the headless fleet, then the owner's live run.
+Rules: `ANTHROPIC_API_KEY` comes from the environment and never goes in a mission file. Keep a mission's tool set to what it needs: every tool costs prompt tokens each turn and the API marks at most 20 tools strict. Offline checks: `bin/llm_selftest`, `bin/bt_selftest`, `bin/cap_selftest`, `bin/squad_selftest` (not run by CI), then the headless fleet, then the owner's live run.
 
 ## Working in this repo
 
@@ -71,7 +71,7 @@ Rules: `ANTHROPIC_API_KEY` comes from the environment and never goes in a missio
 - Build and verify each piece before the next: library self-test, then the app headless on a scratch fleet, then the next piece. Say plainly what was verified and how, and what was not; a headless run is called headless.
 - Anything that changes vehicle behaviour (helm behaviours, formations, avoidance) gets one or two headless attempts at most, then a launch-and-watch recipe for the owner, who observes the viewer and proposes fixes; read the behaviour's documentation and measure the geometry before redesigning.
 - Fixes go one at a time through the `fix-review` skill: findings with evidence first, each fix explained in plain terms and approved or denied before it is built.
-- The shipped example missions stay minimal (m2_alpha_llm: one team, two members in its examples); generality lives in code, tests and READMEs. A mission's tool menu holds only what it needs.
+- The shipped example missions stay minimal (m2_alpha_llm: one squad, two members in its examples); generality lives in code, tests and READMEs. A mission's tool menu holds only what it needs.
 - Reads under this directory need no permission; writes to upstream source (anything outside the submodules, `ivp/src/CMakeLists.txt`, the fork-owned parts of pMarineViewer and `local-patches/`) are asked about first.
 
 ## Skills

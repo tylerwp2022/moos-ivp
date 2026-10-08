@@ -1,6 +1,6 @@
 ---
 name: review-run
-description: Review the newest live run of an LLM mission (m2_alpha_llm, s1_alpha_llm) from its shoreside log - the chat in order, tool calls, per-request latency and tokens, collisions and near misses, plan and team states, and boat positions around any event. Use when the user asks to look at the last mission, the latest chat, or what went wrong in a run.
+description: Review the newest live run of an LLM mission (m2_alpha_llm, s1_alpha_llm) from its shoreside log - the chat in order, tool calls, per-request latency and tokens, collisions and near misses, plan and squad states, and boat positions around any event. Use when the user asks to look at the last mission, the latest chat, or what went wrong in a run.
 ---
 
 # Review a live run
@@ -35,7 +35,7 @@ python3 ivp/missions/m2_alpha_llm/test/review.py $A --only usage,problems,drawin
 the chat with tool-call bodies left out and arithmetic-heavy step lines
 trimmed, one line per request with its cost and a flag when the history
 was rewritten into the cache or the request was a cold start, the plan
-state changes with team events and button presses, the Say lines and
+state changes with squad events and button presses, the Say lines and
 collisions, the problems (steps that could not start, first-value waits,
 rejected trees and conditions, cut-off and error replies), every drawing
 by variable and label with when it was erased or STILL ON THE MAP when
@@ -53,7 +53,7 @@ grep -E '^\S+\s+(LLM_CHAT_IN|LLM_CHAT_OUT|LLM_TOOL_CALL)\s' $A | awk '!seen[$1 $
 a newline. A proposal is an `LLM_CHAT_OUT` whose source reads
 `pLLMAgent:ask`; `[approved, posted: ...]`, `[declined]` and
 `[error ...]` are console notes. Say and Ask lines from plans are
-`BT_CHAT_<VNAME>` / `BT_CHAT_<TEAM>` and show in the pane as `plan>`.
+`BT_CHAT_<VNAME>` / `BT_CHAT_<SQUAD>` and show in the pane as `plan>`.
 
 Per request, the reliable record:
 
@@ -68,7 +68,7 @@ max_tokens` in a reply is a truncation.
 ## 3. What the boats did
 
 ```
-grep -E '^\S+\s+(COLLISION|NEAR_MISS|COLLISION_TOTAL|NEAR_MISS_TOTAL|TEAM_EVENT|TEAM_CMD|BT_STATE_[A-Z]+|BT_EVENT_[A-Z]+|BT_PLAN_[A-Z]+|BT_MEMBERS_[A-Z]+|BT_CHAT_[A-Z]+)\s' $A | awk '!seen[$1 $2 $4]++'
+grep -E '^\S+\s+(COLLISION|NEAR_MISS|COLLISION_TOTAL|NEAR_MISS_TOTAL|SQUAD_EVENT|SQUAD_CMD|BT_STATE_[A-Z]+|BT_EVENT_[A-Z]+|BT_PLAN_[A-Z]+|BT_MEMBERS_[A-Z]+|BT_CHAT_[A-Z]+)\s' $A | awk '!seen[$1 $2 $4]++'
 grep -E '^\S+\s+(BT_ACTIVE_[A-Z]+)\s' $A | awk '!seen[$1 $2 $4]++'     # which leaf each plan was in
 ```
 
@@ -85,7 +85,7 @@ position, speed and heading plus every pair's range on a time grid:
 python3 ivp/missions/m2_alpha_llm/test/pairs.py $A <t0> <t1> [step]
 ```
 
-Use it around every collision, near miss and corner. `TEAM_REPORT_<NAME>`
+Use it around every collision, near miss and corner. `SQUAD_REPORT_<NAME>`
 carries `leader=x:y:heading` while a formation is on.
 
 ## 4. Helm detail, from a boat's log
@@ -118,7 +118,7 @@ python3 ivp/missions/m2_alpha_llm/test/views.py $A [--turn N] [--id N] [--events
 ```
 
 Per proposal turn it lists the shapes pLLMAgent drew, grouped by owner
-(vehicle or team), with their colors, waypoint numbers and erase time.
+(vehicle or squad), with their colors, waypoint numbers and erase time.
 Per preview request it lists the plans the agent sent (owner, color,
 roster), each play's length, the first play's events, every bubble text
 with its time on screen, where the ghosts rested, and flags a ghost that

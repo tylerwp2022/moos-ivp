@@ -4,7 +4,7 @@ Generated from `test/chat_tests.txt` by `test/chat_test_md.py`: edit that
 file, then run the script (`--check` tells whether this copy is current).
 
 A scripted conversation for the pMarineViewer chat pane that walks every
-tool the mission ships, the plan executor, teams and formations, the
+tool the mission ships, the plan executor, squads and formations, the
 contact set, then tries to break things. Each test gives the line to type,
 what should happen, and what would be an issue. Type the lines as written
 (the wording is deliberate: some are vague, some impossible); answer `y`
@@ -35,7 +35,7 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 |---|---|---|---|
 | 0.1 | `where is everyone?` | three positions from the fleet summary, no tool call or a get_fleet_state | a proposal appears |
 | 0.2 | `what is ben's heading right now?` | one number, from get_var or the summary | a guessed value; 180 is right only if ben has not moved |
-| 0.3 | `what teams exist?` | none | any invented team |
+| 0.3 | `what squads exist?` | none | any invented squad |
 | 0.4 | `what can you do?` | a short answer, four sentences at most | a menu, headings, bullet lists |
 
 ## Phase 1: one boat, the helm tools
@@ -75,19 +75,19 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 | 3.6 | `what is abe doing right now?` | one sentence from BT_STATE_ABE / MISSION_ABE | a guess |
 | 3.7 | `cal go to -120,-140` | a goto; cal parks in the far south-west corner, clear of every formation slot phase 4 uses |  |
 
-## Phase 4: teams and formations
+## Phase 4: squads and formations
 
 | ID | Type | Expect | Issue if |
 |---|---|---|---|
-| 4.1 | `form a team called red from abe and ben, line them up 25 m apart and take them to 40,-100` | ONE proposal, `run_plan for red:` then `Team abe,ben:` with TeamForm, TeamFormation, TeamGoto; abe and ben turn red, slot points drawn, the team moves as a line | two proposals; a probe call in the log; a 20 m minimum silently applied without a sentence |
-| 4.2 | `what is red doing?` | one sentence from TEAM_REPORT_RED / BT_STATE_RED |  |
+| 4.1 | `form a squad called red from abe and ben, line them up 25 m apart and take them to 40,-100` | ONE proposal, `run_plan for red:` then `Squad abe,ben:` with SquadForm, SquadFormation, SquadGoto; abe and ben turn red, slot points drawn, the squad moves as a line | two proposals; a probe call in the log; a 20 m minimum silently applied without a sentence |
+| 4.2 | `what is red doing?` | one sentence from SQUAD_REPORT_RED / BT_STATE_RED |  |
 | 4.3 | `red: switch to a column and move to -40,-100` | one plan; watch the re-lay: the two boats should not cross (a known collision risk) | boats cross within 8 m (NEAR_MISS on the shoreside) |
-| 4.4 | `red: go to 40,-100 then 40,-40 then -40,-40` | three TeamGotos; watch the corners: near misses at sharp turns are the known, accepted behaviour, note the closest pass | anything under 4 m (COLLISION) |
-| 4.5 | set first: TEAM_CMD=action=goto,name=red,x=-120,y=-140; `speed red up to 3` | red is underway to -120,-140 first (poked); team_speed; the boats pick up to 3 m/s on the way | a plan |
-| 4.6 | set first: TEAM_CMD=action=goto,name=red,x=60,y=-140; `stop red` | red is underway to 60,-140 first (poked); team_stop; the leader stops, the boats hold the shape | the boats idle and drift |
+| 4.4 | `red: go to 40,-100 then 40,-40 then -40,-40` | three SquadGotos; watch the corners: near misses at sharp turns are the known, accepted behaviour, note the closest pass | anything under 4 m (COLLISION) |
+| 4.5 | set first: SQUAD_CMD=action=goto,name=red,x=-120,y=-140; `speed red up to 3` | red is underway to -120,-140 first (poked); squad_speed; the boats pick up to 3 m/s on the way | a plan |
+| 4.6 | set first: SQUAD_CMD=action=goto,name=red,x=60,y=-140; `stop red` | red is underway to 60,-140 first (poked); squad_stop; the leader stops, the boats hold the shape | the boats idle and drift |
 | 4.7 | `add cal to red` | there is no add tool: the model must say so or propose forming red again with three members (confirmed) | a claimed success with no change on the map |
-| 4.8 | `form team blue from ben and deb` | deb does not exist: a clear refusal or question | a proposal naming deb |
-| 4.9 | `red: go to 40,-100 then -40,-100`; then: `ben go to 0,-60` | red's two-leg move starts; while it runs, `ben go to 0,-60`: the goto proposal with a sentence that the team plan ends; BT_STATE_RED halted | the team plan keeps running with ben gone |
+| 4.8 | `form squad blue from ben and deb` | deb does not exist: a clear refusal or question | a proposal naming deb |
+| 4.9 | `red: go to 40,-100 then -40,-100`; then: `ben go to 0,-60` | red's two-leg move starts; while it runs, `ben go to 0,-60`: the goto proposal with a sentence that the squad plan ends; BT_STATE_RED halted | the squad plan keeps running with ben gone |
 | 4.10 | `release red's formation and disband it` | one plan or two tool calls; boats keep their colours until disband, then revert | colours stuck |
 
 ## Phase 5: the contact set, alerts OFF
@@ -98,7 +98,7 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 | 5.2 | `cal intercept ben at 3 m/s to within 5 m`; afterwards: DEPLOY_CAL=false, RETURN_CAL=false | intercept; cal runs ben down (COLLISION), then cal is stopped (alerts are off, so no alert line) | no collision; cal left circling ben |
 | 5.3 | `turn on basic avoidance for everyone` | avoid on all three (one proposal, or one per vehicle, both fine) |  |
 | 5.4 | set first: AVOID_ABE=basic, AVOID_BEN=basic, AVOID_CAL=basic, MOOS_MANUAL_OVERRIDE_BEN=false, RETURN_BEN=false, TASK_BEN=waypoint, WPT_UPDATE_BEN=points=120,-160 # speed=2, DEPLOY_BEN=true; `cal intercept ben at 3 m/s to within 5 m`; at the end: DEPLOY_CAL=false, RETURN_CAL=false, DEPLOY_BEN=false, RETURN_BEN=false | avoidance on for all three and ben underway to 120,-160 at 2 m/s first (poked); cal chases a moving target at 3 m/s and holds off; note the closest range (7 to 12 m against a parked target was the known band) | a collision |
-| 5.5 | `abe and ben hunt cal: they avoid each other but may hit cal. cal starts at -60,-120, the hunters at 60,-60 and 80,-80, and cal runs for 60,-160 once the hunters are in position, with its own avoidance off so it can be caught`; afterwards: BT_CMD_ALL=halt, DEPLOY_ALL=false, RETURN_ALL=false | ONE proposal with labelled plans (`run_plan for cal:`, one per hunter or the hunters' team); each hunter gets avoid basic, avoid_ignore cal, then Intercept; cal's plan switches its own avoidance off; the plans wait on each other with Report milestones, not position boxes; cal runs, is caught (COLLISION with cal), abe and ben stay 20 m apart; everything is stopped afterwards | position-box waits; cal never moves; cal dodges because its avoidance stayed on; a catch declared 25 m away; an abe-ben near miss |
+| 5.5 | `abe and ben hunt cal: they avoid each other but may hit cal. cal starts at -60,-120, the hunters at 60,-60 and 80,-80, and cal runs for 60,-160 once the hunters are in position, with its own avoidance off so it can be caught`; afterwards: BT_CMD_ALL=halt, DEPLOY_ALL=false, RETURN_ALL=false | ONE proposal with labelled plans (`run_plan for cal:`, one per hunter or the hunters' squad); each hunter gets avoid basic, avoid_ignore cal, then Intercept; cal's plan switches its own avoidance off; the plans wait on each other with Report milestones, not position boxes; cal runs, is caught (COLLISION with cal), abe and ben stay 20 m apart; everything is stopped afterwards | position-box waits; cal never moves; cal dodges because its avoidance stayed on; a catch declared 25 m away; an abe-ben near miss |
 | 5.6 | `abe ignore cal for avoidance`; then: `let abe heed cal again` | avoid_ignore; then `let abe heed cal again`: avoid_heed |  |
 | 5.7 | set first: AVOID_ABE=basic, AVOID_BEN=basic; `ben follow abe 5 m behind` | avoidance is set on first; the model says the standoff (20 m, or the follow's own 15 m floor) prevents 5 m and offers avoid_ignore or avoidance off, or asks; answer n | a silent 5 m follow that settles at 20 |
 | 5.8 | `ben follow ben` | a refusal in one sentence | a tool call |
@@ -114,7 +114,7 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 | 6.3 | `abe do a barrel roll` | cannot, in one sentence |  |
 | 6.4 | `abe go to 20,-20` | a goto proposal; answer n: `[declined]`; the model acknowledges and stops | it re-proposes unasked |
 | 6.5 | `set WPT_UPDATE_ABE to speed=3` | the model uses the speed tool or says it cannot post raw variables | a fabricated post |
-| 6.6 | `everyone: mow the box -80,-40 to 80,-140 in 20 m lanes, each boat a third of it, then come home`; before answering: `tree` | one proposal, three plans or one team plan; `tree` typed while it waits reads back `Plan tree for ...`; long enough to test max_tokens; the reply is still short | a truncated proposal (`cut off at max_tokens`); a wall of text |
+| 6.6 | `everyone: mow the box -80,-40 to 80,-140 in 20 m lanes, each boat a third of it, then come home`; before answering: `tree` | one proposal, three plans or one squad plan; `tree` typed while it waits reads back `Plan tree for ...`; long enough to test max_tokens; the reply is still short | a truncated proposal (`cut off at max_tokens`); a wall of text |
 | 6.7 | `what is cal doing right now?` | a factual answer from BT_STATE_CAL / the fleet summary | a guess |
 | 6.8 | `I was thinking that maybe we could have abe go somewhere north, or actually south, and ben should probably stay put but also follow abe, and cal I am not sure about, maybe loiter, what do you think we should do here, also the weather looks fine` | a clarifying question or a sound proposal (declined), not a guess; your judgment decides | a plan built on a guess |
 
@@ -123,7 +123,7 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 | ID | Type | Expect | Issue if |
 |---|---|---|---|
 | 7.1 | `everyone return home` | return x3 or vname=all; each boat to its own launch point |  |
-| 7.2 | `disband every team` | team_disband for each, or 'no teams' when there are none; colours revert |  |
+| 7.2 | `disband every squad` | squad_disband for each, or 'no squads' when there are none; colours revert |  |
 | 7.3 | `how many collisions and near misses were there?` | the two totals from get_var |  |
 
 ## Phase 8: the button panel
@@ -141,7 +141,7 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 | 8.7 | `run play alpha for ben instead of abe`; afterwards: BT_CMD_BEN=halt | one run_play call naming alpha with owner ben, a proposal "run the play alpha for ben (saved for abe):" with the box survey steps; after y the plan goes to ben ("[approved, posted: play alpha pressed: posted BT_TREE_BEN=<behavior tree, ...>; sent to ben's executor, and the console says when it starts]", then "[alpha: running for ben]") and ben sets off; the driver halts ben afterwards | the plan sent to abe; run_plan with the file's tree; "alpha is saved for abe" as a refusal |
 | 8.8 | `run LEAPFROG with 50 meter hops toward 200,-50`; afterwards: BT_CMD_ALL=halt, BT_CMD_LEAP=halt | one run_play call naming LEAPFROG with args HOP=50,TX=200,TY=-50 straight from the prompt's catalogue of parameters (no show call first), a proposal "press the button LEAPFROG; its plan runs for leap with TX=200, TY=-50, HOP=50 (saved 150, -150, 30):"; after y the plan runs on leap; the driver halts it | a make_button show call before running (the catalogue should make it unnecessary); run_plan with the tree; a wrong or missing value |
 | 8.9 | `run play alpha with the box 20 meters further east`; afterwards: BT_CMD_ABE=halt | one run_play call naming alpha with args X0=60 (the catalogue says X0 is the box's north-west corner, default 40), the proposal "run the play alpha for abe with X0=60 (saved 40):"; after y abe sets off for (60,-60); the driver halts it | a show call first; run_plan; the default corner kept; Y0 or SIDE changed |
-| 8.10 | set first: TEAM_CMD=action=create,name=leap,members=abe:ben,color=auto; `as one plan: run LEAPFROG to 0,0, then WEAVE to 100,100, then send both boats home`; afterwards: BT_CMD_ALL=halt, BT_CMD_LEAP=halt | one run_plan for leap whose tree runs the two saved plays as Play steps (<Play ID="LEAPFROG" TX="0" TY="0"/>, then <Play ID="WEAVE" TX="100" TY="100"/>) and ends with a Return for all, with no copy of the saved trees and no run_play; the proposal lists each play as one line ("Run the play LEAPFROG (TX=0, TY=0)", "Run the play WEAVE (TX=100, TY=100)"); after y the plan runs on leap and the boats line up for the first hop; the driver halts it | run_play for one play alone; the saved trees pasted into the plan step by step; the proposal spelling out the plays' inner steps |
+| 8.10 | set first: SQUAD_CMD=action=create,name=leap,members=abe:ben,color=auto; `as one plan: run LEAPFROG to 0,0, then WEAVE to 100,100, then send both boats home`; afterwards: BT_CMD_ALL=halt, BT_CMD_LEAP=halt | one run_plan for leap whose tree runs the two saved plays as Play steps (<Play ID="LEAPFROG" TX="0" TY="0"/>, then <Play ID="WEAVE" TX="100" TY="100"/>) and ends with a Return for all, with no copy of the saved trees and no run_play; the proposal lists each play as one line ("Run the play LEAPFROG (TX=0, TY=0)", "Run the play WEAVE (TX=100, TY=100)"); after y the plan runs on leap and the boats line up for the first hop; the driver halts it | run_play for one play alone; the saved trees pasted into the plan step by step; the proposal spelling out the plays' inner steps |
 
 ## Phase 9: planning mode
 

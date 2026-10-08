@@ -20,14 +20,14 @@ must be set in the shell for the chat to answer; without it the fleet
 still runs from the viewer's buttons (they act on every vehicle; there is
 no mouse context) and from uPokeDB.
 
-The shoreside also runs uFldTeam (moos-ivp-team): teams of vehicles as
-objects. TEAM_CMD forms a team (its members take the team color on the
+The shoreside also runs uFldSquad (moos-ivp-squad): squads of vehicles as
+objects. SQUAD_CMD forms a squad (its members take the squad color on the
 map), moves its center of mass with every member keeping its offset, or
 puts it in a formation (line, column, wedge, circle ...) that holds at rest
 and moves as a body behind a virtual leader the members trail with
-BHV_Trail (the formation block in meta_vehicle.bhv). TEAM_REPORT_<NAME>,
-TEAM_<NAME>_X/_Y/... and TEAM_MISSION_<NAME> come back. pLLMAgent gets the
-team_* tools from the team capability set (a capability_dir = team line),
+BHV_Trail (the formation block in meta_vehicle.bhv). SQUAD_REPORT_<NAME>,
+SQUAD_<NAME>_X/_Y/... and SQUAD_MISSION_<NAME> come back. pLLMAgent gets the
+squad_* tools from the squad capability set (a capability_dir = squad line),
 and the contact set (capability_dir = contact): follow, one vehicle
 trailing another along its exact track at a set distance, through the
 BHV_Convoy block in meta_vehicle.bhv (TASK = convoy, CONVOY_UPDATE);
@@ -42,7 +42,7 @@ command; and avoid, the vehicle's collision avoidance,
 colregs (BHV_AvdColregsV22) or basic (BHV_AvoidCollision) or off, one
 AVOID flag the two templated blocks condition on. pContactMgrV20 on each
 vehicle spawns those per contact (ignore_type = virtual keeps them off a
-team's leader) and every vehicle starts with AVOID = off; on, the 20 m
+squad's leader) and every vehicle starts with AVOID = off; on, the 20 m
 standoff (max_util_cpa_dist) is what a follow or an intercept cannot get
 inside, unless avoid_ignore leaves that one contact out (BHV_ABLE_FILTER,
 qbridged; avoid_heed takes it back) (headless at warp 10: a crossing with it off collided, with it on
@@ -54,18 +54,18 @@ the two events to the model as [alert: ...] notes, each opening a turn
 of its own so the agent can report and propose (alert = COLLISION,
 NEAR_MISS), off at launch; LLM_ALERTS=on, from the viewer's Action menu
 or uPokeDB, turns them on and off mutes them again. Also
-from that run: uFldTeam's slot legs set a member's waypoint speed to
+from that run: uFldSquad's slot legs set a member's waypoint speed to
 1.2 m/s and the helm keeps it, so a member let go (formation_off, stop,
 disband) now gets release_speed back.
 
-Beside it runs one pBehaviorTree with a plan slot per team (teams_var =
-TEAM_LIST): a team's variables carry its suffix (BT_TREE_RED, BT_STATE_RED,
+Beside it runs one pBehaviorTree with a plan slot per squad (squads_var =
+SQUAD_LIST): a squad's variables carry its suffix (BT_TREE_RED, BT_STATE_RED,
 BT_CHAT_RED, BT_PLAN_RED ...), so a plan reaches red the way a vehicle's
-reaches abe, two teams run two plans at once, and a disbanded team's plan
-is halted with it. A plan for vehicles not yet in a team forms it: its
-first step is TeamForm, and both the executor and pLLMAgent take the new
-name (plans/team_form_line.xml). A team plan starts with a bare <Team> (the whole team,
-from TEAM_REPORT_<NAME>) and drives no vehicle itself: each Member block,
+reaches abe, two squads run two plans at once, and a disbanded squad's plan
+is halted with it. A plan for vehicles not yet in a squad forms it: its
+first step is SquadForm, and both the executor and pLLMAgent take the new
+name (plans/squad_form_line.xml). A squad plan starts with a bare <Squad> (the whole squad,
+from SQUAD_REPORT_<NAME>) and drives no vehicle itself: each Member block,
 or a leaf with a vname, goes down to that vehicle as its own plan and the
 block waits on BT_STATE_<VNAME>; Report lines come back up as
 BT_REPORT_<VNAME>, and back down to every vehicle under that name
@@ -79,18 +79,18 @@ dynamics from uDynamicsTest's dyn/<vname>.txt: turning radius, stopping
 distance, acceleration distance and turn rate per speed, through the
 executor's facts_from) comes up as VEHICLE_FACTS_<VNAME> and pLLMAgent
 puts them in its prompt, so prompts/fleet.txt states no number the
-system publishes; Signal goes down as BT_SIGNAL; the team leaves
-(TeamFormation, TeamGoto ...) run on the executor and post TEAM_CMD. The
-team's report shows the plan (plan=, plan_state=). pLLMAgent learns the
-teams from TEAM_LIST too (run_plan vname=red) and the fleet prompt tells
-the model to form a team, then plan for it. Vehicles a plan does not list
-are left alone; a member taken out of its team is taken over, and the team
-plan ends. plans/team_wedge_south.xml is a plan of team leaves (form a
-wedge, move south), plans/team_line_south.xml the full Member form (each
+system publishes; Signal goes down as BT_SIGNAL; the squad leaves
+(SquadFormation, SquadGoto ...) run on the executor and post SQUAD_CMD. The
+squad's report shows the plan (plan=, plan_state=). pLLMAgent learns the
+squads from SQUAD_LIST too (run_plan vname=red) and the fleet prompt tells
+the model to form a squad, then plan for it. Vehicles a plan does not list
+are left alone; a member taken out of its squad is taken over, and the squad
+plan ends. plans/squad_wedge_south.xml is a plan of squad leaves (form a
+wedge, move south), plans/squad_line_south.xml the full Member form (each
 member reports at the line, the coordinator signals the move south),
-plans/team_box.xml the compact form, plans/follow_ben.xml a vehicle
+plans/squad_box.xml the compact form, plans/follow_ben.xml a vehicle
 reacting to another through the contact variables (BEN_RANGE). A member
-may itself be a team (a team of teams; see the moos-ivp-bt README), which
+may itself be a squad (a squad of squads; see the moos-ivp-bt README), which
 this mission keeps out to stay minimal.
 
 uPlanPreview (moos-ivp-bt) also runs on the shoreside: while a proposal
@@ -100,7 +100,7 @@ ten plan seconds per second, a dot per vehicle in its proposal color
 with its name and the words of any step that is not a movement beside
 it ("abe: Say 'done'", "red: waiting for abe"), replayed until the
 proposal resolves. A plan file can be previewed by hand:
-  uPokeDB targ_shoreside.moos 'PLAN_PREVIEW:=<preview><plan owner="red" file="plans/team_box.xml"/></preview>'
+  uPokeDB targ_shoreside.moos 'PLAN_PREVIEW:=<preview><plan owner="red" file="plans/squad_box.xml"/></preview>'
   uPokeDB targ_shoreside.moos PLAN_PREVIEW:=none
 Straight lines and instant turns, no avoidance: it shows the plan's logic
 and geometry, not the helm's dynamics.
@@ -126,15 +126,15 @@ Without the model, from this directory:
   uPokeDB targ_shoreside.moos BT_TREE_FILE_ABE=plans/box_goto.xml
   uPokeDB targ_shoreside.moos TASK_BEN=waypoint WPT_UPDATE_BEN=points=40,-40 DEPLOY_BEN=true MOOS_MANUAL_OVERRIDE_BEN=false
   uPokeDB targ_shoreside.moos BT_REPLY_ABE=yes
-  uPokeDB targ_shoreside.moos TEAM_CMD:=action=create,name=red,members=abe:ben
-  uPokeDB targ_shoreside.moos BT_TREE_FILE_RED=plans/team_wedge_south.xml
+  uPokeDB targ_shoreside.moos SQUAD_CMD:=action=create,name=red,members=abe:ben
+  uPokeDB targ_shoreside.moos BT_TREE_FILE_RED=plans/squad_wedge_south.xml
   uPokeDB targ_shoreside.moos BT_CMD_RED=halt
   uPokeDB targ_shoreside.moos BT_CMD_ALL=halt
   uXMS targ_shoreside.moos BT_STATE_RED BT_PLAN_RED BT_MEMBERS_RED BT_STATE_ABE BT_STATE_BEN BT_REPORT_ABE BT_REPORT_BEN
-  pBehaviorTree --check=plans/team_line_south.xml --team --roster=abe,ben
-  uPokeDB targ_shoreside.moos TEAM_CMD:=action=formation,name=red,shape=line,spacing=30
-  uPokeDB targ_shoreside.moos TEAM_CMD:=action=goto,name=red,x=60,y=-160
-  uXMS targ_shoreside.moos TEAM_LIST TEAM_REPORT_RED TEAM_MISSION_RED TEAM_EVENT
+  pBehaviorTree --check=plans/squad_line_south.xml --squad --roster=abe,ben
+  uPokeDB targ_shoreside.moos SQUAD_CMD:=action=formation,name=red,shape=line,spacing=30
+  uPokeDB targ_shoreside.moos SQUAD_CMD:=action=goto,name=red,x=60,y=-160
+  uXMS targ_shoreside.moos SQUAD_LIST SQUAD_REPORT_RED SQUAD_MISSION_RED SQUAD_EVENT
 
 This is the shape the MCTF mission takes later: pLLMAgent joins its
 shoreside block, pBehaviorTree and the bridge lines join meta_surveyor.moos.

@@ -1,15 +1,15 @@
-<!-- A team plan in the compact form: a step that names its vehicle runs
+<!-- A squad plan in the compact form: a step that names its vehicle runs
      as a one-step plan on that vehicle, and a Parallel waits for both.
      abe and ben each drive two legs side by side, then everyone returns.
 
-     Form the team, then poke the plan at its slot on the shoreside:
-       uPokeDB targ_shoreside.moos TEAM_CMD:=action=create,name=red,members=abe:ben
-       uPokeDB targ_shoreside.moos BT_TREE_FILE_RED=plans/team_box.xml
+     Form the squad, then poke the plan at its slot on the shoreside:
+       uPokeDB targ_shoreside.moos SQUAD_CMD:=action=create,name=red,members=abe:ben
+       uPokeDB targ_shoreside.moos BT_TREE_FILE_RED=plans/squad_box.xml
      Offline check:
-       pBehaviorTree --check=plans/team_box.xml --team --roster=abe,ben -->
+       pBehaviorTree --check=plans/squad_box.xml --squad --roster=abe,ben -->
 <root BTCPP_format="4" main_tree_to_execute="box">
   <BehaviorTree ID="box">
-    <Team members="abe,ben">
+    <Squad members="abe,ben">
       <Sequence>
         <Say msg="abe and ben: two legs side by side, then home"/>
         <Parallel>
@@ -23,6 +23,6 @@
         <Return vname="all" timeout="600"/>
         <Say msg="both home"/>
       </Sequence>
-    </Team>
+    </Squad>
   </BehaviorTree>
 </root>

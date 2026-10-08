@@ -27,7 +27,7 @@ Generated from `test/chat_tests.txt` by `test/chat_test_md.py`: edit that
 file, then run the script (`--check` tells whether this copy is current).
 
 A scripted conversation for the pMarineViewer chat pane that walks every
-tool the mission ships, the plan executor, teams and formations, the
+tool the mission ships, the plan executor, squads and formations, the
 contact set, then tries to break things. Each test gives the line to type,
 what should happen, and what would be an issue. Type the lines as written
 (the wording is deliberate: some are vague, some impossible); answer `y`

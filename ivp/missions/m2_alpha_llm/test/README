@@ -1,7 +1,7 @@
 m2_alpha_llm/test: the scripted chat test
 
 chat_tests.txt is the conversation to hold with the model to exercise
-every tool, the plans, the teams and the contact set, with what to expect
+every tool, the plans, the squads and the contact set, with what to expect
 of each line: chat_driver.py holds it for you against a live fleet and
 grades it, and chat_test_md.py writes chat_test.md (one directory up), the
 same script as tables for a person at the keyboard. Edit chat_tests.txt
@@ -45,9 +45,9 @@ git), launches abe, ben, cal on ports 9101.. with the shoreside on 9100
 and results.json there beside the run's LOG_ and XLOG_ directories.
 
 fleet.sh here launches, inspects and kills a scratch fleet by hand (up,
-ready, run, chat, plan, team, dump, alog, down): plan copies a plan file
-in, pokes it on a boat or a team and waits for its end; team creates a
-team and waits for its plan slot; dump prints review.py's tables on the
+ready, run, chat, plan, squad, dump, alog, down): plan copies a plan file
+in, pokes it on a boat or a squad and waits for its end; squad creates a
+squad and waits for its plan slot; dump prints review.py's tables on the
 run so far. review.py turns a shoreside alog into the tables a review
 reads (chat, requests and cost, plan states, Say lines, problems,
 drawings with what is still on the map, first-step waits); views.py reads

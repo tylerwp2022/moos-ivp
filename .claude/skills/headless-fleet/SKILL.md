@@ -1,6 +1,6 @@
 ---
 name: headless-fleet
-description: Launch a scratch copy of m2_alpha_llm (or s1_alpha_llm) without the viewer on the 9100 ports, drive it with uPokeDB and uQueryDB, read the logs, and shut it down cleanly. Use to verify any executor, capability, team or avoidance change before the user launches live, and for collision or formation experiments.
+description: Launch a scratch copy of m2_alpha_llm (or s1_alpha_llm) without the viewer on the 9100 ports, drive it with uPokeDB and uQueryDB, read the logs, and shut it down cleanly. Use to verify any executor, capability, squad or avoidance change before the user launches live, and for collision or formation experiments.
 ---
 
 # Headless scratch fleet
@@ -46,14 +46,14 @@ A plan under test is three lines, not a script:
 
 ```
 ivp/missions/m2_alpha_llm/test/fleet.sh plan $S /path/to/plan.xml abe        # copies it into $S/plans/, checks it, pokes it, waits for success/failure/halted, exit 0 on success
-ivp/missions/m2_alpha_llm/test/fleet.sh team $S pair abe:ben                  # a team and its plan slot, for a team plan
-ivp/missions/m2_alpha_llm/test/fleet.sh plan $S /path/to/team_plan.xml pair
+ivp/missions/m2_alpha_llm/test/fleet.sh squad $S pair abe:ben                  # a squad and its plan slot, for a squad plan
+ivp/missions/m2_alpha_llm/test/fleet.sh plan $S /path/to/squad_plan.xml pair
 ivp/missions/m2_alpha_llm/test/fleet.sh dump $S                                # review.py's plan tables on the run so far: states, Say lines, problems, drawings (STILL ON THE MAP), first-step waits
 ivp/missions/m2_alpha_llm/test/fleet.sh dump $S usage,chat                     # or any of review.py's sections
 ```
 
 `plan` reports "never ran" when the owner is not a boat or an existing
-team, and a plan that `pBehaviorTree --check` rejects before poking it.
+squad, and a plan that `pBehaviorTree --check` rejects before poking it.
 `dump` reads the shoreside alog; a vehicle's own log (`$S/LOG_<V>_*`)
 is still the final word on timing, since the alog thins event bursts.
 
@@ -86,7 +86,7 @@ with `#`, but a value cannot itself contain `=` (wait on a marker
 variable instead). `MulticastNode ... bind failed` lines are noise.
 
 Plans: `uPokeDB ... BT_TREE_FILE_ABE=plans/foo.xml` (the vehicle loads
-the file relative to $S). Teams: `TEAM_CMD:=action=create,name=red,members=abe:ben`,
+the file relative to $S). Squads: `SQUAD_CMD:=action=create,name=red,members=abe:ben`,
 then `action=formation,name=red,shape=line,spacing=25`, `action=goto,...`.
 A direct poke that moves a boat needs `MOOS_MANUAL_OVERRIDE_<V>=false`
 and `DEPLOY_<V>=true` unless a capability post carries them. Alerts to
@@ -97,8 +97,8 @@ that boat's own DB (`targ_abe.moos`), then grep its alog for `APPCAST`.
 ## Read the result
 
 Use the review-run skill's greps on `$S/XLOG_SHORESIDE_*/*.alog` and
-`$S/LOG_<V>_*/*.alog`: BT_STATE/BT_EVENT for plans, TEAM_EVENT and
-TEAM_REPORT for teams, COLLISION/NEAR_MISS with CPA, `pairs.py` for
+`$S/LOG_<V>_*/*.alog`: BT_STATE/BT_EVENT for plans, SQUAD_EVENT and
+SQUAD_REPORT for squads, COLLISION/NEAR_MISS with CPA, `pairs.py` for
 ranges, IVPHELM_LIFE_EVENT for spawned avoidance instances,
 DESIRED_ vs NAV_ for commanded vs actual. Correlate boat and shore
 logs through a marker you poke (`FORM_MARK:=start`).

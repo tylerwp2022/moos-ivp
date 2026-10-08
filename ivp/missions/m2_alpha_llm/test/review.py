@@ -8,7 +8,7 @@ Sections, in order (--only takes a comma list of their names):
   usage     one line per request: tokens, cost, latency, and a flag when
             the history was rewritten into the cache (a cache read below
             the previous request's total) or the request was a cold start
-  plans     plan state changes per slot, plan names, team events, button
+  plans     plan state changes per slot, plan names, squad events, button
             presses and definitions
   says      Say lines from plans, collisions and near misses
   problems  steps that could not start, waits for first values, rejected
@@ -143,7 +143,7 @@ if want("usage"):
 
 # ---------------- plans
 if want("plans"):
-    section("plans: state changes, names, teams, buttons")
+    section("plans: state changes, names, squads, buttons")
     last = {}
     for t, var, app, aux, val in rows:
         if re.match(r'BT_STATE_[A-Z0-9_]+$', var):
@@ -152,8 +152,8 @@ if want("plans"):
                 print(f"{t:9.1f} {var[9:].lower():>8} {val}")
         elif re.match(r'BT_PLAN_[A-Z0-9_]+$', var) and val != "none":
             print(f"{t:9.1f} {var[8:].lower():>8} plan {val}")
-        elif var == "TEAM_EVENT":
-            print(f"{t:9.1f}     team {val[:120]}")
+        elif var == "SQUAD_EVENT":
+            print(f"{t:9.1f}     squad {val[:120]}")
         elif var in ("BUTTON_PRESS", "LLM_BUTTON_DEF"):
             label = val
             if var == "BUTTON_PRESS" and "button=" in aux:

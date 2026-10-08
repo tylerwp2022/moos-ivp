@@ -1,17 +1,17 @@
-<!-- A team plan in the full form: every member gets its own plan, with
-     a milestone (Report) and a wait for the team's go (BT_SIGNAL); the
+<!-- A squad plan in the full form: every member gets its own plan, with
+     a milestone (Report) and a wait for the squad's go (BT_SIGNAL); the
      coordinator branch on the shoreside waits for both milestones and
      signals. abe and ben line up on y=-105 (abe at x=100, ben at x=50),
      head south together at 2 m/s and stop past y=-180.
 
-     Form the team, then poke the plan at its slot on the shoreside:
-       uPokeDB targ_shoreside.moos TEAM_CMD:=action=create,name=red,members=abe:ben
-       uPokeDB targ_shoreside.moos BT_TREE_FILE_RED=plans/team_line_south.xml
+     Form the squad, then poke the plan at its slot on the shoreside:
+       uPokeDB targ_shoreside.moos SQUAD_CMD:=action=create,name=red,members=abe:ben
+       uPokeDB targ_shoreside.moos BT_TREE_FILE_RED=plans/squad_line_south.xml
      Offline check:
-       pBehaviorTree --check=plans/team_line_south.xml --team --roster=abe,ben -->
+       pBehaviorTree --check=plans/squad_line_south.xml --squad --roster=abe,ben -->
 <root BTCPP_format="4" main_tree_to_execute="line_south">
   <BehaviorTree ID="line_south">
-    <Team members="abe,ben">
+    <Squad members="abe,ben">
       <Parallel>
         <Member vname="abe">
           <Sequence>
@@ -41,6 +41,6 @@
           <Signal vname="all" msg="go_south"/>
         </Sequence>
       </Parallel>
-    </Team>
+    </Squad>
   </BehaviorTree>
 </root>

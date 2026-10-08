@@ -13,7 +13,7 @@
 //   station_keep : DEPLOY=true, RETURN=false, TASK=station, STATION_UPDATE=station_pt=...
 //   hold_heading : DEPLOY=true, RETURN=false, TASK=heading, HEADING_UPDATE=heading=...
 //   formation    : DEPLOY=true, RETURN=false, TASK=formation, TRAIL_UPDATE=contact=...
-//                  (uFldTeam: hold a slot on the team's virtual leader)
+//                  (uFldSquad: hold a slot on the squad's virtual leader)
 //   follow       : DEPLOY=true, RETURN=false, TASK=convoy, CONVOY_UPDATE=contact=...
 //   intercept    : DEPLOY=true, RETURN=false, TASK=intercept, INTERCEPT_UPDATE=contact=...,
 //                  INTERCEPT_SPEED_UPDATE=max_speed=...
@@ -180,8 +180,8 @@ Behavior = BHV_ConstantSpeed
 }
 
 //----------------------------------------------
-// formation: hold a slot relative to a contact, the team's virtual
-// leader (<team>_lead) that uFldTeam posts to this vehicle as a
+// formation: hold a slot relative to a contact, the squad's virtual
+// leader (<squad>_lead) that uFldSquad posts to this vehicle as a
 // NODE_REPORT. TRAIL_UPDATE names the contact and the slot as a range
 // and an angle; the angle is relative to the leader's heading (+90
 // starboard, 180 astern) or a compass bearing (trail_angle_type =
