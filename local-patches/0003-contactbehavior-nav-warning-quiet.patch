@@ -1,0 +1,23 @@
+diff --git a/ivp/src/lib_behaviors/IvPContactBehavior.cpp b/ivp/src/lib_behaviors/IvPContactBehavior.cpp
+index 28db03695..c23ceebd0 100644
+--- a/ivp/src/lib_behaviors/IvPContactBehavior.cpp
++++ b/ivp/src/lib_behaviors/IvPContactBehavior.cpp
+@@ -534,8 +534,16 @@ bool IvPContactBehavior::updatePlatformInfo()
+   if(!ok1 || !ok2 || !ok3 || !ok4) {    
+     string msg = m_contact + " x/y/heading/speed info not found";
+     if(m_on_no_contact_ok) {
+-      postWMessage(msg);
+-      m_nav_warning_posted = true;
++      // LOCAL PATCH (local-patches/0003): no warning at all. A behavior
++      // whose contact has not reported yet (a fixed instance at helm
++      // start, waiting for the shoreside's first node reports) polled
++      // here four times a second from onIdleState and posted thousands
++      // of warnings before the first report, and the helm's appcast
++      // counts every one for the rest of the run (a retraction clears
++      // the active list, not the count), so the vehicle stayed red in
++      // the viewer over nothing. on_no_contact_ok says a missing contact
++      // is acceptable: the behavior idles quietly until it reports.
++      // The error setting (on_no_contact_ok = false) still reports it.
+     }
+     else
+       postEMessage(msg);
