@@ -9,7 +9,7 @@
 #               then build-check.sh finds every expected binary
 #   plays       pBehaviorTree --check-plays accepts every saved plan in the
 #               missions' buttons files (parameters at their defaults)
-#   selftests   cap, bt, llm, squad self-tests: 0 failures
+#   selftests   cap, field, bt, llm, squad self-tests: 0 failures
 #   chat test   chat_test.md is current with test/chat_tests.txt
 #   fleet       no scratch fleet on the 9100 ports
 REPO=$(cd "$(dirname "$0")/../.." && pwd)
@@ -53,10 +53,10 @@ for bf in ivp/missions/m2_alpha_llm/buttons.txt ivp/missions/s1_alpha_llm/button
   fi
 done
 
-for t in cap bt llm squad; do
+for t in cap field bt llm squad; do
   if [ -x "$REPO/bin/${t}_selftest" ]; then
     line=$("$REPO/bin/${t}_selftest" 2>&1 | grep -E 'checks' | tail -1)
-    case "$line" in *" 0 failures"*) say "selftest" "$t: $line";; *) fail selftest "$t: ${line:-did not run}";; esac
+    case "$line" in *" 0 failures"*|*" 0 failed"*) say "selftest" "$t: $line";; *) fail selftest "$t: ${line:-did not run}";; esac
   else
     fail selftest "$t: bin/${t}_selftest missing"
   fi

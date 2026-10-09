@@ -79,17 +79,17 @@ PMV_GUI::PMV_GUI(int g_w, int g_h, const char *g_l)
 
   // Lines are colored by role through a parallel style buffer: A is
   // the operator, B the model, C anything waiting on the operator,
-  // D the running plan. Colors are set in applyChatColors() once the
-  // pane's background is known.
+  // D the running plan, E a WARNING line inside a proposal. Colors
+  // are set in applyChatColors() once the pane's background is known.
   m_chat_style = new Fl_Text_Buffer();
-  for(int i=0; i<4; i++) {
+  for(int i=0; i<5; i++) {
     m_chat_colors[i]       = "auto";
     m_chat_styles[i].color = FL_BLACK;
     m_chat_styles[i].font  = FL_COURIER;
     m_chat_styles[i].size  = m_chat_font_size;
     m_chat_styles[i].attr  = 0;
   }
-  m_chat_disp->highlight_data(m_chat_style, m_chat_styles, 4, 'A', 0, 0);
+  m_chat_disp->highlight_data(m_chat_style, m_chat_styles, 5, 'A', 0, 0);
 
   m_chat_status = new Fl_Output(0, 0, 1, 1);
   m_chat_status->textsize(m_chat_font_size - 1);
@@ -1040,9 +1040,9 @@ void PMV_GUI::adjustChatFontSize(int delta)
 void PMV_GUI::applyChatFontSize()
 {
   m_chat_disp->textsize(m_chat_font_size);
-  for(unsigned int i=0; i<4; i++)
+  for(unsigned int i=0; i<5; i++)
     m_chat_styles[i].size = m_chat_font_size;
-  m_chat_disp->highlight_data(m_chat_style, m_chat_styles, 4, 'A', 0, 0);
+  m_chat_disp->highlight_data(m_chat_style, m_chat_styles, 5, 'A', 0, 0);
   m_chat_input->textsize(m_chat_font_size);
   m_chat_status->textsize((m_chat_font_size > 9) ? (m_chat_font_size - 1) : m_chat_font_size);
   resizeWidgets();
@@ -1098,8 +1098,24 @@ void PMV_GUI::addChatLine(string who, string text, string mode)
   else if(who == "plan")
     style = 'D';
 
+  // A WARNING line inside a proposal (the field check) gets its own
+  // color, line by line, so it stands out of the amber block
+  string styles(line.size(), style);
+  if(mode == "ask") {
+    size_t start = 0;
+    while(start < line.size()) {
+      size_t end = line.find('\n', start);
+      if(end == string::npos)
+	end = line.size();
+      size_t first = line.find_first_not_of(" \t", start);
+      if((first != string::npos) && (first < end) && (line.compare(first, 7, "WARNING") == 0))
+	styles.replace(start, end - start, end - start, 'E');
+      start = end + 1;
+    }
+  }
+
   m_chat_buff->append(line.c_str());
-  m_chat_style->append(string(line.size(), style).c_str());
+  m_chat_style->append(styles.c_str());
 
   // Keep the transcript bounded, both buffers alike
   if(m_chat_buff->length() > 200000) {
@@ -1127,6 +1143,8 @@ bool PMV_GUI::setChatColor(string role, string color)
     idx = 2;
   else if(role == "plan")
     idx = 3;
+  else if(role == "warn")
+    idx = 4;
   if(idx < 0)
     return(false);
 
@@ -1151,21 +1169,23 @@ void PMV_GUI::applyChatColors(Fl_Color back, Fl_Color text)
   Fl::get_color(back, r, g, b);
   bool dark = ((0.299 * r + 0.587 * g + 0.114 * b) < 128);
 
-  Fl_Color dflt[4];
+  Fl_Color dflt[5];
   if(dark) {
     dflt[0] = fl_rgb_color(170, 215, 255);   // you: light blue
     dflt[1] = text;                          // llm
     dflt[2] = fl_rgb_color(255, 205, 120);   // ask: amber
     dflt[3] = fl_rgb_color(165, 240, 165);   // plan: pale green
+    dflt[4] = fl_rgb_color(255, 110, 110);   // warn: light red
   }
   else {
     dflt[0] = fl_rgb_color(0, 60, 180);      // you: blue
     dflt[1] = text;                          // llm
     dflt[2] = fl_rgb_color(180, 70, 0);      // ask: dark orange
     dflt[3] = fl_rgb_color(0, 115, 45);      // plan: green
+    dflt[4] = fl_rgb_color(200, 0, 0);       // warn: red
   }
 
-  for(int i=0; i<4; i++) {
+  for(int i=0; i<5; i++) {
     Fl_Color c = dflt[i];
     if(m_chat_colors[i] != "auto") {
       ColorPack cpack(m_chat_colors[i]);

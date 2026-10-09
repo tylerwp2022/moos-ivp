@@ -200,6 +200,7 @@ SET(IVP_NON_GUI_LIBS
   lib_geodaid        lib_survey          lib_dep_behaviors
   lib_gen_poly       moos-ivp-tak/lib_cot_geodesy
   moos-ivp-cap/lib_cap          moos-ivp-llm/lib_llm
+  moos-ivp-cap/lib_field
   moos-ivp-bt/lib_bt            moos-ivp-squad/lib_squad
   moos-ivp-dyn/lib_dyn
 )

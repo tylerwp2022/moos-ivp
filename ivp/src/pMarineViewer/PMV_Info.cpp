@@ -168,7 +168,9 @@ void showExampleConfigAndExit()
   blk("                                 // and the bare BT_CHAT as well  ");
   blk("  chat_color_you       = auto    // auto or a color name, also   ");
   blk("  chat_color_llm       = auto    // chat_color_ask (a message    ");
-  blk("  chat_color_plan      = auto    // waiting on you)              ");
+  blk("  chat_color_plan      = auto    // waiting on you) and          ");
+  blk("  chat_color_warn      = auto    // chat_color_warn (a WARNING   ");
+  blk("                                 // line inside a proposal)      ");
   blk("  // resize live: drag the bar left of the pane, or Ctrl+] / Ctrl+[");
   blk("  chat_in_var          = LLM_CHAT_IN // typed here; a line another");
   blk("                                 // app posts shows as <app>>    ");
