@@ -402,9 +402,16 @@ void PMV_MOOSApp::handleNewMail(const MOOS_event & e)
     else if(key == "RESET_MHASH")
       handled = setMissionHash();
     else if(key == m_chat_out_var) {
-      // A message that waits for the operator carries source aux "ask"
-      string mode = strBegins(msg.GetSourceAux(), "ask") ? "ask" : "";
-      m_gui->addChatLine("llm", sval, mode);
+      // A message that waits for the operator carries source aux "ask";
+      // an event the agent is about to answer (an alert) carries
+      // "event" and shows as event> in the plan color, ahead of the
+      // reply, so the reply has a visible cause
+      string aux  = msg.GetSourceAux();
+      string mode = strBegins(aux, "ask") ? "ask" : "";
+      if(strBegins(aux, "event"))
+	m_gui->addChatLine("event", sval, "plan");
+      else
+	m_gui->addChatLine("llm", sval, mode);
       handled = true;
     }
     else if(key == m_chat_in_var) {
