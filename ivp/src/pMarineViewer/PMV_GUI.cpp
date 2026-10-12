@@ -22,6 +22,7 @@
 /*****************************************************************/
 
 #include <FL/fl_ask.H>
+#include <FL/fl_draw.H>
 #include "MOOS/libMOOS/MOOSLib.h"
 #include "PMV_GUI.h"
 #include "MBUtils.h"
@@ -994,9 +995,11 @@ void PMV_GUI::cb_ChatWidth(Fl_Widget* o, int v)
 // Procedure: cb_ChatFont / setChatFontSize / adjustChatFontSize / applyChatFontSize
 //   Purpose: The chat pane's text size, 8 to 32 points: the config
 //            line chat_font_size, and Ctrl+= / Ctrl+- at run time.
-//            The transcript's four styles, the input box and the
+//            The transcript's five styles, the input box and the
 //            status line follow; the pane is laid out again since
-//            the input's height depends on the font.
+//            the input's height depends on the font. The transcript
+//            recounts its wrapped lines, which FLTK does on its own
+//            only when the width changes, and the end stays in view.
 
 inline void PMV_GUI::cb_ChatFont_i(int v)
 {
@@ -1043,9 +1046,21 @@ void PMV_GUI::applyChatFontSize()
   for(unsigned int i=0; i<5; i++)
     m_chat_styles[i].size = m_chat_font_size;
   m_chat_disp->highlight_data(m_chat_style, m_chat_styles, 5, 'A', 0, 0);
+
+  // Fl_Text_Display recounts its wrapped lines only when its width
+  // changes; textsize() just stores the size. With the old total the
+  // scrollbar and the scroll clamp stop short and the end of the
+  // transcript is out of reach. Re-applying the wrap mode makes FLTK
+  // count every line again at the new size (Fl_Text_Display::wrap_mode).
+  m_chat_disp->wrap_mode(Fl_Text_Display::WRAP_AT_BOUNDS, 0);
+
   m_chat_input->textsize(m_chat_font_size);
   m_chat_status->textsize((m_chat_font_size > 9) ? (m_chat_font_size - 1) : m_chat_font_size);
   resizeWidgets();
+
+  // Fewer lines fit at a larger size: keep the latest line in view
+  m_chat_disp->insert_position(m_chat_buff->length());
+  m_chat_disp->show_insert_position();
   redraw();
 }
 
@@ -3663,7 +3678,12 @@ void PMV_GUI::resizeWidgets()
     int cy = (int)ypos;
     int cw = (int)chat_wid;
     int ch = (int)yhgt;
-    int status_hgt = 20;
+    // The status row is as tall as its text needs (20 px at the
+    // default size); the transcript gives up the difference
+    fl_font(m_chat_status->textfont(), m_chat_status->textsize());
+    int status_hgt = fl_height() + Fl::box_dh(m_chat_status->box());
+    if(status_hgt < 20)
+      status_hgt = 20;
     int input_hgt  = m_chat_input->wantedHeight(cw);
     if(input_hgt > (ch / 2))
       input_hgt = ch / 2;
