@@ -270,7 +270,7 @@ ProcessConfig = pLLMAgent
   // What comes back from each vehicle, renamed with its name by its
   // uFldNodeBroker, and from each squad's plan slot; a * registers a
   // wildcard.
-  watch = BT_STATE_*, BT_ACTIVE_*, BT_LOG_*, MISSION_*
+  watch = BT_STATE_*, BT_ACTIVE_*, BT_REASON_*, BT_LOG_*, MISSION_*
   watch = BT_REPORT_*, BT_MEMBERS_*, BT_PLAN_*
   watch = IVPHELM_STATE_*, IVPHELM_UPDATE_RESULT_*
   watch = DEPLOY_ALL, RETURN_ALL
