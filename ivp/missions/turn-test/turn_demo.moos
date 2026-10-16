@@ -1,0 +1,179 @@
+//-------------------------------------------------
+// FILE: turn_demo.moos
+//
+// Behavior-integrated demo of turn-in-place. Unlike turn_test.moos
+// (the pure characterization rig with no helm), this is a FULL helm
+// vehicle: pHelmIvP + pMarinePID drive normally, and BHV_TurnInPlace
+// triggers a TIGHT180 via pTurnInPlace, which seizes the actuators
+// (MOOS_MANUAL_OVERRIDE), performs the maneuver, and hands control
+// back to the helm -- which resumes station-keeping.
+//
+// Flow: press DEPLOY (station-keep at origin) -> press TURN180
+// (BHV_TurnInPlace fires) -> boat does a shuffle 180 in place ->
+// control returns to station-keep automatically.
+//-------------------------------------------------
+
+ServerHost = localhost
+ServerPort = 9000
+Community  = turn_demo
+MOOSTimeWarp = 1
+
+LatOrigin  = 43.825300
+LongOrigin = -70.330400
+
+//------------------------------------------
+ProcessConfig = ANTLER
+{
+  MSBetweenLaunches = 200
+
+  Run = MOOSDB        @ NewConsole = false
+  Run = pLogger       @ NewConsole = false
+  Run = uSimMarine    @ NewConsole = false
+  Run = pMarinePID    @ NewConsole = false
+  Run = pHelmIvP      @ NewConsole = false
+  Run = pTurnInPlace  @ NewConsole = false
+  Run = pMarineViewer @ NewConsole = false
+  Run = pNodeReporter @ NewConsole = false
+  Run = uProcessWatch @ NewConsole = false
+  Run = pRealm        @ NewConsole = false
+}
+
+//------------------------------------------
+// Same kinematics as V2GPM / turn_test.
+ProcessConfig = uSimMarine
+{
+  AppTick   = 10
+  CommsTick = 10
+  start_pos = x=0, y=0, heading=0, speed=0
+  prefix    = NAV
+  turn_rate        = 10
+  max_acceleration = 0.15
+  max_deceleration = 0.25
+  rotate_speed     = 0.0
+  thrust_map = -100:-2, 0:0, 20:1, 40:1.5, 60:2.0, 70:2.25, 100:3.0
+  deprecated_ok = true
+}
+
+//------------------------------------------
+ProcessConfig = pMarinePID
+{
+  AppTick    = 10
+  CommsTick  = 10
+  VERBOSE       = false
+  DEPTH_CONTROL = false
+
+  YAW_PID_KP             = 1.2
+  YAW_PID_KD             = 3.0
+  YAW_PID_KI             = 0.0
+  YAW_PID_INTEGRAL_LIMIT = 0.0
+
+  SPEED_PID_KP           = 0.5
+  SPEED_PID_KD           = 0.0
+  SPEED_PID_KI           = 0.0
+  SPEED_PID_INTEGRAL_LIMIT = 0.0
+
+  MAXRUDDER  = 100
+  MAXTHRUST  = 100
+  deprecated_ok = true
+}
+
+//------------------------------------------
+ProcessConfig = pHelmIvP
+{
+  AppTick    = 4
+  CommsTick  = 4
+  Behaviors  = turn_demo.bhv
+  Verbose    = false
+  Domain     = course:0:359:360
+  Domain     = speed:0:3:31
+}
+
+//------------------------------------------
+ProcessConfig = pTurnInPlace
+{
+  AppTick   = 10
+  CommsTick = 10
+
+  // Defaults; the behavior overrides per-request. manage_override=true
+  // is the key: it hands the helm off and back.
+  strategy        = shuffle
+  rudder_max      = 100
+  fwd_thrust      = 100
+  rev_thrust      = -100
+  phase_time      = 2
+  heading_tol     = 5
+  settle_time     = 2
+  max_run_time    = 40
+  manage_override = true
+}
+
+//------------------------------------------
+ProcessConfig = pNodeReporter
+{
+  AppTick     = 4
+  CommsTick   = 4
+  vessel_type = kayak
+  platform_color = green
+}
+
+//------------------------------------------
+ProcessConfig = pLogger
+{
+  AppTick   = 10
+  CommsTick = 10
+  AsyncLog = true
+  WildCardLogging = true
+  WildCardOmitPattern = *_STATUS
+  Log = TURN_RESULT @ 0
+  Log = TURN_STATE @ 0
+  Log = MOOS_MANUAL_OVERRIDE @ 0
+}
+
+//------------------------------------------
+ProcessConfig = uProcessWatch
+{
+  AppTick   = 4
+  CommsTick = 4
+  watch_all = true
+  nowatch   = uMAC*
+  nowatch   = uXMS*
+  nowatch   = uPokeDB*
+}
+
+//------------------------------------------
+ProcessConfig = pMarineViewer
+{
+  AppTick   = 4
+  CommsTick = 4
+
+  tiff_file            = forrest19.tif
+  set_pan_x            = 0
+  set_pan_y            = 0
+  zoom                 = 8
+  vehicle_shape_scale  = 8
+  vehicles_name_mode   = names
+
+  hash_viewable = true
+  hash_delta    = 5
+  hash_shade    = 0.35
+  datum_viewable = true
+  datum_size     = 8
+
+  trails_point_size = 2
+  trails_length     = 5000
+  trails_color      = white
+
+  appcast_viewable = true
+  appcast_color_scheme = indigo
+
+  scope = TURN_STATE
+  scope = TURN_RESULT
+  scope = TURN_BHV_STATUS
+  scope = MOOS_MANUAL_OVERRIDE
+
+  button_one   = DEPLOY  # DEPLOY=true
+  button_one   = MOOS_MANUAL_OVERRIDE=false # TURN=false
+  button_two   = TURN180 # TURN=true
+  button_three = STATION # TURN=false
+  button_four  = STOP    # DEPLOY=false
+}

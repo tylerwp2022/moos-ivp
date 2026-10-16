@@ -1,0 +1,54 @@
+//-------------------------------------------------
+// FILE: turn_demo.bhv
+//
+// Two behaviors: hold station normally, and turn-in-place on command.
+// BHV_TurnInPlace is a trigger -- it posts a TURN_REQUEST and waits for
+// TURN_DONE, then completes (firing its endflag TURN=false) so control
+// returns to station-keeping. The actual maneuver is executed by the
+// pTurnInPlace app under MOOS_MANUAL_OVERRIDE.
+//-------------------------------------------------
+
+initialize DEPLOY = false
+initialize TURN   = false
+initialize MOOS_MANUAL_OVERRIDE = false
+
+//----------------------------------------------
+// Normal behavior: hold position wherever activated.
+Behavior = BHV_StationKeep
+{
+  name      = station_keep
+  pwt       = 100
+  condition = DEPLOY = true
+  condition = TURN = false
+
+  center_activate = true
+     inner_radius = 3
+     outer_radius = 8
+      outer_speed = 1.5
+    transit_speed = 2.5
+       swing_time = 4
+
+  visual_hints = vertex_color=red, edge_color=light_blue
+}
+
+//----------------------------------------------
+// Turn-in-place: on TURN=true, request a shuffle 180 (relative to
+// current heading) and, when the app reports done, complete and clear
+// TURN so station_keep resumes.
+Behavior = BHV_TurnInPlace
+{
+  name       = turn_in_place
+  pwt        = 100
+  condition  = DEPLOY = true
+  condition  = TURN = true
+  perpetual  = true
+  endflag    = TURN = false
+
+  // Maneuver spec (passed through to pTurnInPlace):
+  delta       = 180
+  strategy    = shuffle
+  fwd_thrust  = 100
+  rev_thrust  = -100
+  phase_time  = 2
+  tol         = 5
+}
