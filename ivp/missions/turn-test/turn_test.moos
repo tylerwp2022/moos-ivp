@@ -1,0 +1,200 @@
+//-------------------------------------------------
+// FILE: turn_test.moos
+//
+// Turn-in-place characterization rig. Single vehicle, NO helm and NO
+// PID: pTurnInPlace drives DESIRED_RUDDER / DESIRED_THRUST straight
+// into uSimMarine. The uTimerScript sweeps strategy x heading-delta so
+// the speed-vs-footprint tradeoff can be read from the .alog.
+//
+// IMPORTANT: uses the legacy 'uSimMarine' (dep_uSimMarine) turn model,
+// matching missions/V2GPM. Reverse rotation (K-turns) works there but
+// NOT in uSimMarineV23, whose TurnSpeedMap zeroes turn-rate at spd<=0.
+//-------------------------------------------------
+
+ServerHost = localhost
+ServerPort = 9000
+Community  = turn_test
+MOOSTimeWarp = 1
+
+// Forest Lake (matches the stock alpha imagery)
+LatOrigin  = 43.825300
+LongOrigin = -70.330400
+
+//------------------------------------------
+ProcessConfig = ANTLER
+{
+  MSBetweenLaunches = 200
+
+  Run = MOOSDB        @ NewConsole = false
+  Run = pLogger       @ NewConsole = false
+  Run = uSimMarine    @ NewConsole = false
+  Run = pTurnInPlace  @ NewConsole = false
+  Run = pMarineViewer @ NewConsole = false
+  Run = pNodeReporter @ NewConsole = false
+  Run = uProcessWatch @ NewConsole = false
+  Run = uTimerScript  @ NewConsole = false
+  Run = pRealm        @ NewConsole = false
+}
+
+//------------------------------------------
+// uSimMarine (dep) -- actuator mode: consumes DESIRED_RUDDER/THRUST.
+// Kinematics copied from missions/V2GPM/surveyor/plug_uSimMarine.moos.
+ProcessConfig = uSimMarine
+{
+  AppTick   = 10
+  CommsTick = 10
+
+  start_pos = x=0, y=0, heading=0, speed=0
+  prefix    = NAV
+
+  turn_rate        = 10
+  max_acceleration = 0.15
+  max_deceleration = 0.25
+  rotate_speed     = 0.0
+
+  thrust_map = -100:-2, 0:0, 20:1, 40:1.5, 60:2.0, 70:2.25, 100:3.0
+
+  deprecated_ok = true
+}
+
+//------------------------------------------
+ProcessConfig = pTurnInPlace
+{
+  AppTick   = 10
+  CommsTick = 10
+
+  strategy      = kturn
+  rudder_max    = 100
+  fwd_thrust    = 60
+  rev_thrust    = -60
+  heading_tol   = 5
+  settle_time   = 2
+  footprint_cap = 6
+  return_frac   = 0.25
+  phase_time    = 3
+  max_run_time  = 60    // per-maneuver safety timeout (< batch spacing)
+  manage_override = false  // no helm/PID in this rig; drive actuators direct
+}
+
+//------------------------------------------
+// Batch driver. Sweeps strategy x heading-delta. Each TURN_REQUEST
+// captures the current pose as the station point, so trials chain
+// without resets. Events are in warped sim-seconds; 65s spacing >
+// pTurnInPlace max_run_time so each trial finishes before the next.
+ProcessConfig = uTimerScript
+{
+  AppTick   = 4
+  CommsTick = 4
+
+  paused     = false
+  reset_max  = 0
+  script_name = TURN_BATCH
+
+  event = var=TURN_REQUEST, val="delta=45,strategy=circle,id=circle_45",   time=5
+  event = var=TURN_REQUEST, val="delta=90,strategy=circle,id=circle_90",   time=70
+  event = var=TURN_REQUEST, val="delta=135,strategy=circle,id=circle_135", time=135
+  event = var=TURN_REQUEST, val="delta=180,strategy=circle,id=circle_180", time=200
+
+  event = var=TURN_REQUEST, val="delta=45,strategy=kturn,id=kturn_45",     time=265
+  event = var=TURN_REQUEST, val="delta=90,strategy=kturn,id=kturn_90",     time=330
+  event = var=TURN_REQUEST, val="delta=135,strategy=kturn,id=kturn_135",   time=395
+  event = var=TURN_REQUEST, val="delta=180,strategy=kturn,id=kturn_180",   time=460
+
+  event = var=TURN_REQUEST, val="delta=45,strategy=shuffle,id=shuffle_45",   time=525
+  event = var=TURN_REQUEST, val="delta=90,strategy=shuffle,id=shuffle_90",   time=590
+  event = var=TURN_REQUEST, val="delta=135,strategy=shuffle,id=shuffle_135", time=655
+  event = var=TURN_REQUEST, val="delta=180,strategy=shuffle,id=shuffle_180", time=720
+}
+
+//------------------------------------------
+ProcessConfig = pNodeReporter
+{
+  AppTick     = 4
+  CommsTick   = 4
+
+  vessel_type = kayak
+  platform_color = green
+}
+
+//------------------------------------------
+ProcessConfig = pLogger
+{
+  AppTick   = 10
+  CommsTick = 10
+
+  AsyncLog = true
+  WildCardLogging = true
+  WildCardOmitPattern = *_STATUS
+  WildCardOmitPattern = DB_VARSUMMARY
+  WildCardOmitPattern = DB_RWSUMMARY
+  WildCardExclusionLog = true
+
+  Log = NAV_X @ 0
+  Log = NAV_Y @ 0
+  Log = NAV_HEADING @ 0
+  Log = NAV_SPEED @ 0
+  Log = DESIRED_THRUST @ 0
+  Log = DESIRED_RUDDER @ 0
+  Log = TURN_STATE @ 0
+  Log = TURN_RESULT @ 0
+}
+
+//------------------------------------------
+ProcessConfig = uProcessWatch
+{
+  AppTick   = 4
+  CommsTick = 4
+
+  watch_all = true
+  nowatch   = uMAC*
+  nowatch   = uXMS*
+  nowatch   = uPokeDB*
+}
+
+//------------------------------------------
+ProcessConfig = pMarineViewer
+{
+  AppTick   = 4
+  CommsTick = 4
+
+  // forrest19.tif is geo-referenced to this mission's datum (Forest
+  // Lake). The boat starts at the datum = screen center. The maneuver
+  // area is only ~10 m across, so the vehicle is drawn oversized and
+  // the view starts zoomed in; use the mouse wheel / '+'/'-' to adjust
+  // and 'c' to re-center on the vehicle.
+  tiff_file            = forrest19.tif
+
+  set_pan_x            = 0
+  set_pan_y            = 0
+  zoom                 = 8
+  vehicle_shape_scale  = 8      // 4 m boat drawn large so it's obvious
+  vehicles_name_mode   = names
+
+  hash_viewable        = true
+  hash_delta           = 5      // grid line every 5 m for scale
+  hash_shade           = 0.35
+
+  datum_viewable       = true
+  datum_size           = 8
+
+  trails_point_size    = 2
+  trails_length        = 5000
+  trails_color         = white
+
+  appcast_viewable     = true
+  appcast_color_scheme = indigo
+
+  scope = TURN_STATE
+  scope = TURN_RESULT
+  scope = TURN_HDG_ERR
+  scope = TURN_EXCURSION
+
+  // Manual single-trial triggers (station = current pose). These make the
+  // speed lever tangible: SLOW vs FAST is the same circle style at
+  // thrust 60 vs 100 -- watch how much sooner FAST reaches heading.
+  // TIGHT trades a hair of time for ~3x smaller footprint (shuffle).
+  button_one   = SLOW180  # TURN_REQUEST=delta=180,strategy=circle,fwd_thrust=60,id=slow
+  button_two   = FAST180  # TURN_REQUEST=delta=180,strategy=circle,fwd_thrust=100,id=fast
+  button_three = TIGHT180 # TURN_REQUEST=delta=180,strategy=shuffle,fwd_thrust=100,rev_thrust=-100,phase_time=2,id=tight
+  button_four  = STOP # TURN_STOP=true
+}
