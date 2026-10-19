@@ -1,0 +1,64 @@
+---
+name: headless-mctf
+description: Launch a scratch copy of the mctf_llm capture-the-flag match (moos-ivp-mctf) without the viewer on the 9100 ports, deploy, press buttons and plays, send intruders, run plans, drive the agent through a stand-in API, read the run back as tables, and shut it down. Use to verify any play, plan, capability, referee-fact or field change before the owner launches the match live, and to reproduce a live run's event headless.
+---
+
+# Headless mctf fleet
+
+Verify on a scratch copy, never in `~/moos-ivp-mctf/missions/mctf_llm`
+itself: a launch there leaves logs and targ files behind and collides
+with the owner's match on 9000. `missions/mctf_llm/test/fleet.sh` does
+the whole thing; its README lists every command and the gotchas.
+
+```
+F=/home/tyler/moos-ivp-mctf/missions/mctf_llm/test/fleet.sh
+S=/tmp/claude-1001/.../scratchpad/mctf          # the session scratchpad, or test/runs/<stamp>
+$F up $S 5 [--red_idle --blue_idle --llm=red --nobrake ...]   # the copy, ports +100, warp 5; launch_sim.sh options pass through
+$F ready $S                  # helms, each boat linked both ways, facts, agent idle (names what held it up)
+$F deploy $S all             # or red | blue | a,b,c: NOTHING MOVES BEFORE THIS (the A/B trap of 2026-10-18)
+$F game $S play              # the referee's clock
+$F press $S "WALL DEFENSE 2" # a button or play by label; prints the agent's word ([X: running for blue_wall])
+$F press $S "STOP ALL"       # a fixed button: the kit posts its lines as the panel would (BT_CMD_ALL=halt ...)
+$F wait $S '<regex>' 150 [boat]     # a NEW line in the shoreside log or a boat's own, printed
+$F intruder $S red_one 215 110 2    # a red into our half by its own plan; it idles when it arrives
+$F plan $S plans/x.xml red_two      # or an inline '<root ..>' tree; checked, run, its end and reason printed
+$F get $S VAR [boat]         # the log's latest value, or the DB's for what pLogger omits (LLM_STATUS)
+$F report $S [--window 600 | --from T --to T | --only referee,boats]
+$F down $S                   # by working directory, then by port; ports 91xx/94xx free afterwards
+```
+
+The agent without the real model: `up ... --stand-in=script.json` points
+pLLMAgent at `test/standin.py` (port 8089): rules match a substring of the
+operator's line and answer with text and tool calls, `"http": 529` with an
+error once, tool results are echoed back as text; every request lands in
+`$S/standin/req_N.json` (the fleet line and the tools the model would have
+seen). `$F chat $S "go to 200,100 with blue_one" y` then runs a tool through
+confirmation. `--key` keeps the real key instead.
+
+Reading the run: `report $S` gives the timeline (presses, deploys, notes,
+plan states with the executor's reason), one referee row per press (tags
+by side, boundary tags, grabs, scores, collisions, blue's rates per 1000 s,
+each side's INACTIVE share with a loud line when it misleads), who tagged
+whom, grabs lost within 5 s, and per boat the executor events per second
+(FLOOD above 10/s), each leaf's starts and endings, the drivers, tagged
+spells and carries. The boats' own logs lie in `$S/surveyor/`; their clocks
+start a few warped seconds apart from the shoreside's, so compare within
+one log or through an event both saw. `playback.sh` in the mission replays
+a run in alogview for the owner (never run it headless).
+
+Rules that cost time when broken:
+- Never count log lines to see what is new: pLogger writes a line many
+  times over, some long after. The kit snapshots distinct lines; do the
+  same in any hand-written check (`awk '!seen[$0]++'`).
+- `ready` before any press: a boat has come up with no link (3 of 7 starts).
+- Deploy both sides before the first press of an A/B, equal windows, note
+  the press times; `report` flags a side undeployed for part of a window.
+- One launch per subshell with its own `cd` inside a script; never a `cd`
+  in the harness command. Long waits inside a script (`wait`), never a
+  bare `sleep`. Kill by working directory, never `pkill -f <literal>`.
+- uQueryDB: the mission file and `--wait` always; `--condition` matches the
+  CURRENT value. uPokeDB keeps quotes in a value: `LLM_BUTTON:=WALL DEFENSE 2`.
+- A WhileDoElse with no else fails at once when its test is false at the
+  start; an idle blue near the flag is a tag trap for an intruder.
+- The Stop hook reads `$S/shoreside/.driver`: a fleet left up at the end
+  of a turn with no live owner blocks the turn until `down`.
