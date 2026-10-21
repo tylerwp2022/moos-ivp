@@ -16,7 +16,7 @@ S=/tmp/claude-1001/.../scratchpad/mctf          # the session scratchpad, or tes
 $F up $S 5 [--red_idle --blue_idle --llm=red --brake ...]   # the copy, ports +100, warp 5; launch_sim.sh options pass through
 $F ready $S                  # helms, each boat linked both ways, facts, agent idle (names what held it up)
 $F deploy $S all             # or red | blue | a,b,c: NOTHING MOVES BEFORE THIS (the A/B trap of 2026-10-18)
-$F game $S play              # the referee's clock
+$F game $S play              # the clock (and the power play): only when they are what is tested
 $F press $S "WALL DEFENSE 2" # a button or play by label; prints the agent's word ([X: running for blue_wall])
 $F press $S "STOP ALL"       # a fixed button: the kit posts its lines as the panel would (BT_CMD_ALL=halt ...)
 $F wait $S '<regex>' 150 [boat]     # a NEW line in the shoreside log or a boat's own, printed
@@ -61,5 +61,11 @@ Rules that cost time when broken:
   CURRENT value. uPokeDB keeps quotes in a value: `LLM_BUTTON:=WALL DEFENSE 2`.
 - A WhileDoElse with no else fails at once when its test is false at the
   start; an idle blue near the flag is a tag trap for an intruder.
+- `game play` only when the clock or the power play is what is under
+  test (the owner, 2026-10-21): live runs deploy and never start the
+  clock, and the referee tags, grabs and scores without it. A driving or
+  dynamics scene skips it: the clock also starts the power play
+  (uFldPowerPlayManager disables BLUE_ONE at 120 s and RED_ONE at 420 s,
+  120 s each), which sat a carrier for 120 s in the slow-finish scene.
 - The Stop hook reads `$S/shoreside/.driver`: a fleet left up at the end
   of a turn with no live owner blocks the turn until `down`.
