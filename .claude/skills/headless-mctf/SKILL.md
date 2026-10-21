@@ -13,7 +13,7 @@ the whole thing; its README lists every command and the gotchas.
 ```
 F=/home/tyler/moos-ivp-mctf/missions/mctf_llm/test/fleet.sh
 S=/tmp/claude-1001/.../scratchpad/mctf          # the session scratchpad, or test/runs/<stamp>
-$F up $S 5 [--red_idle --blue_idle --llm=red --nobrake ...]   # the copy, ports +100, warp 5; launch_sim.sh options pass through
+$F up $S 5 [--red_idle --blue_idle --llm=red --brake ...]   # the copy, ports +100, warp 5; launch_sim.sh options pass through
 $F ready $S                  # helms, each boat linked both ways, facts, agent idle (names what held it up)
 $F deploy $S all             # or red | blue | a,b,c: NOTHING MOVES BEFORE THIS (the A/B trap of 2026-10-18)
 $F game $S play              # the referee's clock
@@ -21,6 +21,7 @@ $F press $S "WALL DEFENSE 2" # a button or play by label; prints the agent's wor
 $F press $S "STOP ALL"       # a fixed button: the kit posts its lines as the panel would (BT_CMD_ALL=halt ...)
 $F wait $S '<regex>' 150 [boat]     # a NEW line in the shoreside log or a boat's own, printed
 $F intruder $S red_one 215 110 2    # a red into our half by its own plan; it idles when it arrives
+$F place $S blue_one 205 60 340     # the boat is there NOW facing 340 at rest (simulator reset): before deploy, or an idle boat
 $F plan $S plans/x.xml red_two      # or an inline '<root ..>' tree; checked, run, its end and reason printed
 $F get $S VAR [boat]         # the log's latest value, or the DB's for what pLogger omits (LLM_STATUS)
 $F report $S [--window 600 | --from T --to T | --only referee,boats]
