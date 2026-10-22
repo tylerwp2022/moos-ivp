@@ -925,6 +925,8 @@ void PMV_MOOSApp::handleStartUp(const MOOS_event & e) {
       handled = m_gui->addAction(value);
     else if(param == "action+")
       handled = m_gui->addAction(value, true);
+    else if(param == "hotkey")
+      handled = m_gui->addHotkey(value);
     else if((param == "center_vehicle") || (param == "reference_vehicle"))
       handled = m_gui->addReferenceVehicle(value);
 

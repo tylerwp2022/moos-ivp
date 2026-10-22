@@ -900,37 +900,69 @@ int PMV_GUI::handle(int event)
       cb_InfoCastSetting_i(55);
       return(1);
     }
-    else if(Fl::event_key() == 'b') {
-      pushPending("RDR_SEL_TEAM", "blue");
-      return(1);
-    }
-    else if(Fl::event_key() == 'r') {
-      pushPending("RDR_SEL_TEAM", "red");
-      return(1);
-    }
-    else if((Fl::event_key() >= '1') && (Fl::event_key() <= '9')) {
-      string idx(1, (char)Fl::event_key());
-      pushPending("RDR_SEL_INDEX", idx);
-      return(1);
-    }
-    else if(Fl::event_key() == 'w') {
-      pushPending("RDR_CLICK_MODE_TOGGLE", doubleToString(MOOSTime(),3));
-      return(1);
-    }
-    else if(Fl::event_key() == 'u') {
-      pushPending("RDR_UNTAG_TOGGLE", doubleToString(MOOSTime(),3));
-      return(1);
-    }
-    else if(Fl::event_key() == 'e') {
-      pushPending("AUTOTAG_EXPLODE", doubleToString(MOOSTime(),3));
-      return(1);
-    }
-    else if(Fl::event_key() == 'g') {
-      pushPending("AUTOTAG_AUTO_TOGGLE", doubleToString(MOOSTime(),3));
+    else if(m_hotkey_vars.count(Fl::event_key())) {
+      // A configured key (hotkey lines): post its variable. No value
+      // configured = the time, the changing value a toggle wants.
+      int    key = Fl::event_key();
+      string val = m_hotkey_vals[key];
+      if(val == "")
+	val = doubleToString(MOOSTime(), 3);
+      else
+	val = findReplace(val, "$[KEY]", string(1, (char)key));
+      pushPending(m_hotkey_vars[key], val);
       return(1);
     }
   }
   return(Fl_Window::handle(event));
+}
+
+//----------------------------------------------------------
+// Procedure: addHotkey()
+//   Purpose: A mission's "hotkey = <key> # VAR[=VAL]" line: the key,
+//            or a range such as 1-9, posts VAR when pressed with the
+//            map in focus (never while typing in the chat pane).
+//            Without VAL the time is posted, the edge a toggle wants;
+//            $[KEY] in VAL is the key pressed (not $(KEY), which
+//            nsplug would eat). Single printable characters; a letter
+//            matches in either case, as FLTK reports the key. A
+//            later line for the same key replaces the earlier.
+//   Returns: false if the line could not be read
+
+bool PMV_GUI::addHotkey(string spec)
+{
+  vector<string> svector = parseStringQ(spec, '#');
+  if(svector.size() != 2)
+    return(false);
+  string keys = stripBlankEnds(svector[0]);
+  string var  = stripBlankEnds(biteString(svector[1], '='));
+  string val  = stripBlankEnds(svector[1]);
+  if(isQuoted(val))
+    val = stripQuotes(val);
+  if((var == "") || (keys == ""))
+    return(false);
+
+  int lo = 0, hi = 0;
+  if(keys.size() == 1) {
+    lo = (unsigned char)keys[0];
+    hi = lo;
+  }
+  else if((keys.size() == 3) && (keys[1] == '-')) {
+    lo = (unsigned char)keys[0];
+    hi = (unsigned char)keys[2];
+  }
+  else
+    return(false);
+  if((lo < 33) || (hi > 126) || (lo > hi))
+    return(false);
+
+  for(int k=lo; k<=hi; k++) {
+    int code = k;
+    if((k >= 'A') && (k <= 'Z'))
+      code = k - 'A' + 'a';
+    m_hotkey_vars[code] = var;
+    m_hotkey_vals[code] = val;
+  }
+  return(true);
 }
 
 //----------------------------------------------------------

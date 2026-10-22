@@ -51,6 +51,10 @@ Rules that cost time when broken:
 - Never count log lines to see what is new: pLogger writes a line many
   times over, some long after. The kit snapshots distinct lines; do the
   same in any hand-written check (`awk '!seen[$0]++'`).
+- A variable's first second in a run reaches the wildcard logger only as
+  its LAST post (pLogger discovers new names once a second, warped): the
+  agent's LLM_* lines are named in the pLogger block for that; for any
+  other variable, its creation tick may be missing posts, not the poster.
 - `ready` before any press: a boat has come up with no link (3 of 7 starts).
 - Deploy both sides before the first press of an A/B, equal windows, note
   the press times; `report` flags a side undeployed for part of a window.
@@ -69,3 +73,27 @@ Rules that cost time when broken:
   120 s each), which sat a carrier for 120 s in the slow-finish scene.
 - The Stop hook reads `$S/shoreside/.driver`: a fleet left up at the end
   of a turn with no live owner blocks the turn until `down`.
+
+## The suggested chaser, and an appcast headless
+
+pInterceptAssign runs on the scratch shoreside too. A scene for it: an
+idle field (`up ... --blue_idle --red_idle`), `place` the blues before
+`deploy all`, then `$F intruder $S red_one 215 110 2` and
+`$F wait $S '^\S+\s+INTERCEPT_SUMMARY_BLUE\s+\S+\s+.*red_one=blue' 60`.
+Read `$F get $S INTERCEPT_SUMMARY_BLUE`, `INTERCEPT_TARGET_BLUE_TWO`,
+`INTERCEPT_INFO_BLUE_TWO` (why there is no pick, per red) and the
+boat's copy with `$F get $S INTERCEPT_TARGET blue_two`. The referee's
+tag shows as `red_one=tagged` in the summary and the chaser's cooldown
+in the appcast. `intercept_replay <alog> --region=... --dyn=dyn/sim
+--sides=blue --at=<t>` (~/moos-ivp-mctf/bin, built by its build.sh with
+the app and `intercept_selftest`) gives the same picks from a finished
+run's shoreside log, live or scratch.
+
+An appcast headless (pLogger omits APPCAST, uQueryDB overwrites it):
+```
+( cd $S && timeout 30 bin/umm --moos_port=9100 --moos_time_warp=5 --moos_name=cast --moos_quiet -s=APPCAST --log=$S/cast.log >/dev/null 2>&1 & )
+bin/uPokeDB $S/shoreside/targ_shoreside.moos 'APPCAST_REQ:=node=shoreside,app=pInterceptAssign,duration=20,key=k,thresh=any'
+grep -a 'proc=pInterceptAssign' $S/cast.log | tail -1 | sed 's/!@/\n/g'
+```
+Apps register `APPCAST_REQ` only (not `APPCAST_REQ_SHORESIDE`); the
+cast's lines are joined by `!@`; `umm -h` hangs looking for a DB.

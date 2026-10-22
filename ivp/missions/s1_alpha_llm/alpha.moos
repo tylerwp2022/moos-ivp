@@ -58,6 +58,16 @@ ProcessConfig = pLogger
   Log = REPORT @ 0 NOSYNC
   Log = BHV_SETTINGS @ 0 NOSYNC
   Log = MISSION @ 0 NOSYNC
+  // The agent's lines come several to a tick (a tool round): named too,
+  // so a variable's first-second posts are all kept, not only the last.
+  Log = LLM_CHAT_IN @ 0 NOSYNC
+  Log = LLM_CHAT_OUT @ 0 NOSYNC
+  Log = LLM_CHAT_NOTE @ 0 NOSYNC
+  Log = LLM_TOOL_CALL @ 0 NOSYNC
+  Log = LLM_TOOL_RESULT @ 0 NOSYNC
+  Log = LLM_TOOL_POST @ 0 NOSYNC
+  Log = LLM_USAGE @ 0 NOSYNC
+  Log = LLM_COST @ 0 NOSYNC
 
   LogAuxSrc = true
   WildCardLogging = true

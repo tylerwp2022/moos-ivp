@@ -158,6 +158,13 @@ void showExampleConfigAndExit()
   blk("  infocast_width        = 40      // {20, 25, 30, ..., 65, 70}  ");
   blk("  infocast_height       = 70      // {30, 35, 40, ..., 85, 90}  ");
   blk("                                                                ");
+  blk("  // A key pressed over the map posts a variable: the mission's   ");
+  blk("  // operator keys (nothing is bound by default). No value = the  ");
+  blk("  // time is posted, the edge a toggle wants; $[KEY] = the key.   ");
+  blk("  hotkey = u # RDR_UNTAG_TOGGLE                                   ");
+  blk("  hotkey = b # RDR_SEL_TEAM=blue                                  ");
+  blk("  hotkey = 1-9 # RDR_SEL_INDEX=$[KEY]                             ");
+  blk("                                                                  ");
   blk("  // LLM chat pane on the right edge (pairs with pLLMAgent)    ");
   blk("  chat_viewable        = false   // {true, FALSE}               ");
   blk("  chat_width           = 25      // pct of window, {15..60}     ");

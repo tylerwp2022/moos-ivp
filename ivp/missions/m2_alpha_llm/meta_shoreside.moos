@@ -131,6 +131,19 @@ ProcessConfig = pLogger
   FileTimeStamp = true
 
   LogAuxSrc = true
+  // The agent's log lines come several to a tick, and a variable's
+  // first-second posts reach a wildcard logger only as the last one
+  // (pLogger discovers new names once a second). Named here they are
+  // registered at startup and every post is kept.
+  Log = LLM_CHAT_IN @ 0 NOSYNC
+  Log = LLM_CHAT_OUT @ 0 NOSYNC
+  Log = LLM_CHAT_NOTE @ 0 NOSYNC
+  Log = LLM_TOOL_CALL @ 0 NOSYNC
+  Log = LLM_TOOL_RESULT @ 0 NOSYNC
+  Log = LLM_TOOL_POST @ 0 NOSYNC
+  Log = LLM_USAGE @ 0 NOSYNC
+  Log = LLM_COST @ 0 NOSYNC
+
   WildCardLogging = true
   WildCardOmitPattern = *_STATUS
   WildCardOmitPattern = DB_VARSUMMARY

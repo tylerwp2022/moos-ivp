@@ -40,6 +40,7 @@
 #include "CommandFolio.h"
 #include "CommandSummary.h"
 #include "UCMD_GUI.h"
+#include <map>
 
 class PMV_GUI : public MarineVehiGUI {
 public:
@@ -53,6 +54,7 @@ public:
   void   setVerbose(bool bval);
   bool   addButton(std::string button, std::string pairs);
   bool   addAction(std::string pair, bool separator=false);
+  bool   addHotkey(std::string spec);
   void   calcButtonColumns();
   void   setCurrTime(double v)       {m_curr_time=v;}
   void   setTitleBase(std::string s) {m_title_base=s;}
@@ -259,6 +261,11 @@ public: // InfoCast Related Functions
   std::vector<std::string> m_action_vars;
   std::vector<std::string> m_action_vals;
   std::vector<std::string> m_action_keys;
+
+  // Poking via a key pressed in the viewer (the mission's hotkey
+  // lines; nothing bound by default): FLTK key code to the post
+  std::map<int, std::string> m_hotkey_vars;
+  std::map<int, std::string> m_hotkey_vals;
 
   // Poking via mouse clicking
   std::vector<std::string> m_left_mouse_keys;
