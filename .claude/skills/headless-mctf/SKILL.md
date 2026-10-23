@@ -39,7 +39,7 @@ confirmation. `--key` keeps the real key instead.
 Reading the run: `report $S` gives the timeline (presses, deploys, notes,
 plan states with the executor's reason), one referee row per press (tags
 by side, boundary tags, grabs, scores, collisions, blue's rates per 1000 s,
-each side's INACTIVE share with a loud line when it misleads), who tagged
+each side's tagged and idle shares, a loud line when idle misleads), who tagged
 whom, grabs lost within 5 s, and per boat the executor events per second
 (FLOOD above 10/s), each leaf's starts and endings, the drivers, tagged
 spells and carries. The boats' own logs lie in `$S/surveyor/`; their clocks
