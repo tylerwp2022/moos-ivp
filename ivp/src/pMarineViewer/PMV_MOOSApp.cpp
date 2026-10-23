@@ -981,6 +981,19 @@ void PMV_MOOSApp::handleStartUp(const MOOS_event & e) {
       handled = setNonWhiteVarOnString(m_chat_out_var, value);
     else if(param == "chat_status_var")
       handled = setNonWhiteVarOnString(m_chat_status_var, value);
+    else if(param == "chat_interrupt_var") {
+      // Ctrl+C in the chat box while the assistant thinks posts here
+      if(tolower(value) == "off") {
+	m_gui->setChatInterruptVar("");
+	handled = true;
+      }
+      else {
+	string var;
+	handled = setNonWhiteVarOnString(var, value);
+	if(handled)
+	  m_gui->setChatInterruptVar(var);
+      }
+    }
     else if(param == "chat_mode_var") {
       if(tolower(value) == "off") {
 	m_chat_mode_var = "";

@@ -42,14 +42,20 @@
 //     on its own.
 //  2. Escape hands focus back to the window so the hotkeys work
 //     again after typing.
+//  3. Ctrl+C asks the owner's interrupt hook first: while the
+//     assistant thinks it interrupts the turn (and the hook puts the
+//     line last sent back here to edit); any other time it stays
+//     the editor's copy.
 
 class PMV_ChatInput : public Fl_Text_Editor {
  public:
   typedef void (*GrowHook)(void*);
+  typedef bool (*InterruptHook)(void*);   // true: Ctrl+C was taken as an interrupt
 
   PMV_ChatInput(int x, int y, int w, int h, const char* l=0)
     : Fl_Text_Editor(x, y, w, h, l), m_want_focus(false), m_max_lines(6),
-      m_seen_len(0), m_grow_hook(0), m_grow_data(0) {
+      m_seen_len(0), m_grow_hook(0), m_grow_data(0),
+      m_interrupt_hook(0), m_interrupt_data(0) {
     m_buff = new Fl_Text_Buffer();
     buffer(m_buff);
     box(FL_DOWN_BOX);
@@ -72,10 +78,18 @@ class PMV_ChatInput : public Fl_Text_Editor {
     m_buff->text("");
     m_seen_len = 0;
   }
+  // A line put back into the box (after an interrupt), cursor at its end
+  void setText(const std::string& s) {
+    m_buff->text(s.c_str());
+    m_seen_len = m_buff->length();
+    insert_position(m_buff->length());
+    show_insert_position();
+  }
 
   void setMaxLines(int n)        {m_max_lines = (n < 1) ? 1 : n;}
   int  getMaxLines() const       {return(m_max_lines);}
   void setGrowHook(GrowHook f, void* data) {m_grow_hook = f; m_grow_data = data;}
+  void setInterruptHook(InterruptHook f, void* data) {m_interrupt_hook = f; m_interrupt_data = data;}
 
   // The height that shows every wrapped line of the text at the given
   // width, capped at the line limit. Wrapping depends on the width,
@@ -103,6 +117,10 @@ class PMV_ChatInput : public Fl_Text_Editor {
       m_want_focus = false;
       break;
     case FL_KEYDOWN:
+      if((Fl::event_state() & FL_CTRL) && (Fl::event_key() == 'c')) {
+	if(m_interrupt_hook && m_interrupt_hook(m_interrupt_data))
+	  return(1);
+      }
       if(Fl::event_key() == FL_Escape) {
 	Fl::focus(window());
 	return(1);
@@ -130,6 +148,8 @@ class PMV_ChatInput : public Fl_Text_Editor {
   int             m_seen_len;
   GrowHook        m_grow_hook;
   void*           m_grow_data;
+  InterruptHook   m_interrupt_hook;
+  void*           m_interrupt_data;
 };
 
 #endif

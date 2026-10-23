@@ -67,6 +67,8 @@ PMV_GUI::PMV_GUI(int g_w, int g_h, const char *g_l)
   m_chat_viewable = false;
   m_chat_width    = 0.25;
   m_chat_in_var   = "LLM_CHAT_IN";
+  m_chat_interrupt_var = "LLM_INTERRUPT";
+  m_chat_thinking      = false;
 
   m_chat_buff = new Fl_Text_Buffer();
   m_chat_disp = new Fl_Text_Display(0, 0, 1, 1);
@@ -105,6 +107,7 @@ PMV_GUI::PMV_GUI(int g_w, int g_h, const char *g_l)
   m_chat_input->textfont(FL_COURIER);
   m_chat_input->callback((Fl_Callback*)PMV_GUI::cb_ChatSend);
   m_chat_input->setGrowHook(PMV_GUI::cb_ChatGrow, this);
+  m_chat_input->setInterruptHook(PMV_GUI::cb_ChatInterrupt, this);
 
   m_chat_split = new PMV_ChatSplitter(0, 0, 1, 1);
   m_chat_split->callback((Fl_Callback*)PMV_GUI::cb_ChatDrag);
@@ -980,6 +983,7 @@ inline void PMV_GUI::cb_ChatSend_i()
   }
   if(text == "")
     return;
+  m_chat_last_sent = text;
   pushPending(m_chat_in_var, text);
   addChatLine("you", text);
 }
@@ -987,6 +991,36 @@ inline void PMV_GUI::cb_ChatSend_i()
 void PMV_GUI::cb_ChatSend(Fl_Widget* o)
 {
   ((PMV_GUI*)(o->parent()->user_data()))->cb_ChatSend_i();
+}
+
+//----------------------------------------------------------
+// Procedure: cb_ChatInterrupt
+//   Purpose: Ctrl+C in the chat box while the assistant thinks: the
+//            interrupt goes out on the interrupt variable (pLLMAgent
+//            drops the turn and says so in the pane) and the line
+//            last sent comes back into the box, to edit or replace,
+//            unless something is already typed there. Any other
+//            time Ctrl+C keeps its meaning, copy: false leaves it to
+//            the editor.
+
+inline bool PMV_GUI::cb_ChatInterrupt_i()
+{
+  if(!m_chat_thinking || (m_chat_interrupt_var == ""))
+    return(false);
+  pushPending(m_chat_interrupt_var, "now");
+  if((m_chat_last_sent != "") && (stripBlankEnds(m_chat_input->getText()) == "")) {
+    m_chat_input->setText(m_chat_last_sent);
+    if(m_chat_input->wantedHeight(m_chat_input->w()) != m_chat_input->h()) {
+      resizeWidgets();
+      redraw();
+    }
+  }
+  return(true);
+}
+
+bool PMV_GUI::cb_ChatInterrupt(void* data)
+{
+  return(((PMV_GUI*)data)->cb_ChatInterrupt_i());
 }
 
 //----------------------------------------------------------
@@ -1251,6 +1285,7 @@ void PMV_GUI::applyChatColors(Fl_Color back, Fl_Color text)
 void PMV_GUI::setChatStatus(string status)
 {
   m_chat_status_text = status;
+  m_chat_thinking    = strBegins(status, "thinking");
   renderChatStatus();
 }
 

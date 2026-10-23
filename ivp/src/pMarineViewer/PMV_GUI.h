@@ -103,6 +103,7 @@ public:
   void  adjustChatFontSize(int delta);
   void  applyChatFontSize();
   void  setChatInVar(std::string s) {m_chat_in_var=s;}
+  void  setChatInterruptVar(std::string s) {m_chat_interrupt_var=s;}
 
  public: // Window title bar preferences
   bool  showTitleIP(std::string str)
@@ -173,6 +174,8 @@ public: // InfoCast Related Functions
 
   inline void cb_ChatSend_i();
   static void cb_ChatSend(Fl_Widget*);
+  inline bool cb_ChatInterrupt_i();
+  static bool cb_ChatInterrupt(void*);
   inline void cb_ChatToggle_i();
   static void cb_ChatToggle(Fl_Widget*);
   inline void cb_ChatWidth_i(int);
@@ -304,6 +307,9 @@ public: // InfoCast Related Functions
   std::string      m_chat_mode;         // mission | planning
   Fl_Color         m_chat_status_back;  // the pane's colors, restored out of planning mode
   Fl_Color         m_chat_status_fore;
+  std::string      m_chat_interrupt_var; // Ctrl+C while thinking posts here ("" = off)
+  std::string      m_chat_last_sent;     // the line Enter sent last, back in the box after an interrupt
+  bool             m_chat_thinking;      // the status word begins with "thinking"
   bool             m_chat_viewable;
   int              m_chat_font_size;
   double           m_chat_width;    // fraction of window width
