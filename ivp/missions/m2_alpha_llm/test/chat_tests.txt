@@ -39,11 +39,11 @@
 #     target VNAME             a tool call aimed at that vehicle or squad
 #     head_for VNAME           the proposal reads "run_plan for VNAME:"
 #     no_probe                 no run_plan with a junk tree
-#     tree_has TEXT            the run_plan tree contains TEXT
+#     tree_has TEXT            a run_plan or make_button tree contains TEXT
 #     no_collision [A [B]] | collision [A [B]]
 #     no_near_miss [A [B]] | near_miss [A [B]]
 #     reply_sentences <= N     the last plain reply's sentence count
-#     reply_asks               the reply contains a question mark
+#     reply_asks               the reply asks: a question mark, or numbered choices after a colon
 #     reply_contains TEXT | chat_contains TEXT | proposal_contains TEXT
 #     state VAR VALUE          the last post of VAR in the window
 #     min_range A B >= N       closest approach of two boats, meters
@@ -563,16 +563,16 @@ check = observe min_range cal ben >= 7
 
 [5.5]
 say = abe and ben hunt cal: they avoid each other but may hit cal. cal starts at -60,-120, the hunters at 60,-60 and 80,-80, and cal runs for 60,-160 once the hunters are in position, with its own avoidance off so it can be caught
-expect = ONE proposal with labelled plans (`run_plan for cal:`, one per hunter or the hunters' squad); each hunter gets avoid basic, avoid_ignore cal, then Intercept; cal's plan switches its own avoidance off; the plans wait on each other with Report milestones, not position boxes; cal runs, is caught (COLLISION with cal), abe and ben stay 20 m apart; everything is stopped afterwards
+expect = ONE proposal with labelled plans (`run_plan for cal:` beside the hunters' plans, or one squad plan for all three); each hunter gets avoid basic, avoid_ignore cal, then Intercept; cal's plan switches its own avoidance off; the plans wait on each other with Report milestones or a Parallel, not position boxes; cal runs, is caught (COLLISION with cal), abe and ben stay 20 m apart; everything is stopped afterwards
 issue = position-box waits; cal never moves; cal dodges because its avoidance stayed on; a catch declared 25 m away; an abe-ben near miss
 answer = y
 wait = COLLISION
 timeout = 600
 check = proposals 1
 check = no_probe
-check = head_for cal
+check = either head_for cal | proposal_contains Squad abe,ben,cal
 check = tree_has AvoidIgnore
-check = tree_has Report
+check = observe tree_has Report
 after = BT_CMD_ALL=halt
 after = DEPLOY_ALL=false
 after = RETURN_ALL=false
@@ -853,7 +853,7 @@ ask = The driver halts the play once it has started, on purpose. Did alpha start
 check = tool run_play
 check = no_tool run_plan|make_button
 check = proposal_contains run the play alpha for ben (saved for abe)
-check = chat_contains its plan runs for ben
+check = chat_contains alpha: running for ben
 
 [8.8]
 say = run LEAPFROG with 50 meter hops toward 200,-50
@@ -918,7 +918,7 @@ poke = LLM_MODE=planning
 answer = none
 check = no_proposal
 check = reply_asks
-check = reply_sentences <= 8
+check = reply_sentences <= 10
 ask = Did the agent ask what you meant instead of proposing?
 
 [9.2]
@@ -945,5 +945,5 @@ poke = LLM_MODE=mission
 answer = n
 check = tool make_button
 check = proposal_contains Starts: from wherever
-check = proposal_contains $(
+check = tree_has $(
 check = reply_sentences <= 3

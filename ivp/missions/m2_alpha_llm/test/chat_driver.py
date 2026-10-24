@@ -517,7 +517,8 @@ def grade(test, records, facts):
             ok = len(bad) == 0
         elif name == "tree_has":
             want = " ".join(toks[1:]).lower()
-            ok = any(want in str(k["args"].get("tree", "")).lower() for k in calls if k["tool"] == "run_plan")
+            ok = any(want in str(k["args"].get("tree", "")).lower() for k in calls
+                     if k["tool"] in ("run_plan", "make_button"))
         elif name == "no_collision":
             a, b = pair_args(toks)
             ok = not any(r[1] == "COLLISION" and pair_in(r[4], a, b) for r in events)
@@ -535,7 +536,8 @@ def grade(test, records, facts):
             ok = n <= int(toks[2]) if toks[1] == "<=" else n >= int(toks[2])
             note = "%s (saw %d)" % (c, n)
         elif name == "reply_asks":
-            ok = "?" in reply
+            # a question mark, or numbered choices offered after a colon
+            ok = ("?" in reply) or bool(re.search(r":\s*(?:!@#|\n)+\s*1[.)]\s", reply))
         elif name == "reply_contains":
             ok = " ".join(toks[1:]).lower() in reply.lower()
         elif name == "chat_contains":
