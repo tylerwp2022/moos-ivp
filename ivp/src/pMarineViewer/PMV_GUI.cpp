@@ -976,6 +976,7 @@ bool PMV_GUI::addHotkey(string spec)
 inline void PMV_GUI::cb_ChatSend_i()
 {
   string text = stripBlankEnds(findReplace(m_chat_input->getText(), "\n", " "));
+  m_chat_input->addHistory(text);       // Up recalls it, as sent
   m_chat_input->clearText();
   if(m_chat_input->wantedHeight(m_chat_input->w()) != m_chat_input->h()) {
     resizeWidgets();

@@ -22,6 +22,8 @@
 
 #include <cstdlib>
 #include <string>
+#include <vector>
+#include <map>
 #include <FL/Fl.H>
 #include <FL/Fl_Text_Editor.H>
 #include <FL/Fl_Text_Buffer.H>
@@ -46,6 +48,13 @@
 //     assistant thinks it interrupts the turn (and the hook puts the
 //     line last sent back here to edit); any other time it stays
 //     the editor's copy.
+//  4. History, as a shell's: the owner adds each line it sends
+//     (addHistory); Up with the cursor on the first line of the box
+//     recalls the line before, Down on the last line the one after,
+//     and past the newest the draft that was being typed. An edit
+//     made to a recalled line is kept while browsing, as bash keeps
+//     it, until a line is sent. Elsewhere in the text Up and Down
+//     move the cursor as usual.
 
 class PMV_ChatInput : public Fl_Text_Editor {
  public:
@@ -55,7 +64,7 @@ class PMV_ChatInput : public Fl_Text_Editor {
   PMV_ChatInput(int x, int y, int w, int h, const char* l=0)
     : Fl_Text_Editor(x, y, w, h, l), m_want_focus(false), m_max_lines(6),
       m_seen_len(0), m_grow_hook(0), m_grow_data(0),
-      m_interrupt_hook(0), m_interrupt_data(0) {
+      m_interrupt_hook(0), m_interrupt_data(0), m_hist_pos(0) {
     m_buff = new Fl_Text_Buffer();
     buffer(m_buff);
     box(FL_DOWN_BOX);
@@ -85,6 +94,25 @@ class PMV_ChatInput : public Fl_Text_Editor {
     insert_position(m_buff->length());
     show_insert_position();
   }
+
+  // A line sent, remembered for Up/Down: not an empty one, not the
+  // same as the newest, not a bare confirmation answer; the newest
+  // 200 kept. Browsing starts over past the newest, edits forgotten.
+  void addHistory(const std::string& s) {
+    std::string low;
+    for(unsigned int i=0; i<s.size(); i++)
+      low += (char)tolower((unsigned char)s[i]);
+    if((s == "") || (low == "y") || (low == "n") || (low == "yes") || (low == "no"))
+      return;
+    if(m_history.empty() || (m_history.back() != s))
+      m_history.push_back(s);
+    if(m_history.size() > 200)
+      m_history.erase(m_history.begin());
+    m_hist_pos = m_history.size();
+    m_draft = "";
+    m_edits.clear();
+  }
+  unsigned int historySize() const {return(m_history.size());}
 
   void setMaxLines(int n)        {m_max_lines = (n < 1) ? 1 : n;}
   int  getMaxLines() const       {return(m_max_lines);}
@@ -130,6 +158,14 @@ class PMV_ChatInput : public Fl_Text_Editor {
 	do_callback();
 	return(1);
       }
+      if((Fl::event_key() == FL_Up) && onFirstLine() && (m_hist_pos > 0)) {
+	recall(m_hist_pos - 1);
+	return(1);
+      }
+      if((Fl::event_key() == FL_Down) && onLastLine() && (m_hist_pos < m_history.size())) {
+	recall(m_hist_pos + 1);
+	return(1);
+      }
       break;
     }
     int result = Fl_Text_Editor::handle(event);
@@ -142,6 +178,37 @@ class PMV_ChatInput : public Fl_Text_Editor {
   }
 
  protected:
+  // The cursor on the first or the last wrapped line of the text: the
+  // visual line holding it starts at the text's start, or ends at its end
+  bool onFirstLine() {
+    return(line_start(insert_position()) == 0);
+  }
+  bool onLastLine() {
+    return(line_end(insert_position(), false) >= m_buff->length());
+  }
+  // Move to a history position: what the box holds now is kept for
+  // the position left (the draft past the newest, an edit of an
+  // entry), the text of the position reached shown with the cursor
+  // at its end, and the pane re-laid out when the height changes.
+  void recall(unsigned int pos) {
+    std::string now = getText();
+    if(m_hist_pos == m_history.size())
+      m_draft = now;
+    else if(now != m_history[m_hist_pos])
+      m_edits[m_hist_pos] = now;
+    else
+      m_edits.erase(m_hist_pos);
+    m_hist_pos = pos;
+    if(pos == m_history.size())
+      setText(m_draft);
+    else if(m_edits.count(pos))
+      setText(m_edits[pos]);
+    else
+      setText(m_history[pos]);
+    if(m_grow_hook && (wantedHeight(w()) != h()))
+      m_grow_hook(m_grow_data);
+  }
+
   Fl_Text_Buffer* m_buff;
   bool            m_want_focus;
   int             m_max_lines;
@@ -150,6 +217,10 @@ class PMV_ChatInput : public Fl_Text_Editor {
   void*           m_grow_data;
   InterruptHook   m_interrupt_hook;
   void*           m_interrupt_data;
+  std::vector<std::string>            m_history;   // the lines sent, oldest first
+  unsigned int                        m_hist_pos;  // where browsing stands; size() = past the newest
+  std::string                         m_draft;     // the text left behind when browsing began
+  std::map<unsigned int, std::string> m_edits;     // an entry as edited while browsing
 };
 
 #endif
