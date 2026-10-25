@@ -40,8 +40,8 @@ case "$cmd" in
       [ "$a" = "--gui" ] && GUI=1
       [ "$a" = "--key" ] && KEYENV="env"
     done
-    if ss -ltnu 2>/dev/null | grep -qE ':9(10[0-4]|30[0-4])\b'; then
-      echo "tcp 9100-9104 or udp 9300-9304 in use: an earlier fleet is still up; fleet.sh down <its dir> first"; exit 1
+    if ss -ltnu 2>/dev/null | grep -qE ':9(10[0-4]|50[0-4])\b'; then
+      echo "tcp 9100-9104 or udp 9500-9504 in use: an earlier fleet is still up; fleet.sh down <its dir> first"; exit 1
     fi
     mkdir -p "$S"
     cp "$M"/meta_*.moos "$M"/plugs.moos "$M"/meta_vehicle.bhv "$M"/launch_vehicle.sh "$M"/launch_shoreside.sh "$S"/ || exit 1
@@ -51,11 +51,11 @@ case "$cmd" in
     for ((i=0; i<AMT; i++)); do
       v=${NAMES[$i]}; VN="${VN:+$VN:}$v"
       (cd "$S" && PATH=$BIN:$PATH $KEYENV setsid nohup ./launch_vehicle.sh --vname=$v --color=${COLORS[$i]} \
-         --start_pos=${STARTS[$i]} --return_pos=${RETURNS[$i]} --mport=$((9101+i)) --pshare=$((9301+i)) \
-         --shore_pshare=9300 --auto $WARP > $v.log 2>&1 &)
+         --start_pos=${STARTS[$i]} --return_pos=${RETURNS[$i]} --mport=$((9101+i)) --pshare=$((9501+i)) \
+         --shore_pshare=9500 --auto $WARP > $v.log 2>&1 &)
     done
     NOGUI="--nogui"; [ -n "$GUI" ] && NOGUI=""
-    (cd "$S" && PATH=$BIN:$PATH $KEYENV setsid nohup ./launch_shoreside.sh --auto $NOGUI --mport=9100 --pshare=9300 \
+    (cd "$S" && PATH=$BIN:$PATH $KEYENV setsid nohup ./launch_shoreside.sh --auto $NOGUI --mport=9100 --pshare=9500 \
        --vnames=$VN $WARP > shore.log 2>&1 &)
     # Who owns this fleet: the script that called up. The Stop hook
     # (.claude/hooks/fleet_check.sh) lets a fleet whose owner is still
@@ -73,13 +73,13 @@ case "$cmd" in
       sleep 3
     done
     # a MOOSDB or pShare that outlived the passes above: by port
-    for pid in $(ss -ltnup 2>/dev/null | grep -E ':9(10[0-4]|30[0-4])\b' | grep -oE 'pid=[0-9]+' | cut -d= -f2 | sort -u); do
+    for pid in $(ss -ltnup 2>/dev/null | grep -E ':9(10[0-4]|50[0-4])\b' | grep -oE 'pid=[0-9]+' | cut -d= -f2 | sort -u); do
       [ "$(readlink /proc/$pid/cwd 2>/dev/null)" = "$S" ] && kill -9 $pid 2>/dev/null
     done
     sleep 1
     rm -f "$S/.driver"
     n=0; for p in /proc/[0-9]*; do [ "$(readlink $p/cwd 2>/dev/null)" = "$S" ] && n=$((n+1)); done
-    echo "processes left in $S: $n"; ss -ltnu 2>/dev/null | grep -E ':9(10[0-4]|30[0-4])\b' || echo "tcp 9100-9104 and udp 9300-9304 free"
+    echo "processes left in $S: $n"; ss -ltnu 2>/dev/null | grep -E ':9(10[0-4]|50[0-4])\b' || echo "tcp 9100-9104 and udp 9500-9504 free"
     ;;
   alog)
     ls "$1"/XLOG_SHORESIDE_*/*.alog 2>/dev/null | tail -1

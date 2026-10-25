@@ -24,8 +24,9 @@ ivp/missions/m2_alpha_llm/test/fleet.sh down $S      # kill everything whose cwd
 dyn/ and buttons.txt (pLLMAgent writes to the copy, never the mission's),
 writes the calling script's PID to `<scratch>/.driver` (the Stop hook
 lets a fleet pass while that script runs; a background test script
-therefore never trips it, a leftover does), then launches abe (9101/9301), ben (9102/9302), cal, deb and
-the shoreside (9100/9300, `--nogui`, `--auto`) with the API key removed
+therefore never trips it, a leftover does), then launches abe (9101/9501), ben (9102/9502), cal, deb and
+the shoreside (9100/9500, pShare on the 9500s so a live m2 mission on
+the 9200s or a live mctf match on the 9300s can stay up, `--nogui`, `--auto`) with the API key removed
 from the environment (`--key` keeps it; pLLMAgent then calls the model).
 Ports 9000/9200 stay free for the user. Launch can take up to 150 s
 real before every helm reports; wait, do not relaunch. Three more

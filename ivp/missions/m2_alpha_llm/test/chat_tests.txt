@@ -43,6 +43,8 @@
 #     no_collision [A [B]] | collision [A [B]]
 #     no_near_miss [A [B]] | near_miss [A [B]]
 #     reply_sentences <= N     the last plain reply's sentence count
+#     reply_words <= N         its word count, for an answer that lists things (buttons, boats),
+#                              where the sentence count would grade the line breaks
 #     reply_asks               the reply asks: a question mark, or numbered choices after a colon
 #     reply_contains TEXT | chat_contains TEXT | proposal_contains TEXT
 #     state VAR VALUE          the last post of VAR in the window
@@ -780,12 +782,12 @@ ask = Did abe drive the box and come home after the press, with no chat from the
 
 [8.3]
 say = what buttons do I have on the panel?
-expect = STOP ALL (fixed) and BOX, from the fleet line, no tool call
-issue = a guess, or a tool call to find out
+expect = STOP ALL (fixed) and BOX, from the fleet line, no tool call, under 100 words
+issue = a guess, a tool call to find out, or an essay
 answer = none
 check = no_proposal
 check = reply_contains BOX
-check = reply_sentences <= 3
+check = reply_words <= 100
 
 [8.3b]
 say = what exactly does the BOX button do? read its saved plan

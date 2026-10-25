@@ -63,7 +63,11 @@ repeats of the same pair within `alert_fold` seconds).
 `ANTHROPIC_API_KEY` must be exported in the shell that runs the
 driver: pLLMAgent reads it (about one model request per test, cached
 prompt, cheap). Ports 9100 to 9103 must be free; a mission of the
-user's own on 9000 can stay up. The driver copies the mission to
+user's own on 9000 can stay up, the mctf match included: the driver's
+pShare ports are 9500 to 9503 (the live m2 mission has 9200s, the live
+match 9300s, the mctf scratch kit 9400s), so neither fleet hears the
+other; `killmoos` still kills both, and only one headless fleet runs at
+a time (the mctf scratch kit is on 9100 too). The driver copies the mission to
 `test/runs/<stamp>/` and launches there; the viewer's fourth button is
 `NEXT_TEST` in that copy only.
 

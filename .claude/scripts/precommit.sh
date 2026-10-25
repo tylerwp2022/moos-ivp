@@ -64,7 +64,7 @@ done
 
 if out=$(python3 "$REPO/ivp/missions/m2_alpha_llm/test/chat_test_md.py" --check 2>&1); then say "chat test" "chat_test.md current"; else fail "chat test" "$out (run test/chat_test_md.py)"; fi
 
-if ss -ltnu 2>/dev/null | grep -qE ':9(10[0-4]|30[0-4])\b'; then fail fleet "a scratch fleet is up on the 9100 ports (fleet.sh down)"; else say fleet "9100 ports free"; fi
+if ss -ltnu 2>/dev/null | grep -qE ':9(10[0-4]|50[0-4])\b'; then fail fleet "a scratch fleet is up on the 9100 ports (fleet.sh down)"; else say fleet "9100 ports free"; fi
 
 if [ -n "$fails" ]; then echo; echo "NOT READY TO COMMIT:"; printf '%s' "$fails" | sed 's/^/  /'; exit 1; fi
 echo "ready to commit"

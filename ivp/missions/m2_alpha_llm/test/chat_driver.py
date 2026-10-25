@@ -55,7 +55,7 @@ VEHICLES = [("abe", "yellow",      "x=0,y=-20,heading=180",   "0,-20"),
             ("cal", "green",       "x=-30,y=-20,heading=180", "-30,-20"),
             ("deb", "dodger_blue", "x=60,y=-20,heading=180",  "60,-20")]
 SHORE_MPORT  = 9100
-SHORE_PSHARE = 9300
+SHORE_PSHARE = 9500   # 9200s: the live m2 mission; 9300s: the live mctf match; 9400s: the mctf scratch kit
 MARK_VAR     = "CHAT_TEST_MARK"
 NEXT_VAR     = "CHAT_TEST_NEXT"
 NOTE_VAR     = "LLM_CHAT_NOTE"
@@ -533,6 +533,12 @@ def grade(test, records, facts):
             ok = any(r[1] == "NEAR_MISS" and pair_in(r[4], a, b) for r in events)
         elif name == "reply_sentences":
             n = sentences(reply)
+            ok = n <= int(toks[2]) if toks[1] == "<=" else n >= int(toks[2])
+            note = "%s (saw %d)" % (c, n)
+        elif name == "reply_words":
+            # the reply's length as the operator reads it, for an answer
+            # that lists things (a sentence count grades the line breaks)
+            n = len(reply.replace("!@#", " ").split())
             ok = n <= int(toks[2]) if toks[1] == "<=" else n >= int(toks[2])
             note = "%s (saw %d)" % (c, n)
         elif name == "reply_asks":
