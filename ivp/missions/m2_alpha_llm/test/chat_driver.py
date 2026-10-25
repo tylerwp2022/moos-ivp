@@ -552,6 +552,9 @@ def grade(test, records, facts):
         elif name == "proposal_contains":
             want = " ".join(toks[1:]).lower()
             ok = any(want in r[4].lower() for r in proposals)
+        elif name == "proposal_lacks":
+            want = " ".join(toks[1:]).lower()
+            ok = not any(want in r[4].lower() for r in proposals)
         elif name == "state":
             last = [r for r in records if r[1] == toks[1]]
             ok = bool(last) and last[-1][4] == toks[2]

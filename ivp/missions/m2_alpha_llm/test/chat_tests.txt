@@ -47,6 +47,7 @@
 #                              where the sentence count would grade the line breaks
 #     reply_asks               the reply asks: a question mark, or numbered choices after a colon
 #     reply_contains TEXT | chat_contains TEXT | proposal_contains TEXT
+#     proposal_lacks TEXT      no proposal of the turn contains TEXT
 #     state VAR VALUE          the last post of VAR in the window
 #     min_range A B >= N       closest approach of two boats, meters
 #     no_truncation            no "cut off at max_tokens" reply
@@ -925,27 +926,27 @@ ask = Did the agent ask what you meant instead of proposing?
 
 [9.2]
 say = I want a button that sends both boats to 150,-150 by lining them up next to each other 20 m apart and then weaving so their routes cross
-expect = in mission mode the same words get a make_button proposal at once (declined here) with a Starts line
+expect = in mission mode the same words get a make_button proposal at once (declined here)
 issue = a question instead of a proposal
 poke = LLM_MODE=mission
 answer = n
 check = proposal
 check = tool make_button
-check = proposal_contains Starts:
 check = reply_sentences <= 3
 
 # ---------------------------------------------------------------
 # Phase 10: arithmetic in a plan (added 2026-10-05). A button whose
 # step is relative to the boat's live position carries a $( ... )
-# expression; the console's Starts line then reads "from wherever".
+# expression; the console then prints no Starts line (a fixed point
+# would give "Starts: abe goes to (x, y) first").
 
 [10.1]
 say = make a button called STEP that has abe move 30 m toward 150,-150 from wherever it happens to be when I press it
-expect = a make_button proposal whose Goto uses $( ... ) with NAV_X, NAV_Y and bearing(...), Starts: from wherever the boats are; declined here
+expect = a make_button proposal whose Goto uses $( ... ) with NAV_X, NAV_Y and bearing(...), no Starts line; declined here
 issue = a fixed point computed from abe's position now (Starts: abe goes to (x, y) first)
 poke = LLM_MODE=mission
 answer = n
 check = tool make_button
-check = proposal_contains Starts: from wherever
+check = proposal_lacks Starts:
 check = tree_has $(
 check = reply_sentences <= 3
