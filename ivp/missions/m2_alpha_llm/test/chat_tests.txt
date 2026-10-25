@@ -912,20 +912,22 @@ check = chat_contains BT_TREE_LEAP
 # Phase 9: planning mode (added 2026-10-05). The mode is switched by
 # poking LLM_MODE (what a panel button would post); the same wording
 # gets a question in planning mode and a proposal in mission mode.
+# The boats are named (the fleet has three): "both boats" left 9.2
+# asking which two whenever 9.1's exchange was not in the history.
 
 [9.1]
-say = I want a button that sends both boats to 150,-150 by lining them up next to each other 20 m apart and then weaving so their routes cross
-expect = in planning mode a question or two back (where they start, how many crossings ...), no proposal, a longer reply allowed
-issue = a proposal at once; a reply of guesses
+say = I want a button that sends abe and ben to 150,-150 by lining them up next to each other 20 m apart and then weaving so their routes cross
+expect = in planning mode a question or two back (where they start, how many crossings ...), no proposal, a longer reply allowed, under 200 words
+issue = a proposal at once; a reply of guesses; an essay
 poke = LLM_MODE=planning
 answer = none
 check = no_proposal
 check = reply_asks
-check = reply_sentences <= 10
+check = reply_words <= 200
 ask = Did the agent ask what you meant instead of proposing?
 
 [9.2]
-say = I want a button that sends both boats to 150,-150 by lining them up next to each other 20 m apart and then weaving so their routes cross
+say = I want a button that sends abe and ben to 150,-150 by lining them up next to each other 20 m apart and then weaving so their routes cross
 expect = in mission mode the same words get a make_button proposal at once (declined here)
 issue = a question instead of a proposal
 poke = LLM_MODE=mission

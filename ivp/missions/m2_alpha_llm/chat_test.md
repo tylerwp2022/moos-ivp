@@ -147,8 +147,8 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 
 | ID | Type | Expect | Issue if |
 |---|---|---|---|
-| 9.1 | set first: LLM_MODE=planning; `I want a button that sends both boats to 150,-150 by lining them up next to each other 20 m apart and then weaving so their routes cross` | in planning mode a question or two back (where they start, how many crossings ...), no proposal, a longer reply allowed | a proposal at once; a reply of guesses |
-| 9.2 | set first: LLM_MODE=mission; `I want a button that sends both boats to 150,-150 by lining them up next to each other 20 m apart and then weaving so their routes cross` | in mission mode the same words get a make_button proposal at once (declined here) | a question instead of a proposal |
+| 9.1 | set first: LLM_MODE=planning; `I want a button that sends abe and ben to 150,-150 by lining them up next to each other 20 m apart and then weaving so their routes cross` | in planning mode a question or two back (where they start, how many crossings ...), no proposal, a longer reply allowed, under 200 words | a proposal at once; a reply of guesses; an essay |
+| 9.2 | set first: LLM_MODE=mission; `I want a button that sends abe and ben to 150,-150 by lining them up next to each other 20 m apart and then weaving so their routes cross` | in mission mode the same words get a make_button proposal at once (declined here) | a question instead of a proposal |
 
 ## Phase 10: arithmetic in a plan
 
