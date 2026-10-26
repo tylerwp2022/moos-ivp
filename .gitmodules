@@ -28,3 +28,6 @@
 [submodule "ivp/src/moos-ivp-panel"]
 	path = ivp/src/moos-ivp-panel
 	url = git@github.com:tylerwp2022/moos-ivp-panel.git
+[submodule "ivp/src/moos-ivp-history"]
+	path = ivp/src/moos-ivp-history
+	url = git@github.com:tylerwp2022/moos-ivp-history.git

@@ -38,6 +38,7 @@ ProcessConfig = ANTLER
   Run = uPlanPreview    @ NewConsole = false
   Run = uFldSquad        @ NewConsole = false
   Run = uFldCollisionDetect @ NewConsole = false
+  Run = uFldHistory     @ NewConsole = false
 }
 
 #include plugs.moos <pShare>
@@ -98,6 +99,32 @@ ProcessConfig = uFldCollisionDetect
   pulse_render    = true
   pulse_range     = 20
   pulse_duration  = 10
+}
+
+//------------------------------------------
+// uFldHistory config block (moos-ivp-history): the run's history as
+// bounded views the agent reads on demand. Plans, presses and squad
+// events are built in; collisions and near misses come from the
+// standard set's history.cap Event blocks; a mission adds its own
+// blocks with capability_dir. HISTORY_* is watched by pLLMAgent for
+// get_var, never an alert: every repost would open a turn.
+
+ProcessConfig = uFldHistory
+{
+  AppTick   = 2
+  CommsTick = 2
+
+  plans   = true
+  presses = true
+  squads  = true
+
+  recent_window  = 600
+  recent_max     = 40
+  vehicle_window = 1200
+  repost         = 30
+
+  scene_radius = 50
+  scene_before = 10, 20
 }
 
 //------------------------------------------
@@ -291,6 +318,7 @@ ProcessConfig = pLLMAgent
   watch = SQUAD_LIST, SQUAD_EVENT, SQUAD_REPORT_*, SQUAD_MISSION_*   // uFldSquad
   watch = COLLISION_TOTAL, NEAR_MISS_TOTAL   // uFldCollisionDetect's counts
   watch = AVOID_*                             // each vehicle's avoidance mode, as last set here
+  watch = HISTORY_*                           // uFldHistory's views and scenes, read on demand
 
   // Events pushed to the model as [alert: ...] notes, each opening a
   // turn of its own: two vehicles within 4 m (COLLISION) or 8 m

@@ -34,7 +34,7 @@ Without this step the submodule directories under `ivp/src/` will be empty and t
 
 ### Added applications (submodules)
 
-Four repositories are vendored as submodules under `ivp/src/` and wired into the main build:
+These repositories are vendored as submodules under `ivp/src/` and wired into the main build:
 
 | Submodule | Contents | Purpose |
 |---|---|---|
@@ -43,6 +43,7 @@ Four repositories are vendored as submodules under `ivp/src/` and wired into the
 | `uXboxJoystick` | `uXboxJoystick` | Shoreside Xbox-controller teleop for MCTF vehicles. |
 | `uGfxMask` | `uGfxMask` | Graphics masking utility for shoreside display. |
 | `moos-ivp-llm` | `pLLMAgent`, `lib_llm`, `llm_selftest` | Operator chat with an LLM (Anthropic Messages API over libcurl). The model reads fleet state from the MOOSDB and acts on boats only through operator-defined `tool=` posts, each confirmed with y/n by default. Pairs with the pMarineViewer chat pane below. |
+| `moos-ivp-history` | `uFldHistory`, `lib_history`, `history_digest`, `history_selftest` | The run's history as bounded views the agent reads on demand (`HISTORY_RECENT`, `HISTORY_TOTALS`, `HISTORY_<VNAME>`, `HISTORY_SCENE_<N>`): plans, presses, squad events built in, a mission's own events from `Event` blocks in its capability files, with tallies, holdings, spans and the scene around an event. `history_digest` reads a finished log the same way. |
 
 Each submodule carries its own README with per-app configuration details; this section documents only how they integrate into the tree.
 

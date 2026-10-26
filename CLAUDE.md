@@ -29,7 +29,7 @@ cd ivp/src_unit_tests && ./alltest.sh               # runs every dir that has a 
 cd ivp/src_unit_tests/testConvexHull && utest cases.utf -v   # one test
 ```
 
-The framework is homegrown: the `utest` runner drives table-driven `cases.utf` files; a `.skip_test` marker makes a dir non-fatal. No gtest/catch2. CI (`.github/workflows/build.yml`) runs `build.sh`, `build-check.sh`, `build-utests.sh`, and `alltest.sh` on Ubuntu 24.04 and macOS for pushes to `main` and `llm-integration`. It checks out submodules recursively; the private ones need the repository secret `SUBMODULE_TOKEN`, a fine-grained PAT with contents read access to the fork and to `moos-ivp-llm`, `moos-ivp-bt`, `moos-ivp-cap`, `moos-ivp-squad`, `moos-ivp-dyn` and `moos-ivp-panel` (a submodule the PAT does not cover fails every job at checkout with a 403). The offline self-tests `bin/cap_selftest`, `bin/bt_selftest`, `bin/llm_selftest` and `bin/squad_selftest` are not run by CI.
+The framework is homegrown: the `utest` runner drives table-driven `cases.utf` files; a `.skip_test` marker makes a dir non-fatal. No gtest/catch2. CI (`.github/workflows/build.yml`) runs `build.sh`, `build-check.sh`, `build-utests.sh`, and `alltest.sh` on Ubuntu 24.04 and macOS for pushes to `main` and `llm-integration`. It checks out submodules recursively; the private ones need the repository secret `SUBMODULE_TOKEN`, a fine-grained PAT with contents read access to the fork and to `moos-ivp-llm`, `moos-ivp-bt`, `moos-ivp-cap`, `moos-ivp-squad`, `moos-ivp-dyn`, `moos-ivp-panel` and `moos-ivp-history` (a submodule the PAT does not cover fails every job at checkout with a 403). The offline self-tests `bin/cap_selftest`, `bin/bt_selftest`, `bin/llm_selftest`, `bin/squad_selftest` and `bin/history_selftest` are not run by CI.
 
 ## Architecture
 
@@ -52,13 +52,14 @@ The framework is homegrown: the `utest` runner drives table-driven `cases.utf` f
 
 ## LLM integration (branch `llm-integration`)
 
-Six submodules under `ivp/src/`, each with the README that is its reference:
+Seven submodules under `ivp/src/`, each with the README that is its reference:
 - `moos-ivp-llm`: `lib_llm` and `pLLMAgent`, the operator-chat agent (tool grammar, MOOS interface, confirmation flow, prompt and tool-count briefing in its README).
 - `moos-ivp-bt`: `lib_bt` and `pBehaviorTree`, the plan executor, per vehicle and in squad mode on the shoreside; `pBehaviorTree --check=<file> [--squad --roster=abe,ben]` validates a plan offline.
 - `moos-ivp-cap`: the capability files, one per tool and plan leaf, in sets a mission picks with `capability_dir` / `capability_keep` / `capability_drop`.
 - `moos-ivp-squad`: `lib_squad` and `uFldSquad`, squads as objects with formations around a virtual leader.
 - `moos-ivp-dyn`: `lib_dyn` and `uDynamicsTest`, the measured vehicle dynamics that reach the agent's prompt as facts.
 - `moos-ivp-panel`: `uButtonPanel`, the operator's button panel (its own FLTK window) over the mission's `buttons.txt`; the `make_button` tool (in moos-ivp-bt's capabilities) saves buttons there and pLLMAgent runs their plans on a press. The file's reader and writer, `ButtonFile`, is in `lib_cap`.
+- `moos-ivp-history`: `lib_history`, `uFldHistory` and `history_digest`, the run's history as bounded views the agent reads on demand (`HISTORY_RECENT`, `HISTORY_TOTALS`, `HISTORY_<VNAME>`, `HISTORY_SCENE_<N>`); plans, presses and squad events built in, a mission's own events from `Event` blocks (`CapEvent` in `lib_cap`) in its capability files. `bin/history_selftest` is its offline self-test.
 
 Fork-side: the pMarineViewer chat pane (the only upstream edits besides `ivp/src/CMakeLists.txt`; `local-patches/` records any other deliberate upstream edit), `ivp/missions/s1_alpha_llm/` (one vehicle) and `ivp/missions/m2_alpha_llm/` (fleet, squads, contact set; its README explains the bridging and the roster variables; `test/` holds the scripted chat test).
 

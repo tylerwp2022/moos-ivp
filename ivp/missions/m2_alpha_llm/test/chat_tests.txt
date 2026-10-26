@@ -640,6 +640,17 @@ check = collision cal ben
 check = alert_reply <= 3
 check = observe alert_reply <= 1
 
+[5.11]
+say = what has happened in the last few minutes?
+expect = a history call (view recent), no proposal; the reply names 5.10's collision of cal and ben and the intercept, from uFldHistory's digest, in a few sentences
+issue = an answer from the fleet line alone (no history call); a get_var guess; a proposal; a list of every line
+answer = none
+check = no_proposal
+check = tool history
+check = reply_contains cal
+check = reply_sentences <= 6
+ask = Did the agent read the history and tell you about the collision of cal and ben?
+
 # ---------------------------------------------------------------
 # Phase 6: provocations. 6.6 absorbs the tree read-back (old 6.7);
 # 6.7 is the old 6.8 as a plain question; 6.8 is the old 6.9 and

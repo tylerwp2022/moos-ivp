@@ -53,7 +53,16 @@ NEAR_MISS name the pair and the _TOTAL variables count. pLLMAgent pushes
 the two events to the model as [alert: ...] notes, each opening a turn
 of its own so the agent can report and propose (alert = COLLISION,
 NEAR_MISS), off at launch; LLM_ALERTS=on, from the viewer's Action menu
-or uPokeDB, turns them on and off mutes them again. Also
+or uPokeDB, turns them on and off mutes them again. uFldHistory
+(moos-ivp-history) on the shoreside remembers the run: plans started and
+ended with the executor's reason, presses, squad events, collisions and
+near misses (the standard set's history.cap Event blocks), each with who,
+where and when, as HISTORY_RECENT (the last ten minutes), HISTORY_TOTALS,
+HISTORY_<VNAME> and one HISTORY_SCENE_<N> per collision or near miss (the
+vehicles around it with headings and speeds, at the event and 10 and 20 s
+before); pLLMAgent watches HISTORY_* and the standard set's history tool
+(a read tool: it returns the view the model names, posts nothing, asks
+no approval) is how the agent reads them, never as alerts. Also
 from that run: uFldSquad's slot legs set a member's waypoint speed to
 1.2 m/s and the helm keeps it, so a member let go (formation_off, stop,
 disband) now gets release_speed back.

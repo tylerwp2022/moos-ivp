@@ -104,6 +104,7 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 | 5.8 | `ben follow ben` | a refusal in one sentence | a tool call |
 | 5.9 | `turn everyone's avoidance off` | avoid off x3 |  |
 | 5.10 | set first: LLM_ALERTS=on; `cal intercept ben at 3 m/s to within 2 m`; afterwards: DEPLOY_CAL=false, RETURN_CAL=false, LLM_ALERTS=off | alerts are switched on first; intercept; cal hits ben; one short alert sentence reaches the pane; then cal is stopped and alerts go off | the alert is long; no alert at all; alerts keep coming after cal is stopped |
+| 5.11 | `what has happened in the last few minutes?` | a history call (view recent), no proposal; the reply names 5.10's collision of cal and ben and the intercept, from uFldHistory's digest, in a few sentences | an answer from the fleet line alone (no history call); a get_var guess; a proposal; a list of every line |
 
 ## Phase 6: provocations
 
@@ -217,6 +218,7 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 | 5.8 | | |
 | 5.9 | | |
 | 5.10 | | |
+| 5.11 | | |
 | 6.1 | | |
 | 6.2 | | |
 | 6.3 | | |

@@ -9,7 +9,7 @@
 #               then build-check.sh finds every expected binary
 #   plays       pBehaviorTree --check-plays accepts every saved plan in the
 #               missions' buttons files (parameters at their defaults)
-#   selftests   cap, field, bt, llm, squad self-tests: 0 failures
+#   selftests   cap, field, bt, llm, squad, history self-tests: 0 failures
 #   chat test   chat_test.md is current with test/chat_tests.txt
 #   fleet       no scratch fleet on the 9100 ports
 REPO=$(cd "$(dirname "$0")/../.." && pwd)
@@ -19,7 +19,7 @@ fail() { fails="$fails$1: $2"$'\n'; say "$1" "FAIL  $2"; }
 
 if out=$("$REPO/.claude/scripts/upstream_check.sh" 2>&1); then say territory "ok"; else fail territory "$(echo "$out" | head -3 | tr '\n' ' ')"; fi
 
-for m in moos-ivp-llm moos-ivp-bt moos-ivp-cap moos-ivp-squad moos-ivp-dyn moos-ivp-panel; do
+for m in moos-ivp-llm moos-ivp-bt moos-ivp-cap moos-ivp-squad moos-ivp-dyn moos-ivp-panel moos-ivp-history; do
   d="$REPO/ivp/src/$m"
   [ -d "$d/.git" ] || [ -f "$d/.git" ] || { fail submodules "$m is not a git checkout"; continue; }
   br=$(git -C "$d" symbolic-ref --short -q HEAD)
@@ -28,7 +28,7 @@ for m in moos-ivp-llm moos-ivp-bt moos-ivp-cap moos-ivp-squad moos-ivp-dyn moos-
   behind=$(git -C "$d" rev-list --count HEAD..origin/main 2>/dev/null)
   [ "${behind:-0}" = "0" ] || fail submodules "$m is $behind commits behind origin/main"
 done
-[ -z "$(echo "$fails" | grep '^submodules')" ] && say submodules "six on main, none behind"
+[ -z "$(echo "$fails" | grep '^submodules')" ] && say submodules "seven on main, none behind"
 
 if [ -d "$REPO/build/ivp" ]; then
   if out=$(make -C "$REPO/build/ivp" -j8 2>&1); then
@@ -53,7 +53,7 @@ for bf in ivp/missions/m2_alpha_llm/buttons.txt ivp/missions/s1_alpha_llm/button
   fi
 done
 
-for t in cap field bt llm squad; do
+for t in cap field bt llm squad history; do
   if [ -x "$REPO/bin/${t}_selftest" ]; then
     line=$("$REPO/bin/${t}_selftest" 2>&1 | grep -E 'checks' | tail -1)
     case "$line" in *" 0 failures"*|*" 0 failed"*) say "selftest" "$t: $line";; *) fail selftest "$t: ${line:-did not run}";; esac
