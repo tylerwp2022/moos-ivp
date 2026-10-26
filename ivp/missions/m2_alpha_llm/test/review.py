@@ -114,7 +114,7 @@ if want("usage"):
     prev_total = None
     n = 0
     tot_out = tot_cost = 0.0
-    print("     t      in    out  cache_read cache_create  latency     $   note")
+    print("     t      in    out  cache_read cache_create  latency     $  fleet+notes+typed  note")
     for t, var, app, aux, val in rows:
         if var != "LLM_USAGE":
             continue
@@ -136,7 +136,9 @@ if want("usage"):
         tries = re.search(r'tries=(\S+)', val)
         if int(float(u.get("attempts", 1))) > 1:
             note = (note + "; " if note else "") + "retried: " + (tries.group(1) if tries else u.get("attempts"))
-        print(f"{t:9.1f} {i_:6d} {o:6d} {cr:11d} {cc:12d} {lat:7.1f}s {cost:6.3f}  {note}")
+        fc, nc, tc = (int(float(u.get(k, 0))) for k in ("fleet_chars", "notes_chars", "typed_chars"))
+        msg = f"{fc}+{nc}+{tc}" if (fc or nc or tc) else "-"      # the operator message's parts in chars; a tool-result request carries none
+        print(f"{t:9.1f} {i_:6d} {o:6d} {cr:11d} {cc:12d} {lat:7.1f}s {cost:6.3f} {msg:>17}  {note}")
         prev_total = cr + cc
         n += 1
         tot_out += o
