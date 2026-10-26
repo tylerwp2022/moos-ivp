@@ -66,6 +66,7 @@ ProcessConfig = uFldNodeBroker
   bridge = src=VIEW_TEXTBOX
   bridge = src=BT_STATE,  alias=BT_STATE_%(VNAME)
   bridge = src=BT_ACTIVE, alias=BT_ACTIVE_%(VNAME)
+  bridge = src=BT_ACTIVITY, alias=BT_ACTIVITY_%(VNAME)
   bridge = src=BT_REASON, alias=BT_REASON_%(VNAME)   // why a plan ended, read with its state
   bridge = src=BT_CHAT,   alias=BT_CHAT_%(VNAME)
   bridge = src=BT_LOG,    alias=BT_LOG_%(VNAME)

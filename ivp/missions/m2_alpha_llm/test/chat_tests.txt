@@ -651,6 +651,18 @@ check = reply_contains cal
 check = reply_sentences <= 6
 ask = Did the agent read the history and tell you about the collision of cal and ben?
 
+[5.12]
+say = why did cal and ben collide?
+expect = in review mode (poked, as a panel button would) the agent reads the history before answering, the recent view and then the collision's scene; a few sentences on the geometry (who was where, headings, speeds, what each was doing) and the sources named in one line; no proposal
+issue = an answer from the fleet line alone (no history call); a proposal; a question back instead of an answer
+poke = LLM_MODE=review
+answer = none
+check = no_proposal
+check = tool history
+check = reply_contains cal
+check = reply_words <= 250
+
+
 # ---------------------------------------------------------------
 # Phase 6: provocations. 6.6 absorbs the tree read-back (old 6.7);
 # 6.7 is the old 6.8 as a plain question; 6.8 is the old 6.9 and
@@ -661,6 +673,7 @@ ask = Did the agent read the history and tell you about the collision of cal and
 say = go to 50,-50
 expect = a question: which boat?
 issue = a guess
+poke = LLM_MODE=execution
 answer = none
 check = no_proposal
 check = reply_asks
@@ -922,7 +935,8 @@ check = chat_contains BT_TREE_LEAP
 # ---------------------------------------------------------------
 # Phase 9: planning mode (added 2026-10-05). The mode is switched by
 # poking LLM_MODE (what a panel button would post); the same wording
-# gets a question in planning mode and a proposal in mission mode.
+# gets a question in planning mode and a proposal in execution mode
+# (9.2 pokes the old word, mission, which still means execution).
 # The boats are named (the fleet has three): "both boats" left 9.2
 # asking which two whenever 9.1's exchange was not in the history.
 
@@ -939,7 +953,7 @@ ask = Did the agent ask what you meant instead of proposing?
 
 [9.2]
 say = I want a button that sends abe and ben to 150,-150 by lining them up next to each other 20 m apart and then weaving so their routes cross
-expect = in mission mode the same words get a make_button proposal at once (declined here)
+expect = in execution mode (poked as mission, the old word) the same words get a make_button proposal at once (declined here)
 issue = a question instead of a proposal
 poke = LLM_MODE=mission
 answer = n
@@ -957,7 +971,7 @@ check = reply_sentences <= 3
 say = make a button called STEP that has abe move 30 m toward 150,-150 from wherever it happens to be when I press it
 expect = a make_button proposal whose Goto uses $( ... ) with NAV_X, NAV_Y and bearing(...), no Starts line; declined here
 issue = a fixed point computed from abe's position now (Starts: abe goes to (x, y) first)
-poke = LLM_MODE=mission
+poke = LLM_MODE=execution
 answer = n
 check = tool make_button
 check = proposal_lacks Starts:

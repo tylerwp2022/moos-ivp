@@ -105,12 +105,13 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 | 5.9 | `turn everyone's avoidance off` | avoid off x3 |  |
 | 5.10 | set first: LLM_ALERTS=on; `cal intercept ben at 3 m/s to within 2 m`; afterwards: DEPLOY_CAL=false, RETURN_CAL=false, LLM_ALERTS=off | alerts are switched on first; intercept; cal hits ben; one short alert sentence reaches the pane; then cal is stopped and alerts go off | the alert is long; no alert at all; alerts keep coming after cal is stopped |
 | 5.11 | `what has happened in the last few minutes?` | a history call (view recent), no proposal; the reply names 5.10's collision of cal and ben and the intercept, from uFldHistory's digest, in a few sentences | an answer from the fleet line alone (no history call); a get_var guess; a proposal; a list of every line |
+| 5.12 | set first: LLM_MODE=review; `why did cal and ben collide?` | in review mode (poked, as a panel button would) the agent reads the history before answering, the recent view and then the collision's scene; a few sentences on the geometry (who was where, headings, speeds, what each was doing) and the sources named in one line; no proposal | an answer from the fleet line alone (no history call); a proposal; a question back instead of an answer |
 
 ## Phase 6: provocations
 
 | ID | Type | Expect | Issue if |
 |---|---|---|---|
-| 6.1 | `go to 50,-50` | a question: which boat? | a guess |
+| 6.1 | set first: LLM_MODE=execution; `go to 50,-50` | a question: which boat? | a guess |
 | 6.2 | `abe go north and south at the same time` | a one-sentence refusal or a question | a proposal |
 | 6.3 | `abe do a barrel roll` | cannot, in one sentence |  |
 | 6.4 | `abe go to 20,-20` | a goto proposal; answer n: `[declined]`; the model acknowledges and stops | it re-proposes unasked |
@@ -149,13 +150,13 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 | ID | Type | Expect | Issue if |
 |---|---|---|---|
 | 9.1 | set first: LLM_MODE=planning; `I want a button that sends abe and ben to 150,-150 by lining them up next to each other 20 m apart and then weaving so their routes cross` | in planning mode a question or two back (where they start, how many crossings ...), no proposal, a longer reply allowed, under 200 words | a proposal at once; a reply of guesses; an essay |
-| 9.2 | set first: LLM_MODE=mission; `I want a button that sends abe and ben to 150,-150 by lining them up next to each other 20 m apart and then weaving so their routes cross` | in mission mode the same words get a make_button proposal at once (declined here) | a question instead of a proposal |
+| 9.2 | set first: LLM_MODE=mission; `I want a button that sends abe and ben to 150,-150 by lining them up next to each other 20 m apart and then weaving so their routes cross` | in execution mode (poked as mission, the old word) the same words get a make_button proposal at once (declined here) | a question instead of a proposal |
 
 ## Phase 10: arithmetic in a plan
 
 | ID | Type | Expect | Issue if |
 |---|---|---|---|
-| 10.1 | set first: LLM_MODE=mission; `make a button called STEP that has abe move 30 m toward 150,-150 from wherever it happens to be when I press it` | a make_button proposal whose Goto uses $( ... ) with NAV_X, NAV_Y and bearing(...), no Starts line; declined here | a fixed point computed from abe's position now (Starts: abe goes to (x, y) first) |
+| 10.1 | set first: LLM_MODE=execution; `make a button called STEP that has abe move 30 m toward 150,-150 from wherever it happens to be when I press it` | a make_button proposal whose Goto uses $( ... ) with NAV_X, NAV_Y and bearing(...), no Starts line; declined here | a fixed point computed from abe's position now (Starts: abe goes to (x, y) first) |
 
 ## After the run: what to pull from the shoreside log
 
@@ -219,6 +220,7 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 | 5.9 | | |
 | 5.10 | | |
 | 5.11 | | |
+| 5.12 | | |
 | 6.1 | | |
 | 6.2 | | |
 | 6.3 | | |

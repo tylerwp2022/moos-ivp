@@ -285,7 +285,7 @@ ProcessConfig = pLLMAgent
   max_tokens      = 8192
   timeout         = 300
   planning_max_tokens = 16384 // planning turns may think longer (~4.5 min at most, hence timeout 300)
-  planning_effort = medium    // and deeper; mission mode keeps effort low for tempo
+  planning_effort = medium    // and deeper (review too); execution mode keeps effort low for tempo
 
   // What the run costs, on the appcast and as LLM_COST: the prices
   // default to claude-opus-5-5's (price_* lines override them as they
@@ -312,6 +312,7 @@ ProcessConfig = pLLMAgent
   // uFldNodeBroker, and from each squad's plan slot; a * registers a
   // wildcard.
   watch = BT_STATE_*, BT_ACTIVE_*, BT_REASON_*, BT_LOG_*, MISSION_*
+  watch = BT_TREE_*, BT_ACTIVITY_*            // the plans as handed out and what each tree did lately, for review-mode reads (get_var)
   watch = BT_REPORT_*, BT_MEMBERS_*, BT_PLAN_*
   watch = IVPHELM_STATE_*, IVPHELM_UPDATE_RESULT_*
   watch = DEPLOY_ALL, RETURN_ALL
@@ -357,7 +358,7 @@ ProcessConfig = pLLMAgent
   // mission: act at once, short replies (a live run). planning: ask
   // before proposing, answer at length (designing a button or a plan
   // to keep). Type planning or mission in the chat to switch.
-  mode = mission
+  mode = execution
 
   app_logging = true
 }

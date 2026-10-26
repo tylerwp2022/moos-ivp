@@ -1295,7 +1295,9 @@ void PMV_GUI::setChatStatus(string status)
 //   Purpose: The agent's mode (pLLMAgent posts it on LLM_MODE) beside
 //            its status. Planning mode, where the agent asks before
 //            it proposes, tints the line amber so it is seen from
-//            across the room; mission mode leaves the pane's colors.
+//            across the room; review mode, where it reads the run's
+//            history and answers why, tints it blue; execution mode
+//            leaves the pane's colors.
 
 void PMV_GUI::setChatMode(string mode)
 {
@@ -1306,10 +1308,11 @@ void PMV_GUI::setChatMode(string mode)
 void PMV_GUI::renderChatStatus()
 {
   bool planning = (m_chat_mode == "planning");
-  string s = "llm: " + m_chat_status_text + (planning ? " | planning" : "");
+  bool review   = (m_chat_mode == "review");
+  string s = "llm: " + m_chat_status_text + (planning ? " | planning" : (review ? " | review" : ""));
   m_chat_status->value(s.c_str());
-  if(planning) {
-    m_chat_status->color(fl_rgb_color(255, 214, 120));
+  if(planning || review) {
+    m_chat_status->color(planning ? fl_rgb_color(255, 214, 120) : fl_rgb_color(168, 214, 255));
     m_chat_status->textcolor(FL_BLACK);
   }
   else {
