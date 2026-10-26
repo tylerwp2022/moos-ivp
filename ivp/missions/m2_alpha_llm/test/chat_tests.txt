@@ -581,7 +581,7 @@ after = DEPLOY_ALL=false
 after = RETURN_ALL=false
 check = collision cal
 check = no_near_miss abe ben
-check = reply_sentences <= 4
+check = reply_words <= 90
 
 [5.6]
 say = abe ignore cal for avoidance
