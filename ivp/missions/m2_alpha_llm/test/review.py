@@ -24,7 +24,7 @@ warp for real seconds. pLogger's repeats of early posts are dropped."""
 import sys, re, os, glob
 from collections import OrderedDict, defaultdict
 
-PRICES = {"in": 4.0, "out": 20.0, "cache_read": 0.20, "cache_create": 5.0}   # $/MTok, claude-opus-5-5
+PRICES = {"in": 4.0, "out": 20.0, "cache_read": 0.20, "cache_create": 5.0, "cache_create_1h": 8.0}   # $/MTok, claude-opus-5-5; the 1h write 2 x input
 
 if len(sys.argv) < 2 or sys.argv[1].startswith("-"):
     sys.exit(__doc__)
@@ -119,11 +119,13 @@ if want("usage"):
         if var != "LLM_USAGE":
             continue
         u = dict(re.findall(r'(\w+)=([0-9.]+)', val))
-        i_, o, cr, cc = (int(float(u.get(k, 0))) for k in ("in", "out", "cache_read", "cache_create"))
+        i_, o, cr, cc, cc1 = (int(float(u.get(k, 0))) for k in ("in", "out", "cache_read", "cache_create", "cache_create_1h"))
+        cc1 = min(cc1, cc)                     # the part of the write under the one-hour ttl
         lat = float(u.get("latency", 0))
         cost = costs.get(round(t, 1))
         if cost is None:
-            cost = (i_ * PRICES["in"] + o * PRICES["out"] + cr * PRICES["cache_read"] + cc * PRICES["cache_create"]) / 1e6
+            cost = (i_ * PRICES["in"] + o * PRICES["out"] + cr * PRICES["cache_read"]
+                    + (cc - cc1) * PRICES["cache_create"] + cc1 * PRICES["cache_create_1h"]) / 1e6
         note = ""
         if cr == 0:
             note = "cold start"

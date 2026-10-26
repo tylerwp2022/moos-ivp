@@ -299,6 +299,7 @@ ProcessConfig = pLLMAgent
   // change); budget is dollars for this run, left = budget - spent,
   // this agent's requests only, never the account's balance.
   budget = 20                 // edit to your allowance; 0 = none
+  cache_ttl = 1h              // the briefing's cached copy lives an hour across launches and pauses; 5m = the five-minute copy, cheaper to write, gone between launches
   confirm_default = true
 
 
