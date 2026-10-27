@@ -34,7 +34,9 @@
 #                check records the outcome without failing the test;
 #                either A | B passes if either simple check passes):
 #     no_proposal | proposal | proposals N
-#     tool NAME[|NAME]         a tool call named one of these
+#     tool NAME[|NAME] [key=value ...]   a tool call named one of these; with
+#                              key=value pairs, one whose arguments hold each
+#                              value (tool history view=session)
 #     no_tool [NAME[|NAME]]    no tool call at all, or none of these
 #     target VNAME             a tool call aimed at that vehicle or squad
 #     head_for VNAME           the proposal reads "run_plan for VNAME:"
@@ -375,6 +377,19 @@ timeout = 200
 check = tool goto
 check = target cal
 
+[3.8]
+say = did cal's plans go as intended? look at how they ran
+expect = in review mode (poked, as a panel button would) the agent reads the session view (everything since the last press, here the whole run) or cal's own view, then cal's activity line with get_var (BT_ACTIVITY_CAL: the leaves started and how they ended since the plan loaded), a scene only if it needs one; a short paragraph: 3.2's two-leg plan ran to success with its Say lines, 3.4's was halted on the operator's order, the plan's logic told apart from the driving; the sources in one line; no proposal
+issue = the recent view only; no activity line read; a proposal; an answer from the fleet line alone
+poke = LLM_MODE=review
+answer = none
+after = LLM_MODE=execution
+check = no_proposal
+check = either tool history view=session | tool history view=cal
+check = tool get_var name=BT_ACTIVITY_CAL
+check = reply_contains cal
+check = reply_words <= 300
+
 # ---------------------------------------------------------------
 # Phase 4: squads and formations. 4.1 to 4.8 unchanged (the phase is
 # one unit: red exists from 4.1 on). 4.9 states its own premise: a
@@ -494,6 +509,19 @@ answer = y
 wait = SQUAD_LIST = none
 timeout = 120
 check = tool squad_disband|run_plan
+
+[4.11]
+say = did red's plans go as intended? look at how they ran
+expect = in review mode (poked): a squad's plans, so the agent reads the session view first (everything since the last press, here the whole run: red's plan runs with their start, end and outcome), then the squad's activity line with get_var (BT_ACTIVITY_RED, the squad executor's tally since each plan loaded), a scene only if it needs one; a short paragraph on how 4.1, 4.3, 4.4 and 4.9 ran and ended, the plan's logic told apart from the driving; the sources in one line; no proposal
+issue = the recent view only, or a boat's view instead of the session; no activity line read; a proposal; an answer from the fleet line alone
+poke = LLM_MODE=review
+answer = none
+after = LLM_MODE=execution
+check = no_proposal
+check = tool history view=session
+check = tool get_var name=BT_ACTIVITY_RED
+check = reply_contains red
+check = reply_words <= 300
 
 # ---------------------------------------------------------------
 # Phase 5: the contact set, alerts OFF. Each intercept test stops cal
@@ -661,7 +689,6 @@ check = no_proposal
 check = tool history
 check = reply_contains cal
 check = reply_words <= 250
-
 
 # ---------------------------------------------------------------
 # Phase 6: provocations. 6.6 absorbs the tree read-back (old 6.7);

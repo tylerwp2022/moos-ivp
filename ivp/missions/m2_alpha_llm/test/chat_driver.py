@@ -497,9 +497,19 @@ def grade(test, records, facts):
             ok = len(proposals) == int(toks[1])
             note = "%s (saw %d)" % (c, len(proposals))
         elif name == "tool":
+            # tool NAME[|NAME] [key=value ...]: a call of one of the names
+            # whose arguments hold each value (a substring, case blind)
             wanted = set(toks[1].lower().split("|"))
-            ok = any(k["tool"] in wanted for k in calls)
-            note = "%s (saw %s)" % (c, ",".join(k["tool"] for k in calls) or "none")
+            want_args = [t.split("=", 1) for t in toks[2:] if "=" in t]
+            def args_hold(k):
+                for key, val in want_args:
+                    if val.lower() not in str(k["args"].get(key, "")).lower():
+                        return False
+                return True
+            ok = any(k["tool"] in wanted and args_hold(k) for k in calls)
+            seen = ["%s(%s)" % (k["tool"], ",".join("%s=%s" % (a, str(v)[:30]) for a, v in k["args"].items()))
+                    if want_args else k["tool"] for k in calls]
+            note = "%s (saw %s)" % (c, ",".join(seen) or "none")
         elif name == "no_tool":
             if len(toks) > 1:          # no call of this name (or these names)
                 wanted = set(toks[1].lower().split("|"))

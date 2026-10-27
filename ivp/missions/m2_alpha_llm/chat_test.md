@@ -74,6 +74,7 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 | 3.5 | `abe: go to 40,-60, wait 20 seconds there, then 0,-60, then 40,-100`; then: `abe go to 0,-40` | a plan (the Wait forces one); while it runs, `abe go to 0,-40`: the goto proposal, the reply says the plan is cancelled first, BT_STATE_ABE halted then goto_complete | the plan and the goto fight |
 | 3.6 | `what is abe doing right now?` | one sentence from BT_STATE_ABE / MISSION_ABE | a guess |
 | 3.7 | `cal go to -120,-140` | a goto; cal parks in the far south-west corner, clear of every formation slot phase 4 uses |  |
+| 3.8 | set first: LLM_MODE=review; `did cal's plans go as intended? look at how they ran`; afterwards: LLM_MODE=execution | in review mode (poked, as a panel button would) the agent reads the session view (everything since the last press, here the whole run) or cal's own view, then cal's activity line with get_var (BT_ACTIVITY_CAL: the leaves started and how they ended since the plan loaded), a scene only if it needs one; a short paragraph: 3.2's two-leg plan ran to success with its Say lines, 3.4's was halted on the operator's order, the plan's logic told apart from the driving; the sources in one line; no proposal | the recent view only; no activity line read; a proposal; an answer from the fleet line alone |
 
 ## Phase 4: squads and formations
 
@@ -89,6 +90,7 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 | 4.8 | `form squad blue from ben and deb` | deb does not exist: a clear refusal or question | a proposal naming deb |
 | 4.9 | `red: go to 40,-100 then -40,-100`; then: `ben go to 0,-60` | red's two-leg move starts; while it runs, `ben go to 0,-60`: the goto proposal with a sentence that the squad plan ends; BT_STATE_RED halted | the squad plan keeps running with ben gone |
 | 4.10 | `release red's formation and disband it` | one plan or two tool calls; boats keep their colours until disband, then revert | colours stuck |
+| 4.11 | set first: LLM_MODE=review; `did red's plans go as intended? look at how they ran`; afterwards: LLM_MODE=execution | in review mode (poked): a squad's plans, so the agent reads the session view first (everything since the last press, here the whole run: red's plan runs with their start, end and outcome), then the squad's activity line with get_var (BT_ACTIVITY_RED, the squad executor's tally since each plan loaded), a scene only if it needs one; a short paragraph on how 4.1, 4.3, 4.4 and 4.9 ran and ended, the plan's logic told apart from the driving; the sources in one line; no proposal | the recent view only, or a boat's view instead of the session; no activity line read; a proposal; an answer from the fleet line alone |
 
 ## Phase 5: the contact set, alerts OFF
 
@@ -199,6 +201,7 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 | 3.5 | | |
 | 3.6 | | |
 | 3.7 | | |
+| 3.8 | | |
 | 4.1 | | |
 | 4.2 | | |
 | 4.3 | | |
@@ -209,6 +212,7 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 | 4.8 | | |
 | 4.9 | | |
 | 4.10 | | |
+| 4.11 | | |
 | 5.1 | | |
 | 5.2 | | |
 | 5.3 | | |
