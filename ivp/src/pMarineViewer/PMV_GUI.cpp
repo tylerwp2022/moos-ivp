@@ -99,7 +99,7 @@ PMV_GUI::PMV_GUI(int g_w, int g_h, const char *g_l)
   m_chat_status->value("llm: idle");
   m_chat_status->clear_visible_focus();
   m_chat_status_text = "idle";
-  m_chat_mode        = "mission";
+  m_chat_mode        = "execution";
   m_chat_status_back = FL_BACKGROUND_COLOR;
   m_chat_status_fore = FL_FOREGROUND_COLOR;
 
@@ -1302,6 +1302,8 @@ void PMV_GUI::setChatStatus(string status)
 void PMV_GUI::setChatMode(string mode)
 {
   m_chat_mode = tolower(stripBlankEnds(mode));
+  if(m_chat_mode == "mission")       // the old word for execution
+    m_chat_mode = "execution";
   renderChatStatus();
 }
 
@@ -1309,7 +1311,8 @@ void PMV_GUI::renderChatStatus()
 {
   bool planning = (m_chat_mode == "planning");
   bool review   = (m_chat_mode == "review");
-  string s = "llm: " + m_chat_status_text + (planning ? " | planning" : (review ? " | review" : ""));
+  string mode   = (m_chat_mode == "") ? "execution" : m_chat_mode;
+  string s = "llm: " + m_chat_status_text + " | " + mode;
   m_chat_status->value(s.c_str());
   if(planning || review) {
     m_chat_status->color(planning ? fl_rgb_color(255, 214, 120) : fl_rgb_color(168, 214, 255));

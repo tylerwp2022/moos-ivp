@@ -93,7 +93,7 @@ public:
   bool  setChatColor(std::string role, std::string color);
   void  applyChatColors(Fl_Color back, Fl_Color text);
   void  setChatStatus(std::string);
-  void  setChatMode(std::string);        // mission | planning: shown beside the status, planning tinted
+  void  setChatMode(std::string);        // execution | planning | review: shown beside the status, planning and review tinted
   void  renderChatStatus();
   bool  setChatViewable(std::string);
   bool  setChatWidth(std::string);
@@ -304,8 +304,8 @@ public: // InfoCast Related Functions
   PMV_ChatInput   *m_chat_input;
   Fl_Output       *m_chat_status;
   std::string      m_chat_status_text;  // the agent's status word(s)
-  std::string      m_chat_mode;         // mission | planning
-  Fl_Color         m_chat_status_back;  // the pane's colors, restored out of planning mode
+  std::string      m_chat_mode;         // execution | planning | review
+  Fl_Color         m_chat_status_back;  // the pane's colors, restored in execution mode
   Fl_Color         m_chat_status_fore;
   std::string      m_chat_interrupt_var; // Ctrl+C while thinking posts here ("" = off)
   std::string      m_chat_last_sent;     // the line Enter sent last, back in the box after an interrupt
