@@ -94,6 +94,7 @@ public:
   void  applyChatColors(Fl_Color back, Fl_Color text);
   void  setChatStatus(std::string);
   void  setChatMode(std::string);        // execution | planning | review: shown beside the status, planning and review tinted
+  void  setChatCommands(std::string);    // the agent's / commands for Tab completion (LLM_CONSOLE)
   void  renderChatStatus();
   bool  setChatViewable(std::string);
   bool  setChatWidth(std::string);
@@ -176,6 +177,8 @@ public: // InfoCast Related Functions
   static void cb_ChatSend(Fl_Widget*);
   inline bool cb_ChatInterrupt_i();
   static bool cb_ChatInterrupt(void*);
+  static void cb_ChatHint(void*, const std::string&);
+  static void cb_ChatHintClear(void*);
   inline void cb_ChatToggle_i();
   static void cb_ChatToggle(Fl_Widget*);
   inline void cb_ChatWidth_i(int);
@@ -305,6 +308,7 @@ public: // InfoCast Related Functions
   Fl_Output       *m_chat_status;
   std::string      m_chat_status_text;  // the agent's status word(s)
   std::string      m_chat_mode;         // execution | planning | review
+  std::string      m_chat_hint;         // Tab's candidates or a command's arguments, on the status row for a moment
   Fl_Color         m_chat_status_back;  // the pane's colors, restored in execution mode
   Fl_Color         m_chat_status_fore;
   std::string      m_chat_interrupt_var; // Ctrl+C while thinking posts here ("" = off)

@@ -190,6 +190,9 @@ void showExampleConfigAndExit()
   blk("  chat_mode_var        = LLM_MODE   // the agent's mode beside   ");
   blk("                                    // the status; planning tints");
   blk("                                    // the line amber; off = none");
+  blk("  chat_console_var     = LLM_CONSOLE // the agent's / commands,  ");
+  blk("                                    // completed on Tab; off =  ");
+  blk("                                    // a built-in list          ");
   blk("                                                                ");
   blk("  realmcast_show_source        = true  // {TRUE,false}          ");
   blk("  realmcast_show_community     = true  // {TRUE,false}          ");

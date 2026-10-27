@@ -130,6 +130,7 @@ class PMV_MOOSApp : public AppCastingMOOSApp
   std::string  m_chat_out_var;      // LLM_CHAT_OUT
   std::string  m_chat_status_var;   // LLM_STATUS
   std::string  m_chat_mode_var;     // LLM_MODE: execution | planning | review, shown beside the status
+  std::string  m_chat_console_var;  // LLM_CONSOLE: the agent's / commands, for Tab completion in the input
   std::string  m_chat_plan_var;     // BT_CHAT, lines from a running plan
 
   std::vector<VarDataPair> m_beat_flags;  

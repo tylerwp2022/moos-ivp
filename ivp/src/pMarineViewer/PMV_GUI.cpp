@@ -108,6 +108,7 @@ PMV_GUI::PMV_GUI(int g_w, int g_h, const char *g_l)
   m_chat_input->callback((Fl_Callback*)PMV_GUI::cb_ChatSend);
   m_chat_input->setGrowHook(PMV_GUI::cb_ChatGrow, this);
   m_chat_input->setInterruptHook(PMV_GUI::cb_ChatInterrupt, this);
+  m_chat_input->setHintHook(PMV_GUI::cb_ChatHint, this);
 
   m_chat_split = new PMV_ChatSplitter(0, 0, 1, 1);
   m_chat_split->callback((Fl_Callback*)PMV_GUI::cb_ChatDrag);
@@ -1025,6 +1026,40 @@ bool PMV_GUI::cb_ChatInterrupt(void* data)
 }
 
 //----------------------------------------------------------
+// Procedure: cb_ChatHint / cb_ChatHintClear
+//   Purpose: Tab in the chat box: the candidates when several
+//            commands match, or a command's arguments, shown on the
+//            status row in place of the agent's state for four
+//            seconds, then the row goes back to the state.
+
+void PMV_GUI::cb_ChatHint(void* data, const std::string& text)
+{
+  PMV_GUI* gui = (PMV_GUI*)data;
+  gui->m_chat_hint = text;
+  gui->renderChatStatus();
+  Fl::remove_timeout(PMV_GUI::cb_ChatHintClear, data);
+  Fl::add_timeout(4.0, PMV_GUI::cb_ChatHintClear, data);
+}
+
+void PMV_GUI::cb_ChatHintClear(void* data)
+{
+  PMV_GUI* gui = (PMV_GUI*)data;
+  gui->m_chat_hint = "";
+  gui->renderChatStatus();
+}
+
+//----------------------------------------------------------
+// Procedure: setChatCommands
+//   Purpose: The agent's command list (pLLMAgent posts it once on
+//            LLM_CONSOLE) handed to the input for Tab completion.
+
+void PMV_GUI::setChatCommands(string line)
+{
+  if(m_chat_input)
+    m_chat_input->setCommands(line);
+}
+
+//----------------------------------------------------------
 // Procedure: cb_ChatToggle
 
 inline void PMV_GUI::cb_ChatToggle_i()
@@ -1313,6 +1348,8 @@ void PMV_GUI::renderChatStatus()
   bool review   = (m_chat_mode == "review");
   string mode   = (m_chat_mode == "") ? "execution" : m_chat_mode;
   string s = "llm: " + m_chat_status_text + " | " + mode;
+  if(m_chat_hint != "")
+    s = m_chat_hint;
   m_chat_status->value(s.c_str());
   if(planning || review) {
     m_chat_status->color(planning ? fl_rgb_color(255, 214, 120) : fl_rgb_color(168, 214, 255));

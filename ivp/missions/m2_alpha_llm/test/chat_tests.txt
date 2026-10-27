@@ -330,9 +330,9 @@ check = tree_has Fallback
 
 [3.4]
 say = cal: go to -60,-40, say when you get there, then 0,-60, then -60,-100
-expect = a plan (the Say forces one); `steps` typed while the proposal waits reads back `Plan steps for cal:`; once it runs, `halt cal's plan`: halt_plan, cal idles, BT_STATE_CAL = halted
+expect = a plan (the Say forces one); `/steps` typed while the proposal waits reads back `Plan steps for cal:`; once it runs, `halt cal's plan`: halt_plan, cal idles, BT_STATE_CAL = halted
 issue = a route instead of a plan; an unlabelled read-back; cal keeps driving after the halt
-before_answer = steps
+before_answer = /steps
 answer = y
 then = halt cal's plan
 wait = BT_STATE_CAL = running
@@ -739,9 +739,9 @@ check = reply_sentences <= 3
 
 [6.6]
 say = everyone: mow the box -80,-40 to 80,-140 in 20 m lanes, each boat a third of it, then come home
-expect = one proposal, three plans or one squad plan; `tree` typed while it waits reads back `Plan tree for ...`; long enough to test max_tokens; the reply is still short
+expect = one proposal, three plans or one squad plan; `/tree` typed while it waits reads back `Plan tree for ...`; long enough to test max_tokens; the reply is still short
 issue = a truncated proposal (`cut off at max_tokens`); a wall of text
-before_answer = tree
+before_answer = /tree
 answer = y
 turn_timeout = 400
 timeout = 60
