@@ -59,7 +59,9 @@ Rules that cost time when broken:
 - Deploy both sides before the first press of an A/B, equal windows, note
   the press times; `report` flags a side undeployed for part of a window.
 - One launch per subshell with its own `cd` inside a script; never a `cd`
-  in the harness command. Long waits inside a script (`wait`), never a
+  in the harness command. Never pipe `up` into `tail` or `head`: the
+  launched fleet inherits the pipe and the reader waits forever (a script
+  sat 11 min in `up` on 2026-10-28); send its output to a file and read that. Long waits inside a script (`wait`), never a
   bare `sleep`. Kill by working directory, never `pkill -f <literal>`.
 - uQueryDB: the mission file and `--wait` always; `--condition` matches the
   CURRENT value. uPokeDB keeps quotes in a value: `LLM_BUTTON:=WALL DEFENSE 2`.

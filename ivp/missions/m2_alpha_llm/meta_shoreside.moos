@@ -125,6 +125,7 @@ ProcessConfig = uFldHistory
 
   scene_radius = 50
   scene_before = 10, 20
+  scene_var = BHV_ACTIVE_$V : behaviours : span   // the helm's active behaviours (bridged); a change bounds the steps
 }
 
 //------------------------------------------
@@ -170,6 +171,7 @@ ProcessConfig = pLogger
   Log = LLM_TOOL_POST @ 0 NOSYNC
   Log = LLM_USAGE @ 0 NOSYNC
   Log = LLM_COST @ 0 NOSYNC
+  Log = LLM_HANDOFF @ 0 NOSYNC
 
   WildCardLogging = true
   WildCardOmitPattern = *_STATUS

@@ -61,8 +61,11 @@ where and when, as HISTORY_RECENT (the last ten minutes), HISTORY_SESSION
 (since the last press, repeats between the same two vehicles folded when
 long), HISTORY_TOTALS,
 HISTORY_<VNAME> and one HISTORY_SCENE_<N> per collision or near miss (the
-vehicles around it with headings and speeds, at the event and 10 and 20 s
-before); pLLMAgent watches HISTORY_* and the standard set's history tool
+vehicles around it with heading, speed, the helm's order and its active
+behaviours, plan mates joining from any distance, at the event and every
+5 s back to the last behaviour change, 20 s at least; the boats bridge
+IVPHELM_BHV_ACTIVE, DESIRED_HEADING and DESIRED_SPEED up under their
+names for it); pLLMAgent watches HISTORY_* and the standard set's history tool
 (a read tool: it returns the view the model names, posts nothing, asks
 no approval) is how the agent reads them, never as alerts. Also
 from that run: uFldSquad's slot legs set a member's waypoint speed to

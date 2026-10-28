@@ -75,6 +75,11 @@ ProcessConfig = uFldNodeBroker
   bridge = src=VEHICLE_FACTS, alias=VEHICLE_FACTS_%(VNAME)   // the helm's facts, for pLLMAgent
   bridge = src=IVPHELM_STATE, alias=IVPHELM_STATE_%(VNAME)
   bridge = src=IVPHELM_UPDATE_RESULT, alias=IVPHELM_UPDATE_RESULT_%(VNAME)
+  // For the history's scenes: the helm's active behaviours (on change)
+  // and its orders (every iteration it decides), under the vehicle's name
+  bridge = src=IVPHELM_BHV_ACTIVE, alias=BHV_ACTIVE_%(VNAME)
+  bridge = src=DESIRED_HEADING,    alias=DESIRED_HEADING_%(VNAME)
+  bridge = src=DESIRED_SPEED,      alias=DESIRED_SPEED_%(VNAME)
 }
 
 //------------------------------------------
