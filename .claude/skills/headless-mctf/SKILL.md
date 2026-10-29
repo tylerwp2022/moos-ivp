@@ -102,3 +102,10 @@ grep -a 'proc=pInterceptAssign' $S/cast.log | tail -1 | sed 's/!@/\n/g'
 ```
 Apps register `APPCAST_REQ` only (not `APPCAST_REQ_SHORESIDE`); the
 cast's lines are joined by `!@`; `umm -h` hangs looking for a DB.
+One umm name per read (`--moos_name=cast_1`, then `cast_2`: a second
+umm under a name still connected sees nothing). The scratch shoreside's
+log dir is `C000_LOG_SHORESIDE_*`, not `XLOG_`; a `grep PATTERN "$A"`
+with `$A` empty reads stdin and hangs a scene script at that step with
+the fleet up, so guard the path. A `wait` issued right after a `poke`
+can miss the line the boat answers within 0.05 s (the snapshot is taken
+after the poke): read the log for it afterwards.
