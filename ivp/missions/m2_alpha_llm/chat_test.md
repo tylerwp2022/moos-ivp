@@ -62,6 +62,7 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 | 2.4 | `draw a line from home to target` | segment (0,0) to (20,-80) | the model asks for coordinates it already has |
 | 2.5 | `erase target and the line, keep home` | circle and line gone, text stays | everything gone |
 | 2.6 | `take the ring off cal` | ring gone |  |
+| 2.7 | `/erase all` | the console takes the home note (what 2.3 drew) down with no model call and says what it erased | a model call; nothing erased |
 
 ## Phase 3: single-vehicle plans
 
@@ -194,6 +195,7 @@ by the warp before calling a turn slow, or read `LLM_USAGE` afterwards.
 | 2.4 | | |
 | 2.5 | | |
 | 2.6 | | |
+| 2.7 | | |
 | 3.1 | | |
 | 3.2 | | |
 | 3.3 | | |

@@ -288,6 +288,7 @@ ProcessConfig = pLLMAgent
   timeout         = 300
   planning_max_tokens = 16384 // planning turns may think longer (~4.5 min at most, hence timeout 300)
   planning_effort = medium    // and deeper (review too); execution mode keeps effort low for tempo
+  planning_max_tool_rounds = 20 // tool rounds per planning or review turn (a play built as components is one save per round); 8 in execution
 
   // What the run costs, on the appcast and as LLM_COST: the prices
   // default to claude-opus-5-5's (price_* lines override them as they

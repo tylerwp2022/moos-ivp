@@ -56,6 +56,9 @@ Rules that cost time when broken:
   agent's LLM_* lines are named in the pLogger block for that; for any
   other variable, its creation tick may be missing posts, not the poster.
 - `ready` before any press: a boat has come up with no link (3 of 7 starts).
+- `get` prints at most 600 chars: a long value (`HISTORY_RECENT`, a
+  boat's `HISTORY_<V>`) is read from the alog's last post of it,
+  `grep -aE '^\S+\s+HISTORY_RECENT\s' $($F alog $S) | tail -1 | sed 's/!@#/\n/g'`.
 - Deploy both sides before the first press of an A/B, equal windows, note
   the press times; `report` flags a side undeployed for part of a window.
 - One launch per subshell with its own `cd` inside a script; never a `cd`

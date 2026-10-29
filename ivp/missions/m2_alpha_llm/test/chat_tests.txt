@@ -275,6 +275,16 @@ timeout = 30
 check = no_proposal
 check = tool erase_ring
 
+[2.7]
+say = /erase all
+expect = the console takes the home note (what 2.3 drew) down with no model call and says what it erased
+issue = a model call; nothing erased
+answer = none
+timeout = 10
+settle = 4
+check = chat_contains erased
+check = no_tool
+
 # ---------------------------------------------------------------
 # Phase 3: single-vehicle plans. 3.1 to 3.3 unchanged; 3.4 absorbs
 # the halt (old 3.5) with a longer route so the plan is still running;

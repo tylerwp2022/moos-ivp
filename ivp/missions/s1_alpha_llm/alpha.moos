@@ -292,6 +292,7 @@ ProcessConfig = pLLMAgent
   max_tokens      = 8192      // thinking counts: a turn is bounded to ~2 min
   timeout         = 300       // above the longest turn either cap allows
   planning_max_tokens = 16384 // planning turns may think longer (~4.5 min at most, hence timeout 300)
+  planning_max_tool_rounds = 20 // tool rounds per planning or review turn (a play built as components is one save per round); 8 in execution
   planning_effort = medium    // and deeper (review too); execution mode keeps effort low for tempo
 
   // What the run costs, on the appcast and as LLM_COST: the prices
