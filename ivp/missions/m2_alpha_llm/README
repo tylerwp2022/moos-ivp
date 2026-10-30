@@ -152,3 +152,16 @@ Without the model, from this directory:
 
 This is the shape the MCTF mission takes later: pLLMAgent joins its
 shoreside block, pBehaviorTree and the bridge lines join meta_surveyor.moos.
+
+Reviewing a finished run: after the fleet is down, uFldHistory can read a run's shoreside log instead
+of live mail: `load = <path>.alog` in its block (moos-ivp-history's README,
+"Loading a finished run") posts the views as of the run's end, every scene
+once, the run's last BT_ACTIVITY_*, BT_ACTIVE_*, BT_TREE_*, BT_STATE_*,
+BT_PLAN_* and BT_MEMBERS_* once, then HISTORY_LOADED; pLLMAgent (mode =
+review) then says on its fleet line that a finished run is loaded and that
+every time in the views is run time, and the history tool's results say
+"as of its end". This mission ships no review launch: copy
+meta_shoreside.moos to a review file with only MOOSDB, pLogger, uFldHistory,
+pLLMAgent and pMarineViewer in its ANTLER block, add the load line and set
+the mode, or see moos-ivp-mctf's `launch_sim.sh --review=<log dir>` for the
+shape of one (its shoreside blocks are plugs shared by both meta files).
