@@ -302,8 +302,8 @@ public: // InfoCast Related Functions
   Fl_Text_Display *m_chat_disp;
   Fl_Text_Buffer  *m_chat_buff;
   Fl_Text_Buffer  *m_chat_style;      // one style letter per byte of m_chat_buff
-  Fl_Text_Display::Style_Table_Entry m_chat_styles[5];  // A you, B llm, C ask, D plan, E warn
-  std::string      m_chat_colors[5];  // "auto" or a color name, same order
+  Fl_Text_Display::Style_Table_Entry m_chat_styles[6];  // A you, B llm, C ask, D plan, E warn, F note
+  std::string      m_chat_colors[6];  // "auto" or a color name, same order
   PMV_ChatInput   *m_chat_input;
   Fl_Output       *m_chat_status;
   std::string      m_chat_status_text;  // the agent's status word(s)

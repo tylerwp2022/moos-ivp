@@ -179,7 +179,9 @@ void showExampleConfigAndExit()
   blk("  chat_color_llm       = auto    // chat_color_ask (a message    ");
   blk("  chat_color_plan      = auto    // waiting on you) and          ");
   blk("  chat_color_warn      = auto    // chat_color_warn (a WARNING   ");
-  blk("                                 // line inside a proposal)      ");
+  blk("                                 // line inside a proposal),     ");
+  blk("  chat_color_note      = auto    // chat_color_note (a line that ");
+  blk("                                 // asks nothing of you, italic) ");
   blk("  // resize live: drag the bar left of the pane, or Ctrl+] / Ctrl+[");
   blk("  chat_in_var          = LLM_CHAT_IN // typed here; a line another");
   blk("                                 // app posts shows as <app>>    ");

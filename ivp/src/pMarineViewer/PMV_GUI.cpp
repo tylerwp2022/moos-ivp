@@ -82,17 +82,19 @@ PMV_GUI::PMV_GUI(int g_w, int g_h, const char *g_l)
 
   // Lines are colored by role through a parallel style buffer: A is
   // the operator, B the model, C anything waiting on the operator,
-  // D the running plan, E a WARNING line inside a proposal. Colors
-  // are set in applyChatColors() once the pane's background is known.
+  // D the running plan, E a WARNING line inside a proposal, F a note
+  // that asks nothing of the operator (an update on the way, a console
+  // line, a press line: muted, italic). Colors are set in
+  // applyChatColors() once the pane's background is known.
   m_chat_style = new Fl_Text_Buffer();
-  for(int i=0; i<5; i++) {
+  for(int i=0; i<6; i++) {
     m_chat_colors[i]       = "auto";
     m_chat_styles[i].color = FL_BLACK;
-    m_chat_styles[i].font  = FL_COURIER;
+    m_chat_styles[i].font  = (i == 5) ? FL_COURIER_ITALIC : FL_COURIER;
     m_chat_styles[i].size  = m_chat_font_size;
     m_chat_styles[i].attr  = 0;
   }
-  m_chat_disp->highlight_data(m_chat_style, m_chat_styles, 5, 'A', 0, 0);
+  m_chat_disp->highlight_data(m_chat_style, m_chat_styles, 6, 'A', 0, 0);
 
   m_chat_status = new Fl_Output(0, 0, 1, 1);
   m_chat_status->textsize(m_chat_font_size - 1);
@@ -1145,9 +1147,9 @@ void PMV_GUI::adjustChatFontSize(int delta)
 void PMV_GUI::applyChatFontSize()
 {
   m_chat_disp->textsize(m_chat_font_size);
-  for(unsigned int i=0; i<5; i++)
+  for(unsigned int i=0; i<6; i++)
     m_chat_styles[i].size = m_chat_font_size;
-  m_chat_disp->highlight_data(m_chat_style, m_chat_styles, 5, 'A', 0, 0);
+  m_chat_disp->highlight_data(m_chat_style, m_chat_styles, 6, 'A', 0, 0);
 
   // Fl_Text_Display recounts its wrapped lines only when its width
   // changes; textsize() just stores the size. With the old total the
@@ -1207,7 +1209,8 @@ void PMV_GUI::addChatLine(string who, string text, string mode)
 
   // The color says what the line is, the prefix says who wrote it
   // (mode "you": another app's line in the operator's color; mode
-  // "plan": an event line in the plan color)
+  // "plan": an event line in the plan color; mode "note": a line that
+  // asks nothing of the operator, muted)
   char style = 'B';                       // the model
   if((who == "you") || (mode == "you"))
     style = 'A';
@@ -1215,6 +1218,8 @@ void PMV_GUI::addChatLine(string who, string text, string mode)
     style = 'C';                          // waiting on the operator
   else if((who == "plan") || (mode == "plan"))
     style = 'D';
+  else if(mode == "note")
+    style = 'F';                          // asks nothing of the operator
 
   // A WARNING line inside a proposal (the field check) gets its own
   // color, line by line, so it stands out of the amber block
@@ -1263,6 +1268,8 @@ bool PMV_GUI::setChatColor(string role, string color)
     idx = 3;
   else if(role == "warn")
     idx = 4;
+  else if(role == "note")
+    idx = 5;
   if(idx < 0)
     return(false);
 
@@ -1287,13 +1294,14 @@ void PMV_GUI::applyChatColors(Fl_Color back, Fl_Color text)
   Fl::get_color(back, r, g, b);
   bool dark = ((0.299 * r + 0.587 * g + 0.114 * b) < 128);
 
-  Fl_Color dflt[5];
+  Fl_Color dflt[6];
   if(dark) {
     dflt[0] = fl_rgb_color(170, 215, 255);   // you: light blue
     dflt[1] = text;                          // llm
     dflt[2] = fl_rgb_color(255, 205, 120);   // ask: amber
     dflt[3] = fl_rgb_color(165, 240, 165);   // plan: pale green
     dflt[4] = fl_rgb_color(255, 110, 110);   // warn: light red
+    dflt[5] = fl_rgb_color(150, 150, 150);   // note: grey
   }
   else {
     dflt[0] = fl_rgb_color(0, 60, 180);      // you: blue
@@ -1301,9 +1309,10 @@ void PMV_GUI::applyChatColors(Fl_Color back, Fl_Color text)
     dflt[2] = fl_rgb_color(180, 70, 0);      // ask: dark orange
     dflt[3] = fl_rgb_color(0, 115, 45);      // plan: green
     dflt[4] = fl_rgb_color(200, 0, 0);       // warn: red
+    dflt[5] = fl_rgb_color(115, 115, 115);   // note: grey
   }
 
-  for(int i=0; i<5; i++) {
+  for(int i=0; i<6; i++) {
     Fl_Color c = dflt[i];
     if(m_chat_colors[i] != "auto") {
       ColorPack cpack(m_chat_colors[i]);

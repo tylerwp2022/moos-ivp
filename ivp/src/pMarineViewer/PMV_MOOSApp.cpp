@@ -405,12 +405,21 @@ void PMV_MOOSApp::handleNewMail(const MOOS_event & e)
     else if(key == "RESET_MHASH")
       handled = setMissionHash();
     else if(key == m_chat_out_var) {
-      // A message that waits for the operator carries source aux "ask";
-      // an event the agent is about to answer (an alert) carries
+      // A message that waits for the operator carries source aux "ask",
+      // a reply that ends in a question "question": both in the ask
+      // color; an event the agent is about to answer (an alert) carries
       // "event" and shows as event> in the plan color, ahead of the
-      // reply, so the reply has a visible cause
+      // reply, so the reply has a visible cause; a line that asks
+      // nothing of the operator is muted: an update sent with tool
+      // calls ("interim"), a press line ("button"), a console line in
+      // brackets (2026-10-31)
       string aux  = msg.GetSourceAux();
-      string mode = strBegins(aux, "ask") ? "ask" : "";
+      string mode = "";
+      if(strBegins(aux, "ask") || strContains(aux, "question"))
+	mode = "ask";
+      else if(strContains(aux, "interim") || strBegins(aux, "button") ||
+	      ((aux == "") && strBegins(sval, "[")))
+	mode = "note";
       if(strBegins(aux, "event"))
 	m_gui->addChatLine("event", sval, "plan");
       else
