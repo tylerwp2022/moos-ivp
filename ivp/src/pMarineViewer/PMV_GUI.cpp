@@ -1197,6 +1197,38 @@ bool PMV_GUI::adjustChatWidth(double delta_pct)
 }
 
 //----------------------------------------------------------
+// Procedure: closingQuestionStart
+//   Purpose: Where the question that closes a line begins: just
+//            after the last sentence end before the closing '?' at
+//            qend (a '.', '!' or '?' followed by white space, or a
+//            line break), past any blanks, never before floor (the
+//            start of the text). A line with no '?' gives qend.
+
+static size_t closingQuestionStart(const string& line, size_t qend,
+				   size_t floor)
+{
+  if((qend >= line.size()) || (line[qend] != '?') || (qend <= floor))
+    return(qend);
+  size_t start = floor;
+  for(size_t i = qend; i > floor; i--) {
+    size_t j = i - 1;                     // the character before i
+    char c = line[j];
+    if(c == '\n') {
+      start = i;
+      break;
+    }
+    bool ender = (c == '.') || (c == '!') || (c == '?');
+    if(ender && (i < qend) && ((line[i] == ' ') || (line[i] == '\t'))) {
+      start = i;
+      break;
+    }
+  }
+  while((start < qend) && ((line[start] == ' ') || (line[start] == '\t')))
+    start++;
+  return(start);
+}
+
+//----------------------------------------------------------
 // Procedure: addChatLine
 //   Purpose: Append one line to the transcript and keep the end
 //            in view. Newlines arrive encoded as "!@#" so the
@@ -1234,6 +1266,20 @@ void PMV_GUI::addChatLine(string who, string text, string mode)
       if((first != string::npos) && (first < end) && (line.compare(first, 7, "WARNING") == 0))
 	styles.replace(start, end - start, end - start, 'E');
       start = end + 1;
+    }
+  }
+
+  // A reply that ends in a question reads as a reply, its closing
+  // question in the ask color; a reply that is all one question is
+  // in the ask color whole, its prefix too (2026-11-02)
+  if(mode == "question") {
+    size_t qend  = line.find_last_of('?');
+    size_t floor = who.size() + 2;        // past "who> "
+    if((qend != string::npos) && (qend >= floor)) {
+      size_t qstart = closingQuestionStart(line, qend, floor);
+      if(qstart == floor)
+	qstart = 0;
+      styles.replace(qstart, qend + 1 - qstart, qend + 1 - qstart, 'C');
     }
   }
 

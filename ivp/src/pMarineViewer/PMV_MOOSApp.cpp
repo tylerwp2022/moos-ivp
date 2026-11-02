@@ -406,8 +406,9 @@ void PMV_MOOSApp::handleNewMail(const MOOS_event & e)
       handled = setMissionHash();
     else if(key == m_chat_out_var) {
       // A message that waits for the operator carries source aux "ask",
-      // a reply that ends in a question "question": both in the ask
-      // color; an event the agent is about to answer (an alert) carries
+      // in the ask color; a reply that ends in a question "question":
+      // a reply with its closing question in the ask color (2026-11-02);
+      // an event the agent is about to answer (an alert) carries
       // "event" and shows as event> in the plan color, ahead of the
       // reply, so the reply has a visible cause; a line that asks
       // nothing of the operator is muted: an update sent with tool
@@ -415,8 +416,10 @@ void PMV_MOOSApp::handleNewMail(const MOOS_event & e)
       // brackets (2026-10-31)
       string aux  = msg.GetSourceAux();
       string mode = "";
-      if(strBegins(aux, "ask") || strContains(aux, "question"))
+      if(strBegins(aux, "ask"))
 	mode = "ask";
+      else if(strContains(aux, "question"))
+	mode = "question";
       else if(strContains(aux, "interim") || strBegins(aux, "button") ||
 	      ((aux == "") && strBegins(sval, "[")))
 	mode = "note";
