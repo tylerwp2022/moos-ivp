@@ -83,7 +83,7 @@ def parse_tests(path):
             m = re.match(r"^\[(.+)\]$", s)
             if m:
                 cur = {"id": m.group(1).strip(), "say": "", "answer": "y",
-                       "plan_answer": "", "before_answer": "", "pokes": [],
+                       "plan_answer": "", "before_answer": "", "reply": "model", "pokes": [],
                        "then": "", "then_answer": "y", "then_after": 0.0, "after": [], "finally": [], "ask": "",
                        "expect": "", "issue": "",
                        "waits": [], "timeout": 120.0,
@@ -103,6 +103,8 @@ def parse_tests(path):
                 cur["plan_answer"] = val
             elif key == "before_answer":
                 cur["before_answer"] = val
+            elif key == "reply":
+                cur["reply"] = val.lower()
             elif key == "poke":
                 cur["pokes"].append(val)
             elif key == "then":
@@ -438,6 +440,10 @@ def grade(test, records, facts):
                  and operator_line(r)]
     replies = [r for r in records if r[1] == CHAT_OUT and not r[3].startswith("ask")
                and not r[4].startswith("[") and "interim" not in r[3] and operator_line(r)]
+    if test["reply"] == "console":
+        # the console's own answer, a bracketed note, is the reply: the first one
+        replies = [r for r in records if r[1] == CHAT_OUT and not r[3].startswith("ask")
+                   and r[4].startswith("[") and operator_line(r)][:1]
     alert_replies = [r for r in records if r[1] == CHAT_OUT and not r[3].startswith("ask")
                      and not r[4].startswith("[") and not operator_line(r)]
     # The preview requests the agent sent for its proposals (uPlanPreview's
@@ -626,7 +632,10 @@ def follow_turn(fleet, alog, test, text, answer, facts, first, pressed, gone):
     until its reply: a proposal is answered with `answer` (none = one
     is not expected, decline it), the first proposal of the test's
     first line preceded by before_answer, a plan's Ask answered with
-    plan_answer. Sets facts turn_done and turn_error."""
+    plan_answer. A test with reply = console ends its first line's turn at
+    the console's first bracketed answer (a console command never calls
+    the model). Sets facts turn_done and turn_error."""
+    console = first and test["reply"] == "console"
     facts["turn_done"] = False
     facts["turn_error"] = ""
     fleet.poke(CHAT_IN, text)
@@ -679,6 +688,9 @@ def follow_turn(fleet, alog, test, text, answer, facts, first, pressed, gone):
                 if val.startswith("[error"):
                     facts["turn_error"] = val
                     facts["turn_done"] = True
+                elif console and val.startswith("["):
+                    facts["turn_done"] = True
+                    log("   console: " + val[:100].replace("!@#", " "))
                 elif "interim" in aux:
                     # a sentence the model wrote before its tool calls: the
                     # turn goes on (pLLMAgent tags it in the aux)

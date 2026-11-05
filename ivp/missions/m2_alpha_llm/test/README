@@ -60,7 +60,9 @@ posting LLM_CHAT_IN with uPokeDB; the chat pane shows such a line as
 "uPokeDB> ...". It then reads the shoreside alog as it grows: a
 proposal is an LLM_CHAT_OUT line from pLLMAgent:ask and is answered y
 or n (the test's answer); a plan's Ask is a BT_CHAT line with the ask
-mark and is answered with plan_answer; a plain reply ends the turn.
+mark and is answered with plan_answer; a plain reply ends the turn
+(for a console command marked reply = console, the console's first
+bracketed answer does).
 Then it waits for the test's wait lines (MISSION_ABE = goto_complete,
 BT_STATE_RED = success ...) as NEW posts, grades the checks listed in
 chat_tests.txt from the log lines since the test's mark (tool calls,

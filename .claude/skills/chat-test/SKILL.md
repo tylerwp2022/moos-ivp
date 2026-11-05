@@ -96,7 +96,8 @@ line formation crossed itself at its first corner (known, accepted).
 
 Blocks in `chat_tests.txt`: `say`, `answer` (y, n, none),
 `before_answer`, `then` (a second line typed once the first turn is
-complete, with `then_answer` and `then_after`), `plan_answer`, `poke`,
+complete, with `then_answer` and `then_after`), `plan_answer`, `reply`
+(`console` for a console command: its bracketed answer ends the turn), `poke`,
 `after` (pokes once the waits are met, to put the fleet back in a sane
 state), `finally` (pokes after the settle, for a watch that must see the
 boats still going), `wait` (a NEW post after the test's mark, so stale values never
