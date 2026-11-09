@@ -41,6 +41,17 @@ def current():
     return json.loads(STATE.read_text()) if STATE.exists() else None
 
 
+def ports_available(ports):
+    for port in ports:
+        with socket.socket() as probe:
+            probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            try:
+                probe.bind(("127.0.0.1", port))
+            except OSError:
+                return False
+    return True
+
+
 def stop():
     state = current()
     if not state:
@@ -53,6 +64,11 @@ def stop():
                 os.killpg(pid, signal.SIGTERM)
         except ProcessLookupError:
             pass
+    deadline = time.monotonic() + 5
+    while not ports_available(state.get("ports", [PORT, API_PORT])):
+        if time.monotonic() >= deadline:
+            raise RuntimeError("Demo ports are still occupied; state was retained. Check the logs and retry Stop.")
+        time.sleep(0.05)
     STATE.unlink(missing_ok=True)
     print(f"Stopped setup demo; logs retained in {state['directory']}")
 
@@ -94,7 +110,7 @@ def start(headless=False):
         text = re.sub(r"(?m)^\s*Run\s*=\s*(pMarineViewer|uButtonPanel)\b.*$", "", text)
     mission.write_text(text)
     processes = []
-    state = {"directory": str(directory), "headless": headless, "processes": processes}
+    state = {"directory": str(directory), "headless": headless, "ports": [PORT, API_PORT], "processes": processes}
     try:
         commands = [
             ("standin.log", [sys.executable, str(Path(__file__).with_name("standin.py")),

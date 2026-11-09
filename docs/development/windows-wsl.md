@@ -103,7 +103,7 @@ and the loopback stand-in uses 19842. `-Port N` chooses N and N+1 for another
 isolated run; use the same Port with all commands for that installation.
 `-Headless` omits the viewer and button panel. Stop targets only the process
 groups recorded by this launcher, checks process start times to avoid reused
-PIDs, and retains the logs.
+PIDs, waits briefly for the recorded ports to be released, and retains the logs.
 
 For an interactive Ubuntu shell with the binary and library paths loaded:
 
