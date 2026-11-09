@@ -9,6 +9,7 @@ import signal
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 
 ROOT = Path(os.environ.get("MOOS_IVP_WSL_ROOT", Path.home() / "Projects/moos-ivp-wsl"))
@@ -47,8 +48,11 @@ def stop():
         return
     for item in reversed(state["processes"]):
         pid = item["pid"]
-        if stamp(pid) == item["start"] and os.getpgid(pid) == pid:
-            os.killpg(pid, signal.SIGTERM)
+        try:
+            if item["start"] is not None and stamp(pid) == item["start"] and os.getpgid(pid) == pid:
+                os.killpg(pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass
     STATE.unlink(missing_ok=True)
     print(f"Stopped setup demo; logs retained in {state['directory']}")
 
@@ -74,14 +78,18 @@ def start(headless=False):
         with socket.socket() as probe:
             probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             probe.bind(("127.0.0.1", port))
-    directory = RUNS / time.strftime("alpha-%Y%m%d-%H%M%S")
-    shutil.copytree(BASE / "ivp/missions/s1_alpha_llm", directory)
+    RUNS.mkdir(parents=True, exist_ok=True)
+    directory = Path(tempfile.mkdtemp(prefix=time.strftime("alpha-%Y%m%d-%H%M%S-"), dir=RUNS))
+    shutil.copytree(BASE / "ivp/missions/s1_alpha_llm", directory, dirs_exist_ok=True)
     mission = directory / "alpha.moos"
     text = mission.read_text()
     text = re.sub(r"(?m)^ServerPort\s*=.*$", f"ServerPort = {PORT}", text)
     text = re.sub(r"(?m)^MOOSTimeWarp\s*=.*$", "MOOSTimeWarp = 5", text)
-    text = re.sub(r"(?m)^(ProcessConfig\s*=\s*pLLMAgent\s*\n\s*\{)",
-                  rf"\1\n  api_url = localhost:{API_PORT}/v1/messages", text)
+    text, configured = re.subn(r"(?m)^(ProcessConfig\s*=\s*pLLMAgent\s*\n\s*\{)",
+                              rf"\1\n  api_url = localhost:{API_PORT}/v1/messages", text)
+    if configured != 1:
+        raise RuntimeError("Expected one pLLMAgent block; refusing to launch without a local API override.")
+    text = re.sub(r"(?m)^\s*api_url\s*=.*$", f"  api_url = localhost:{API_PORT}/v1/messages", text)
     if headless:
         text = re.sub(r"(?m)^\s*Run\s*=\s*(pMarineViewer|uButtonPanel)\b.*$", "", text)
     mission.write_text(text)

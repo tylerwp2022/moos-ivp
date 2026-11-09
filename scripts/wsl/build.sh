@@ -2,6 +2,7 @@
 set -euo pipefail
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 root=${MOOS_IVP_WSL_ROOT:-"$HOME/Projects/moos-ivp-wsl"}
+[[ "$root" == /* ]] || { echo 'InstallRoot must be an absolute Linux path.' >&2; exit 2; }
 jobs=${MOOS_IVP_BUILD_JOBS:-8}
 squad=ON
 for arg in "$@"; do
