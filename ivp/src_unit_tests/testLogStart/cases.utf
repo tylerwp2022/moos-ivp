@@ -1,0 +1,2 @@
+cmd=testLogStart
+case=all # checks=11 failures=0

@@ -314,7 +314,7 @@ double getLogStart(const string& line)
   int  state = 0;
 
   int  buffix  = 0;
-  char buff[MAX_LINE_LENGTH];
+  char buff[MAX_LINE_LENGTH] = {0};
 
   unsigned int i, len = line.length();
   for(i=0; ((i<len) && !done); i++) {
@@ -333,12 +333,13 @@ double getLogStart(const string& line)
 	state = 2;
       else if(state == 3)
 	state = 4;
-      if(state == 4) {
+      if((state == 4) && (buffix < MAX_LINE_LENGTH-1)) {
 	buff[buffix] = line[i];
 	buffix++;
       }
     }
   }
+  buff[buffix] = '\0';
   return(atof(buff));
 }
 

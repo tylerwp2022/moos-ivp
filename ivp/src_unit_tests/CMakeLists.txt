@@ -58,6 +58,7 @@ SET(APPS
   testDistPointToRay
   testCpasRaySegl
   testCpasArcSegl
+  testLogStart
   )
 
 message(" Apps to be built: ${APPS}")
