@@ -1,0 +1,2 @@
+scripts/wsl/*.sh text eol=lf
+scripts/wsl/*.py text eol=lf

@@ -272,6 +272,12 @@ SET(IVP_NON_GUI_APPS_DEPRECATED
   dep_pMarinePID
 )
 
+OPTION(IVP_BUILD_SQUAD "Build the moos-ivp-squad integration" ON)
+IF(NOT IVP_BUILD_SQUAD)
+  LIST(REMOVE_ITEM IVP_NON_GUI_LIBS moos-ivp-squad/lib_squad)
+  LIST(REMOVE_ITEM ROBOT_APPS moos-ivp-squad/uFldSquad moos-ivp-squad/tests)
+ENDIF()
+
 message(" IVP_NON_GUI_LIBS: ${IVP_NON_GUI_LIBS}")
 message(" IVP_GUI_LIBS: ${IVP_GUI_LIBS}")
 message(" ROBOT_APPS: ${ROBOT_APPS}")
