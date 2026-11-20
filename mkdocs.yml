@@ -1,0 +1,60 @@
+# 2026-11-20: Researcher handbook website.
+# Human contributor: Timeo Williams; acting agent: Cline/ChatGPT.
+site_name: V2GPM Researcher Handbook
+site_description: Build, run, and interpret a MOOS-IvP simulation with operator-approved plans.
+site_url: https://tylerwp2022.github.io/moos-ivp/
+repo_url: https://github.com/tylerwp2022/moos-ivp
+repo_name: Source on GitHub
+edit_uri: edit/dev/docs/handbook/
+docs_dir: docs/handbook
+site_dir: site
+strict: true
+theme:
+  name: readthedocs
+  highlightjs: false
+  navigation_depth: 3
+  collapse_navigation: false
+  sticky_navigation: true
+  include_homepage_in_sidebar: true
+  prev_next_buttons_location: bottom
+plugins:
+  - search
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+validation:
+  nav:
+    omitted_files: warn
+  links:
+    not_found: warn
+    anchors: warn
+    unrecognized_links: warn
+extra_css:
+  - assets/handbook.css
+nav:
+  - Start here: index.md
+  - Tutorials:
+      - First simulated command: tutorials/first-command.md
+  - How-to guides:
+      - Install on Windows with WSL2: how-to/install-wsl.md
+      - Validate and retain a run: how-to/validate-run.md
+      - Configure a model endpoint: how-to/model-endpoint.md
+      - Resolve setup failures: how-to/troubleshoot.md
+      - Publish and maintain this site: how-to/publish-site.md
+  - Reference:
+      - Commands and artifacts: reference/commands.md
+      - Components and interfaces: reference/interfaces.md
+      - Source versions and status: reference/versions.md
+      - Terminology: reference/terminology.md
+      - Documentation migration map: reference/migration.md
+  - Explanation:
+      - How commands reach a vehicle: explanation/architecture.md
+      - What a result establishes: explanation/results.md
+      - Documentation standards: explanation/documentation.md
+  - Decisions and evidence:
+      - ADR 001 — Handbook publication: decisions/001-handbook.md
+      - 2026-11-20 — Dev validation: evidence/2026-11-20-dev.md
+      - 2026-11-20 — Website validation: evidence/2026-11-20-site.md

@@ -1,0 +1,80 @@
+[
+  {
+    "name": "cap_selftest",
+    "pass": true,
+    "exit_code": 0,
+    "seconds": 0.03
+  },
+  {
+    "name": "field_selftest",
+    "pass": true,
+    "exit_code": 0,
+    "seconds": 0.0
+  },
+  {
+    "name": "bt_selftest",
+    "pass": true,
+    "exit_code": 0,
+    "seconds": 0.07
+  },
+  {
+    "name": "dyn_selftest",
+    "pass": true,
+    "exit_code": 0,
+    "seconds": 0.0
+  },
+  {
+    "name": "history_selftest",
+    "pass": true,
+    "exit_code": 0,
+    "seconds": 0.06
+  },
+  {
+    "name": "llm_selftest",
+    "pass": true,
+    "exit_code": 0,
+    "seconds": 1.01
+  },
+  {
+    "name": "intercept_selftest",
+    "pass": true,
+    "exit_code": 0,
+    "seconds": 0.0
+  },
+  {
+    "name": "return_selftest",
+    "pass": true,
+    "exit_code": 0,
+    "seconds": 0.0
+  },
+  {
+    "name": "testmode_selftest",
+    "pass": true,
+    "exit_code": 0,
+    "seconds": 0.0
+  },
+  {
+    "name": "simulator publishes position",
+    "pass": true,
+    "exit_code": 0,
+    "condition": "NAV_X >= 0"
+  },
+  {
+    "name": "LLM asks for confirmation",
+    "pass": true,
+    "exit_code": 0,
+    "condition": "LLM_STATUS = awaiting_confirm"
+  },
+  {
+    "name": "approved command moves the simulated boat",
+    "pass": true,
+    "exit_code": 0,
+    "condition": "NAV_X > 3"
+  },
+  {
+    "name": "behavior tree executes through MOOSDB",
+    "pass": true,
+    "exit_code": 0,
+    "condition": "SETUP_BT = passed"
+  }
+]

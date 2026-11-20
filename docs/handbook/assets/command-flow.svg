@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 390" role="img" aria-labelledby="title desc">
+  <title id="title">Conceptual V2GPM command flow</title>
+  <desc id="desc">An operator request reaches the agent and endpoint, then capability validation and approval. Commands pass through the executor and MOOSDB to the helm, controller, and simulated vehicle. State and logs return for inspection.</desc>
+  <!-- 2026-11-20: Editable conceptual diagram. Human contributor: Timeo Williams; acting agent: Cline/ChatGPT. -->
+  <defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8Z" fill="#087c83"/></marker></defs>
+  <rect width="900" height="390" rx="8" fill="#edf5f6"/>
+  <g font-family="Arial, sans-serif" fill="#213545">
+    <text x="28" y="32" font-size="15" font-weight="bold">CONCEPTUAL FLOW · not validation evidence</text>
+    <g fill="#fff" stroke="#9cb9c3" stroke-width="2">
+      <rect x="28" y="65" width="230" height="80" rx="6"/>
+      <rect x="335" y="65" width="230" height="80" rx="6"/>
+      <rect x="642" y="65" width="230" height="80" rx="6"/>
+      <rect x="642" y="225" width="230" height="100" rx="6"/>
+      <rect x="335" y="225" width="230" height="100" rx="6"/>
+      <rect x="28" y="225" width="230" height="100" rx="6"/>
+    </g>
+    <g text-anchor="middle" font-size="18" font-weight="bold">
+      <text x="143" y="96">Operator request</text>
+      <text x="450" y="96">Agent + endpoint</text>
+      <text x="757" y="96">Validation + approval</text>
+      <text x="757" y="259">Tool / plan executor</text>
+      <text x="450" y="259">Helm + controller</text>
+      <text x="143" y="259">State + logs</text>
+    </g>
+    <g text-anchor="middle" font-size="15">
+      <text x="143" y="123">Chat or MOOS client</text>
+      <text x="450" y="123">Scripted in the tutorial</text>
+      <text x="757" y="123">Configured command policy</text>
+      <text x="757" y="287">MOOS variable posts</text>
+      <text x="450" y="287">Simulated vehicle</text>
+      <text x="143" y="287">Inspect the observation</text>
+    </g>
+    <g fill="none" stroke="#087c83" stroke-width="3" marker-end="url(#arrow)">
+      <path d="M258 105H326"/><path d="M565 105H633"/>
+      <path d="M757 145V216"/><path d="M642 275H574"/>
+      <path d="M335 275H267"/><path d="M143 225V154"/>
+    </g>
+    <text x="450" y="367" text-anchor="middle" font-size="15">MOOSDB carries named commands and state between applications.</text>
+  </g>
+</svg>

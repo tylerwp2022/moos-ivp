@@ -1,0 +1,29 @@
+/* 2026-11-20: Accessible handbook layout and local visual identity.
+   Human contributor: Timeo Williams; acting agent: Cline/ChatGPT. */
+:root { --navy: #142e40; --teal: #087c83; --ink: #213545; }
+.wy-side-nav-search, .wy-nav-top { background: var(--navy); }
+.wy-nav-side { background: #18232e; }
+.wy-menu-vertical header, .wy-menu-vertical p.caption { color: #76d8dd; }
+.wy-side-nav-search>a { font-size: 1.05rem; line-height: 1.4; }
+.wy-nav-content { max-width: 1080px; padding: 2rem 3rem; }
+.rst-content { color: var(--ink); }
+.rst-content a { color: #086d78; }
+.rst-content h1 { font-size: 2.2rem; letter-spacing: -.025em; line-height: 1.2; }
+.rst-content h2 { margin-top: 2rem; }
+.rst-content a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid #d98b00; outline-offset: 3px; }
+.rst-content pre { border-left: 3px solid var(--teal); }
+.rst-content table.docutils td, .rst-content table.docutils th { white-space: normal; }
+.wy-table-responsive { overflow-x: auto; }
+.handbook-intro { border-top: 4px solid var(--teal); background: #edf5f6; padding: 1.4rem 1.6rem; margin: 1.5rem 0; }
+.handbook-intro p:last-child { margin-bottom: 0; }
+.routes { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem; margin-bottom: 1.6rem; }
+.route { border: 1px solid #c7d8dc; border-radius: 4px; padding: 1.1rem; background: #fff; }
+.route a { display: block; font-size: 1.08rem; font-weight: bold; margin-bottom: .45rem; }
+.route p { margin: 0; font-size: .92rem; }
+.doc-label { font-size: .8rem; text-transform: uppercase; letter-spacing: .09em; color: #526773; }
+.rst-content img.diagram { width: 100%; height: auto; }
+@media (max-width: 768px) {
+  .wy-nav-content { padding: 1.4rem; }
+  .routes { grid-template-columns: 1fr; }
+  .rst-content h1 { font-size: 1.8rem; }
+}

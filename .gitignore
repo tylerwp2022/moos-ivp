@@ -39,3 +39,8 @@ mis
 # Local WSL build/verification output
 scripts/wsl/logs/
 scripts/wsl/__pycache__/
+
+# Generated documentation and local authoring environment
+/site/
+/.venv-docs/
+scripts/docs/__pycache__/
