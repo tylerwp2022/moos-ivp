@@ -62,13 +62,14 @@ def main():
             continue
         if path == "ivp/src/moos-ivp-squad" and args.without_squad:
             continue
-        module_objects = common / "modules" / path
+        candidates = (objects / "modules" / path, common / "modules" / path)
+        module_objects = next((candidate for candidate in candidates if candidate.exists()), candidates[0])
         if not module_objects.exists():
             raise RuntimeError(f"Missing objects for {path}. Initialize that submodule with Windows Git first. For squad only, -WithoutSquad is available.")
         git(f"--git-dir={module_objects}", "cat-file", "-e", f"{commit}^{{commit}}")
         modules.append((path, module_objects, commit))
     if "ivp/src/moos-ivp-llm" not in {path for path, _, _ in modules}:
-        raise RuntimeError("This demo requires the llm-integration branch and its extension submodules.")
+        raise RuntimeError("This demo requires the dev integration and its extension submodules.")
     clone(objects, root / "moos-ivp", revision)
     for path, module_objects, commit in modules:
         clone(module_objects, root / "moos-ivp" / path, commit)
