@@ -287,7 +287,10 @@ ProcessConfig = pLLMAgent
   AppTick   = 4
   CommsTick = 4
 
-  model           = claude-opus-5-5
+  provider        = openai
+  model           = gpt-6.1-sol
+  api_key_env     = OPENAI_API_KEY
+  api_url         = "https://api.openai.com/v1/responses"
   effort          = low
   max_tokens      = 8192      // thinking counts: a turn is bounded to ~2 min
   timeout         = 300       // above the longest turn either cap allows
@@ -295,12 +298,11 @@ ProcessConfig = pLLMAgent
   planning_max_tool_rounds = 20 // tool rounds per planning or review turn (a play built as components is one save per round); 8 in execution
   planning_effort = medium    // and deeper (review too); execution mode keeps effort low for tempo
 
-  // What the run costs, on the appcast and as LLM_COST: the prices
-  // default to claude-opus-5-5's (price_* lines override them as they
-  // change); budget is dollars for this run, left = budget - spent,
-  // this agent's requests only, never the account's balance.
+  // Cost estimates require explicit price_input and price_output rates.
+  // Without rates, OpenAI cost is unavailable. The budget is advisory;
+  // it is not the account balance and does not stop requests.
   budget = 20                 // edit to your allowance; 0 = none
-  cache_ttl = 1h              // the briefing's cached copy lives an hour across launches and pauses; 5m = the five-minute copy, cheaper to write, gone between launches
+  cache_ttl = 30m             // Legacy setting; Responses options use request_options_file.
   confirm_default = true
 
 

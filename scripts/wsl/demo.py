@@ -87,6 +87,30 @@ def poke(directory, *values):
         raise RuntimeError(result.stdout + result.stderr)
 
 
+def configure_standin(text):
+    pattern = r"(?ms)^(ProcessConfig\s*=\s*pLLMAgent\s*\n\s*\{)(.*?)(^\})"
+
+    def replace(match):
+        block = match[2]
+        settings = {
+            "provider": "anthropic",
+            "api_protocol": "anthropic_messages",
+            "model": "local-stand-in",
+            "api_key_env": "ANTHROPIC_API_KEY",
+            "api_url": f'"http://127.0.0.1:{API_PORT}/v1/messages"',
+            "cache_ttl": "1h",
+        }
+        for key, value in settings.items():
+            block = re.sub(rf"(?m)^\s*{key}\s*=.*$", "", block)
+            block = f"\n  {key} = {value}" + block
+        return match[1] + block + match[3]
+
+    configured, count = re.subn(pattern, replace, text)
+    if count != 1:
+        raise RuntimeError("Expected one pLLMAgent block; refusing to launch without a local API override.")
+    return configured
+
+
 def start(headless=False):
     if current() and any(stamp(p["pid"]) == p["start"] for p in current()["processes"]):
         raise RuntimeError("A setup demo is already running. Stop it first.")
@@ -101,11 +125,7 @@ def start(headless=False):
     text = mission.read_text()
     text = re.sub(r"(?m)^ServerPort\s*=.*$", f"ServerPort = {PORT}", text)
     text = re.sub(r"(?m)^MOOSTimeWarp\s*=.*$", "MOOSTimeWarp = 5", text)
-    text, configured = re.subn(r"(?m)^(ProcessConfig\s*=\s*pLLMAgent\s*\n\s*\{)",
-                              rf"\1\n  api_url = localhost:{API_PORT}/v1/messages", text)
-    if configured != 1:
-        raise RuntimeError("Expected one pLLMAgent block; refusing to launch without a local API override.")
-    text = re.sub(r"(?m)^\s*api_url\s*=.*$", f"  api_url = localhost:{API_PORT}/v1/messages", text)
+    text = configure_standin(text)
     if headless:
         text = re.sub(r"(?m)^\s*Run\s*=\s*(pMarineViewer|uButtonPanel)\b.*$", "", text)
     mission.write_text(text)

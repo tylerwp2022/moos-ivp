@@ -13,21 +13,28 @@
 [submodule "ivp/src/moos-ivp-llm"]
 	path = ivp/src/moos-ivp-llm
 	url = git@github.com:tylerwp2022/moos-ivp-llm.git
+	branch = dev
 [submodule "ivp/src/moos-ivp-bt"]
 	path = ivp/src/moos-ivp-bt
 	url = git@github.com:tylerwp2022/moos-ivp-bt.git
+	branch = dev
 [submodule "ivp/src/moos-ivp-cap"]
 	path = ivp/src/moos-ivp-cap
 	url = git@github.com:tylerwp2022/moos-ivp-cap.git
+	branch = dev
 [submodule "ivp/src/moos-ivp-squad"]
 	path = ivp/src/moos-ivp-squad
 	url = git@github.com:tylerwp2022/moos-ivp-squad.git
+	branch = dev
 [submodule "ivp/src/moos-ivp-dyn"]
 	path = ivp/src/moos-ivp-dyn
 	url = git@github.com:tylerwp2022/moos-ivp-dyn.git
+	branch = dev
 [submodule "ivp/src/moos-ivp-panel"]
 	path = ivp/src/moos-ivp-panel
 	url = git@github.com:tylerwp2022/moos-ivp-panel.git
+	branch = dev
 [submodule "ivp/src/moos-ivp-history"]
 	path = ivp/src/moos-ivp-history
 	url = git@github.com:tylerwp2022/moos-ivp-history.git
+	branch = dev

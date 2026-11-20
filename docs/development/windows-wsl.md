@@ -6,7 +6,7 @@ instructions do not establish native MSVC/MinGW support: common utility code,
 mission scripts, and some tests depend on POSIX facilities.
 
 The workflow was checked with Ubuntu 24.04, GCC 13.3, CMake 3.28, and WSL2/WSLg.
-Use the `llm-integration` branch, which registers the capability, LLM,
+Use the `dev` branch, which registers the capability, LLM,
 behavior-tree, dynamics, panel, and history extensions.
 
 ## Prerequisites
@@ -31,7 +31,7 @@ login. The scripts do not copy authentication tokens into WSL.
 Clone the integrated branch, or use an existing checkout:
 
 ```powershell
-git clone --branch llm-integration https://github.com/tylerwp2022/moos-ivp.git
+git clone --branch dev https://github.com/tylerwp2022/moos-ivp.git
 cd moos-ivp
 git submodule update --init --recursive
 ```
@@ -129,9 +129,8 @@ replace an existing demo. Results and per-check logs are retained in the Linux
 `verification/` directory. A failing suite keeps the command's exit status
 nonzero even when the live simulation succeeds.
 
-The history suite also exposes the independently fixed `getLogStart()` timestamp
-buffer bug. That parser fix must be included in the tested integration revision;
-this setup change deliberately carries no duplicate source patch for it.
+The `dev` integration includes the `getLogStart()` timestamp buffer fix and its
+regression tests. The setup scripts do not apply a second copy of that patch.
 
 ## Optional MCTF build
 

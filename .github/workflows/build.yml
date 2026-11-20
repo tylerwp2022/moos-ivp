@@ -1,14 +1,14 @@
 name: CMake Build
 on:
   push:
-    branches: [ "main", "llm-integration" ]
-  # A pull request into either branch is built and tested before it is
+    branches: [ "main", "llm-integration", "dev" ]
+  # A pull request into these branches is built and tested before it is
   # merged. One opened from a branch of this repository gets the
   # SUBMODULE_TOKEN secret; one opened from somebody's own fork does not
   # (GitHub withholds secrets there) and stops at the checkout of the
   # private submodules.
   pull_request:
-    branches: [ "main", "llm-integration" ]
+    branches: [ "main", "llm-integration", "dev" ]
 
 env:
   BUILD_TYPE: Release

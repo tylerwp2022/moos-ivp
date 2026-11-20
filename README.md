@@ -1,5 +1,9 @@
 # MOOS-IvP
 
+V2GPM development uses **`dev`** as its source of truth. Tyler maintains `main`.
+Target `dev` for our contributions. See [development instructions](AGENTS.md)
+and the [WSL setup guide](docs/development/windows-wsl.md).
+
 > **Note:** This is a modified fork of [MOOS-IvP](https://moos-ivp.org/) maintained by the
 > West Point Robotics Research Center. It adds TAK/ATAK integration, MCTF (Maritime
 > Capture-the-Flag) support apps, and operator-control utilities on top of the upstream
@@ -19,7 +23,7 @@ To install MOOS-IvP from source, clone this repository and follow the setup, dep
 **Cloning this fork:** the added applications live in git submodules, so clone with:
 
 ```bash
-git clone --recurse-submodules git@github.com:tylerwp2022/moos-ivp.git
+git clone --branch dev --recurse-submodules git@github.com:tylerwp2022/moos-ivp.git
 ```
 
 If you cloned without `--recurse-submodules` (or after pulling updates), populate them with:
