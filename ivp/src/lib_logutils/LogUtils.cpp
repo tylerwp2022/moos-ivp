@@ -339,6 +339,11 @@ double getLogStart(const string& line)
       }
     }
   }
+  // LOCAL PATCH (local-patches/0004): end the string here too. A line
+  // that ends right after the value, as pLogger writes its header,
+  // never meets the blank that ends the string above, and atof read on
+  // into whatever the stack held.
+  buff[buffix] = '\0';
   return(atof(buff));
 }
 
