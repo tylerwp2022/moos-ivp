@@ -2,8 +2,13 @@ name: CMake Build
 on:
   push:
     branches: [ "main", "llm-integration" ]
+  # A pull request into either branch is built and tested before it is
+  # merged. One opened from a branch of this repository gets the
+  # SUBMODULE_TOKEN secret; one opened from somebody's own fork does not
+  # (GitHub withholds secrets there) and stops at the checkout of the
+  # private submodules.
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "llm-integration" ]
 
 env:
   BUILD_TYPE: Release
@@ -72,4 +77,15 @@ jobs:
       run: |
         bin/pBehaviorTree --check-plays=ivp/missions/m2_alpha_llm/buttons.txt --vnames=abe,ben,cal,deb
         bin/pBehaviorTree --check-plays=ivp/missions/s1_alpha_llm/buttons.txt --vnames=abe
+
+    # The submodules' offline self-tests: no network, no key, no mission.
+    # Each prints its count of checks on its last line and exits with
+    # its number of failures, so one failed check fails the job.
+    - name: Run self-tests
+      run: |
+        for t in cap_selftest bt_selftest llm_selftest squad_selftest history_selftest; do
+          echo "== $t"
+          bin/$t > "$t.out" 2>&1 || { cat "$t.out"; echo "$t FAILED"; exit 1; }
+          tail -1 "$t.out"
+        done
 
