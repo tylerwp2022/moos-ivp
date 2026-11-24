@@ -3,6 +3,7 @@
 /*    ORGN: Dept of Mechanical Engineering, MIT, Cambridge MA    */
 /*    FILE: PMV_MOOSApp.h                                        */
 /*    DATE: September 2003                                       */
+/*    MODIFIED: Timeo Williams, 2026-11-24                        */
 /*                                                               */
 /* This file is part of MOOS-IvP                                 */
 /*                                                               */
@@ -28,6 +29,7 @@
 #include "MOOS/libMOOS/Thirdparty/AppCasting/AppCastingMOOSApp.h"
 #include "PMV_GUI.h"
 #include "Threadsafe_pipe.h"
+#include "LLMChatMail.h"
 #include "ExFilterSet.h"
 #include "MOOS_event.h"
 
@@ -42,7 +44,7 @@ class PMV_MOOSApp : public AppCastingMOOSApp
   bool OnStartUp();
   bool OnNewMail(MOOSMSG_LIST &NewMail);
 
-  void setGUI(PMV_GUI* g_gui)            {m_gui=g_gui;}  
+  void setGUI(PMV_GUI*);
   void setAppCastRepo(AppCastRepo* repo) {m_appcast_repo=repo;}
   void setRealmRepo(RealmRepo* repo)     {m_realm_repo=repo;}
   void setPendingEventsPipe(Threadsafe_pipe<MOOS_event>*); 
@@ -68,8 +70,6 @@ class PMV_MOOSApp : public AppCastingMOOSApp
   bool handleMailClear(std::string);
   bool handleMailCenter(std::string);
   bool handleMailConfig(std::string) {return(true);}
-  bool        chatPlanMatch(const std::string& key) const;
-  std::string chatPlanVehicle(const std::string& key) const;
   bool handleConfigCmd(std::string);
   bool handleConfigWatchCluster(std::string);
 
@@ -125,13 +125,7 @@ class PMV_MOOSApp : public AppCastingMOOSApp
   std::string  m_mission_hash_var;  // MISSION_HASH
   std::string  m_mhash_short_var;   // MHASH
 
-  // LLM chat pane variables (pairs with pLLMAgent)
-  std::string  m_chat_in_var;       // LLM_CHAT_IN
-  std::string  m_chat_out_var;      // LLM_CHAT_OUT
-  std::string  m_chat_status_var;   // LLM_STATUS
-  std::string  m_chat_mode_var;     // LLM_MODE: execution | planning | review, shown beside the status
-  std::string  m_chat_console_var;  // LLM_CONSOLE: the agent's / commands, for Tab completion in the input
-  std::string  m_chat_plan_var;     // BT_CHAT, lines from a running plan
+  LLMChatMail m_chat_mail;
 
   std::vector<VarDataPair> m_beat_flags;  
 };

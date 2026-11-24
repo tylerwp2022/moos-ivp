@@ -1,8 +1,9 @@
 /*****************************************************************/
 /*    NAME: Tyler Errico                                         */
 /*    ORGN: West Point Robotics Research Center                  */
-/*    FILE: PMV_ChatSplitter.h                                   */
+/*    FILE: LLMChatSplitter.h                                   */
 /*    DATE: September 15th, 2026                                 */
+/*    MODIFIED: Timeo Williams, 2026-11-24                           */
 /*                                                               */
 /* This file is part of MOOS-IvP                                 */
 /*                                                               */
@@ -17,8 +18,8 @@
 /* the GNU General Public License for more details.              */
 /*****************************************************************/
 
-#ifndef PMV_CHAT_SPLITTER_HEADER
-#define PMV_CHAT_SPLITTER_HEADER
+#ifndef LLM_CHAT_SPLITTER_HEADER
+#define LLM_CHAT_SPLITTER_HEADER
 
 #include <FL/Fl.H>
 #include <FL/Fl_Box.H>
@@ -28,15 +29,15 @@
 // it fires the widget callback on every mouse move; PMV_GUI reads
 // Fl::event_x() there and re-lays out the pane at the new width.
 
-class PMV_ChatSplitter : public Fl_Box {
+class LLMChatSplitter : public Fl_Box {
  public:
-  PMV_ChatSplitter(int x, int y, int w, int h)
+  LLMChatSplitter(int x, int y, int w, int h)
     : Fl_Box(x, y, w, h) {
     box(FL_FLAT_BOX);
     color(FL_DARK2);
     clear_visible_focus();
   }
-  virtual ~PMV_ChatSplitter() {}
+  virtual ~LLMChatSplitter() {}
 
   int handle(int event) {
     switch(event) {

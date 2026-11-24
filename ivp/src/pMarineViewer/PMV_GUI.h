@@ -3,6 +3,7 @@
 /*    ORGN: Dept of Mechanical Engineering, MIT, Cambridge MA    */
 /*    FILE: PMV_GUI.h                                            */
 /*    DATE: Nov 11th 2004                                        */
+/*    MODIFIED: Timeo Williams, 2026-11-24                           */
 /*                                                               */
 /* This file is part of MOOS-IvP                                 */
 /*                                                               */
@@ -32,8 +33,7 @@
 #include "MY_Fl_Hold_Browser.h"
 #include <FL/Fl_Text_Display.H>
 #include <FL/Fl_Text_Buffer.H>
-#include "PMV_ChatInput.h"
-#include "PMV_ChatSplitter.h"
+#include "LLMChatPane.h"
 #include "AppCastRepo.h"
 #include "RealmRepo.h"
 #include "InfoCastSettings.h"
@@ -45,7 +45,7 @@
 class PMV_GUI : public MarineVehiGUI {
 public:
   PMV_GUI(int w, int h, const char *l=0);
-  virtual ~PMV_GUI() {}
+  virtual ~PMV_GUI();
 
   void   augmentMenu();
   void   resize(int, int, int, int);
@@ -88,23 +88,7 @@ public:
 
   InfoCastSettings getInfoCastSettings() const {return(m_icast_settings);}
 
- public: // LLM chat pane (pairs with pLLMAgent)
-  void  addChatLine(std::string who, std::string text, std::string mode="");
-  bool  setChatColor(std::string role, std::string color);
-  void  applyChatColors(Fl_Color back, Fl_Color text);
-  void  setChatStatus(std::string);
-  void  setChatMode(std::string);        // execution | planning | review: shown beside the status, planning and review tinted
-  void  setChatCommands(std::string);    // the agent's / commands for Tab completion (LLM_CONSOLE)
-  void  renderChatStatus();
-  bool  setChatViewable(std::string);
-  bool  setChatWidth(std::string);
-  bool  setChatInputLines(std::string);
-  bool  adjustChatWidth(double delta_pct);
-  bool  setChatFontSize(std::string);     // 8..32 points for the transcript, input and status
-  void  adjustChatFontSize(int delta);
-  void  applyChatFontSize();
-  void  setChatInVar(std::string s) {m_chat_in_var=s;}
-  void  setChatInterruptVar(std::string s) {m_chat_interrupt_var=s;}
+  LLMChatPane& chat() {return *m_chat;}
 
  public: // Window title bar preferences
   bool  showTitleIP(std::string str)
@@ -173,21 +157,6 @@ public: // InfoCast Related Functions
   inline void cb_CommandGUI_i();
   static void cb_CommandGUI(Fl_Widget*);
 
-  inline void cb_ChatSend_i();
-  static void cb_ChatSend(Fl_Widget*);
-  inline bool cb_ChatInterrupt_i();
-  static bool cb_ChatInterrupt(void*);
-  static void cb_ChatHint(void*, const std::string&);
-  static void cb_ChatHintClear(void*);
-  inline void cb_ChatToggle_i();
-  static void cb_ChatToggle(Fl_Widget*);
-  inline void cb_ChatWidth_i(int);
-  static void cb_ChatWidth(Fl_Widget*, int);
-  inline void cb_ChatFont_i(int);
-  static void cb_ChatFont(Fl_Widget*, int);
-  inline void cb_ChatDrag_i();
-  static void cb_ChatDrag(Fl_Widget*);
-  static void cb_ChatGrow(void*);
 
   inline void cb_SelectAppCastNode_i();
   static void cb_SelectAppCastNode(Fl_Widget*, long);
@@ -298,27 +267,7 @@ public: // InfoCast Related Functions
   MY_Fl_Hold_Browser *m_rc_brw_procs;
   MY_Fl_Hold_Browser *m_rc_brw_casts;
 
- protected: // Member variables added for the LLM chat pane
-  Fl_Text_Display *m_chat_disp;
-  Fl_Text_Buffer  *m_chat_buff;
-  Fl_Text_Buffer  *m_chat_style;      // one style letter per byte of m_chat_buff
-  Fl_Text_Display::Style_Table_Entry m_chat_styles[6];  // A you, B llm, C ask, D plan, E warn, F note
-  std::string      m_chat_colors[6];  // "auto" or a color name, same order
-  PMV_ChatInput   *m_chat_input;
-  Fl_Output       *m_chat_status;
-  std::string      m_chat_status_text;  // the agent's status word(s)
-  std::string      m_chat_mode;         // execution | planning | review
-  std::string      m_chat_hint;         // Tab's candidates or a command's arguments, on the status row for a moment
-  Fl_Color         m_chat_status_back;  // the pane's colors, restored in execution mode
-  Fl_Color         m_chat_status_fore;
-  std::string      m_chat_interrupt_var; // Ctrl+C while thinking posts here ("" = off)
-  std::string      m_chat_last_sent;     // the line Enter sent last, back in the box after an interrupt
-  bool             m_chat_thinking;      // the status word begins with "thinking"
-  bool             m_chat_viewable;
-  int              m_chat_font_size;
-  double           m_chat_width;    // fraction of window width
-  PMV_ChatSplitter *m_chat_split;
-  std::string      m_chat_in_var;
+  LLMChatPane* m_chat;
 
   InfoCastSettings m_icast_settings;
 

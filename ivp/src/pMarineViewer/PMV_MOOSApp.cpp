@@ -3,6 +3,7 @@
 /*    ORGN: Dept of Mechanical Engineering, MIT, Cambridge MA    */
 /*    FILE: PMV_MOOSApp.cpp                                      */
 /*    DATE: Early 2000's. Modified many times since....          */
+/*    MODIFIED: Timeo Williams, 2026-11-24                        */
 /*                                                               */
 /* This file is part of MOOS-IvP                                 */
 /*                                                               */
@@ -48,12 +49,6 @@ PMV_MOOSApp::PMV_MOOSApp()
   m_last_beat_time     = 0;
   m_block_heartbeat    = false;
 
-  m_chat_in_var        = "LLM_CHAT_IN";
-  m_chat_out_var       = "LLM_CHAT_OUT";
-  m_chat_status_var    = "LLM_STATUS";
-  m_chat_mode_var      = "LLM_MODE";
-  m_chat_console_var   = "LLM_CONSOLE";
-  m_chat_plan_var      = "BT_CHAT";
 
   VarDataPair pair1("HELM_MAP_CLEAR", 0);
   VarDataPair pair2("PMV_CONNECT", 0);
@@ -82,6 +77,19 @@ PMV_MOOSApp::PMV_MOOSApp()
   m_mhash_short_var  = "MHASH";
   
   m_log_the_image   = false;
+}
+
+void PMV_MOOSApp::setGUI(PMV_GUI* gui)
+{
+  m_gui = gui;
+  m_gui->chat().setPost([this](LLMChatPane::Post post, const string& text) {
+    const string& var = post == LLMChatPane::Post::Message ?
+      m_chat_mail.inputVar() : m_chat_mail.interruptVar();
+    if(var.empty() || !m_Comms.IsConnected() || !Notify(var, text))
+      return false;
+    ++m_button_clicks;
+    return true;
+  });
 }
 
 //----------------------------------------------------------------
@@ -264,24 +272,7 @@ void PMV_MOOSApp::registerVariables()
   Register("PMV_CONFIG");
   Register("BLOCK_HEARTBEAT");
   Register("RESET_MHASH");
-  Register(m_chat_out_var, 0);
-  Register(m_chat_in_var, 0);      // lines other apps type, echoed
-  Register(m_chat_status_var, 0);
-  if(m_chat_mode_var != "")
-    Register(m_chat_mode_var, 0);
-  if(m_chat_console_var != "")
-    Register(m_chat_console_var, 0);   // the DB hands a late subscriber the current value
-  if(m_chat_plan_var != "") {
-    // BT_CHAT_* takes a fleet's per-vehicle copies (BT_CHAT_ABE, ...)
-    // and the bare BT_CHAT of a local executor as well
-    if(strEnds(m_chat_plan_var, "*")) {
-      Register(m_chat_plan_var, "*", 0);
-      if(strEnds(m_chat_plan_var, "_*"))
-	Register(m_chat_plan_var.substr(0, m_chat_plan_var.size()-2), 0);
-    }
-    else
-      Register(m_chat_plan_var, 0);
-  }
+  m_chat_mail.registerVariables(m_Comms);
 
   unsigned int i, vsize = m_scope_vars.size();
   for(i=0; i<vsize; i++)
@@ -317,7 +308,7 @@ void PMV_MOOSApp::handlePendingGUI()
       Register(val, 0);
       m_scope_vars.push_back(val);
     }
-    else if(var == m_chat_in_var)  // chat text is posted verbatim
+    else if(var == m_chat_mail.inputVar())  // chat text is posted verbatim
       Notify(var, val);
     else {
       string val_type = "string";
@@ -404,61 +395,9 @@ void PMV_MOOSApp::handleNewMail(const MOOS_event & e)
       handled = setBooleanOnString(m_block_heartbeat, sval);
     else if(key == "RESET_MHASH")
       handled = setMissionHash();
-    else if(key == m_chat_out_var) {
-      // A message that waits for the operator carries source aux "ask",
-      // in the ask color; a reply that ends in a question "question":
-      // a reply with its closing question in the ask color (2026-11-02);
-      // an event the agent is about to answer (an alert) carries
-      // "event" and shows as event> in the plan color, ahead of the
-      // reply, so the reply has a visible cause; a line that asks
-      // nothing of the operator is muted: an update sent with tool
-      // calls ("interim"), a press line ("button"), a console line in
-      // brackets (2026-10-31)
-      string aux  = msg.GetSourceAux();
-      string mode = "";
-      if(strBegins(aux, "ask"))
-	mode = "ask";
-      else if(strContains(aux, "question"))
-	mode = "question";
-      else if(strContains(aux, "interim") || strBegins(aux, "button") ||
-	      ((aux == "") && strBegins(sval, "[")))
-	mode = "note";
-      if(strBegins(aux, "event"))
-	m_gui->addChatLine("event", sval, "plan");
-      else
-	m_gui->addChatLine("llm", sval, mode);
+    else if(m_chat_mail.handle(msg, GetAppName(), m_gui->chat()))
       handled = true;
-    }
-    else if(key == m_chat_in_var) {
-      // A line typed here was shown as it was sent; one another app
-      // posts (a scripted test through uPokeDB, say) is shown now,
-      // tagged with that app, in the operator's color, so the pane
-      // reads as the conversation the model actually had.
-      if(msg.GetSource() != GetAppName())
-	m_gui->addChatLine(msg.GetSource(), sval, "you");
-      handled = true;
-    }
-    else if((m_chat_plan_var != "") && chatPlanMatch(key)) {
-      string mode = strBegins(msg.GetSourceAux(), "ask") ? "ask" : "";
-      string who  = chatPlanVehicle(key);   // the vehicle, in a fleet
-      if(who != "")
-	sval = who + ": " + sval;
-      m_gui->addChatLine("plan", sval, mode);
-      handled = true;
-    }
-    else if(key == m_chat_status_var) {
-      m_gui->setChatStatus(sval);
-      handled = true;
-    }
-    else if((m_chat_mode_var != "") && (key == m_chat_mode_var)) {
-      m_gui->setChatMode(sval);
-      handled = true;
-    }
-    else if((m_chat_console_var != "") && (key == m_chat_console_var)) {
-      m_gui->setChatCommands(sval);
-      handled = true;
-    }
-      
+
     // PMV_MENU_CONTEXT = 
     // side=left, menukey=polyvert, post="POLY_VERT=x=$(XPOS),y=$(YPOS)"
     else if(key == "PMV_MENU_CONTEXT") {
@@ -984,61 +923,9 @@ void PMV_MOOSApp::handleStartUp(const MOOS_event & e) {
       handled = m_gui->setRadioCastAttrib(param, value);
     else if(param == "infocast_nodes_width")
       handled = m_gui->setRadioCastAttrib(param, value);
-    else if(param == "chat_viewable")
-      handled = m_gui->setChatViewable(value);
-    else if(param == "chat_width")
-      handled = m_gui->setChatWidth(value);
-    else if(param == "chat_input_lines")
-      handled = m_gui->setChatInputLines(value);
-    else if(param == "chat_font_size")
-      handled = m_gui->setChatFontSize(value);
-    else if(param == "chat_in_var") {
-      handled = setNonWhiteVarOnString(m_chat_in_var, value);
-      m_gui->setChatInVar(m_chat_in_var);
-    }
-    else if(param == "chat_out_var")
-      handled = setNonWhiteVarOnString(m_chat_out_var, value);
-    else if(param == "chat_status_var")
-      handled = setNonWhiteVarOnString(m_chat_status_var, value);
-    else if(param == "chat_interrupt_var") {
-      // Ctrl+C in the chat box while the assistant thinks posts here
-      if(tolower(value) == "off") {
-	m_gui->setChatInterruptVar("");
-	handled = true;
-      }
-      else {
-	string var;
-	handled = setNonWhiteVarOnString(var, value);
-	if(handled)
-	  m_gui->setChatInterruptVar(var);
-      }
-    }
-    else if(param == "chat_mode_var") {
-      if(tolower(value) == "off") {
-	m_chat_mode_var = "";
-	handled = true;
-      }
-      else
-	handled = setNonWhiteVarOnString(m_chat_mode_var, value);
-    }
-    else if(param == "chat_plan_var") {
-      if(tolower(value) == "off") {
-	m_chat_plan_var = "";
-	handled = true;
-      }
-      else
-	handled = setNonWhiteVarOnString(m_chat_plan_var, value);
-    }
-    else if(param == "chat_console_var") {
-      if(tolower(value) == "off") {
-	m_chat_console_var = "";
-	handled = true;
-      }
-      else
-	handled = setNonWhiteVarOnString(m_chat_console_var, value);
-    }
-    else if(strBegins(param, "chat_color_"))
-      handled = m_gui->setChatColor(param.substr(11), value);
+    else if(strBegins(param, "chat_"))
+      handled = m_gui->chat().configure(param, value) ||
+        m_chat_mail.configure(param, value);
     else if(param == "stale_report_thresh") 
       handled = m_gui->mviewer->setParam(param, value);
     else if(param == "stale_remove_thresh") 
@@ -1629,35 +1516,4 @@ bool PMV_MOOSApp::buildReport()
   m_msgs << "  vehicle zoom:  " << vzoom_str << endl;
   
   return(true);
-}
-
-//----------------------------------------------------------------------
-// Procedure: chatPlanMatch
-//   Purpose: Whether a mail key is the plan chat variable, or one of a
-//            fleet's per-vehicle copies when chat_plan_var ends in *
-//            (BT_CHAT_* matches BT_CHAT_ABE, BT_CHAT_BEN, ...).
-
-bool PMV_MOOSApp::chatPlanMatch(const string& key) const
-{
-  if(!strEnds(m_chat_plan_var, "*"))
-    return(key == m_chat_plan_var);
-  string base = m_chat_plan_var.substr(0, m_chat_plan_var.size()-1);
-  if(strEnds(base, "_") && (key == base.substr(0, base.size()-1)))
-    return(true);   // the bare variable under BT_CHAT_*
-  return(strBegins(key, base));
-}
-
-//----------------------------------------------------------------------
-// Procedure: chatPlanVehicle
-//   Purpose: The vehicle a per-vehicle copy names, lowercase (abe for
-//            BT_CHAT_ABE under BT_CHAT_*), or empty for a plain match.
-
-string PMV_MOOSApp::chatPlanVehicle(const string& key) const
-{
-  if(!strEnds(m_chat_plan_var, "*"))
-    return("");
-  string base = m_chat_plan_var.substr(0, m_chat_plan_var.size()-1);
-  if(key.size() <= base.size())
-    return("");
-  return(tolower(key.substr(base.size())));
 }
