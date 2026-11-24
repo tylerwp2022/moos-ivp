@@ -529,8 +529,6 @@ def report(output, protocol):
             elif not status:
                 message = draft["message"].lower()
                 passed = any(term in message for term in case["message_terms"])
-                if case["expected"] == "clarify":
-                    passed = passed and "?" in message
                 status = draft["message"]
             usage = result.get("body", {}).get("usage", {})
             rows.append({"model": model, "case": case["id"], "expected": case["expected"],
@@ -552,7 +550,8 @@ def report(output, protocol):
                        "input_tokens": sum(row["input_tokens"] or 0 for row in selected),
                        "output_tokens": sum(row["output_tokens"] or 0 for row in selected),
                        "estimated_cost_usd": round(sum(row["estimated_cost_usd"] or 0 for row in selected), 6)})
-    write_json(output / "summary.json", {"controls": controls, "models": models, "cases": rows})
+    write_json(output / "summary.json", {"controls": controls, "models": models, "cases": rows,
+               "reporter_sha256": sha256(Path(__file__))})
     print(json.dumps(models, indent=2))
 
 
