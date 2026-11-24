@@ -32,6 +32,10 @@ confirm_default = true
 
 Quote URLs that contain `//`; otherwise the MOOS parser can treat the rest as a comment. Explicit protocols require an explicit URL and model.
 
+For OpenAI Responses, use `api_protocol = openai_responses`, `api_url = "https://api.openai.com/v1/responses"`, and `api_key_env = OPENAI_API_KEY`. Set the model ID to one available to your project.
+
+For WIRE, use the `chat_completions` template above with the full endpoint URL, deployed model ID, and authentication settings provided by West Point. Start with `tools_enabled = false`. Run the shared Alpha tutorial against its local stand-in to verify the viewer workflow from either site.
+
 ## Review the configuration
 
 Compare the block with the pinned reference. Use `pLLMAgent -e` and `pLLMAgent -i` to inspect the binary's example and MOOS interface. These commands do not prove that a service accepts the configuration.

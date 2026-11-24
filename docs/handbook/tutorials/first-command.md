@@ -80,6 +80,8 @@ For a mission already running pLLMAgent, start `uMACView mission.moos` with the 
 
 Keep the source manifest, generated `alpha.moos`, operator inputs, and MOOSLog `.alog` files from both runs. Look for the proposal and `awaiting_confirm` state, the operator's answer, and the corresponding navigation updates.
 
+Compare your run with the [November 24 uMACView validation](../evidence/2026-11-24-umacview.md).
+
 Stop the demo after each run.
 
 ```powershell
