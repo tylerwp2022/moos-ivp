@@ -1,3 +1,4 @@
+# Modified by Timeo Williams on 2026-11-24.
 param(
     [ValidateSet('Build','Verify','Demo','Stop','Status','Shell')]
     [string]$Action = 'Demo',
@@ -6,7 +7,9 @@ param(
     [string]$MctfSource,
     [ValidateRange(1024,65534)][int]$Port = 19841,
     [switch]$WithoutSquad,
-    [switch]$Headless
+    [switch]$Headless,
+    [ValidateSet('pmarineviewer','umacview')]
+    [string]$ChatViewer = 'pmarineviewer'
 )
 $ErrorActionPreference = 'Stop'
 
@@ -31,6 +34,7 @@ switch ($Action) {
         $operation = @{Verify='verify'; Demo='start'; Stop='stop'; Status='status'}[$Action]
         $command += @('python3', "$repository/scripts/wsl/demo.py", $operation)
         if ($Headless) { $command += '--headless' }
+        if ($Action -eq 'Demo') { $command += @('--chat-viewer', $ChatViewer) }
     }
 }
 & wsl --distribution $Distribution --exec @command

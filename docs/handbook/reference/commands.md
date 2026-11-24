@@ -31,6 +31,7 @@ The PowerShell wrapper throws when its WSL command returns a nonzero status. The
 | `-InstallRoot` | `~/Projects/moos-ivp-wsl` in Linux | Absolute Linux installation path when supplied. Use it consistently. |
 | `-Port` | `19841` | MOOSDB port. The local API uses the next port. Allowed base range: 1024–65534. |
 | `-Headless` | Off | Omit the viewer and button panel for `Demo`. `Verify` is always headless. |
+| `-ChatViewer` | `pmarineviewer` | For a GUI `Demo`, use `umacview` to open chat in uMACView and keep pMarineViewer open for the map. |
 | `-WithoutSquad` | Off | Omit squad during `Build`. |
 | `-MctfSource` | None | Existing Windows MCTF checkout to include during `Build`. |
 
@@ -53,7 +54,7 @@ Paths below are relative to the Linux install root.
 | `runs/alpha-*/startup-query.log` | Agent readiness query output. |
 | `runs/alpha-*/standin.log` | Local endpoint server output. |
 | `runs/alpha-*/standin/request-*.json` | Requests received by the scripted endpoint. |
-| `runs/current.json` | Recorded run directory, headless flag, ports, PIDs, and process start identities. Removed after a successful stop. |
+| `runs/current.json` | Recorded run directory, headless flag, chat viewer, ports, PIDs, and process start identities. Removed after a successful stop. |
 
 The script copies the source mission directory into each run directory. Other mission-generated files can also appear there. `Stop` does not erase them.
 

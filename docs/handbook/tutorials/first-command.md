@@ -64,19 +64,23 @@ The behavior-tree check tests a delayed MOOS post. It does not test every plan n
 
 You have now run the command path, found its source identity, and identified the limits of its result.
 
-## Optional: submit the command in the viewer
+## Optional: submit the command in uMACView
 
-This GUI exercise uses the same launcher. The dated evidence covers the headless test; it does not qualify this complete GUI walkthrough.
+This exercise opens pMarineViewer for the map and uMACView for appcasts and chat. Both viewers connect to the same MOOSDB. The Alpha profile opens chat in uMACView.
 
 In PowerShell, start the demo:
 
 ```powershell
-.\scripts\wsl\Project.ps1 -Action Demo
+.\scripts\wsl\Project.ps1 -Action Demo -ChatViewer umacview
 ```
 
-In the map viewer's chat pane, enter `setup smoke goto`. Read the proposal. Enter `y` to approve it. Observe the simulated position. Other messages receive a fixed explanatory reply.
+In uMACView, enter `/help` to see console commands, then enter `setup smoke goto`. When the status says `awaiting_confirm`, enter `n`. Alpha should hold its starting position. Stop and restart the demo, repeat the request, and enter `y`. Watch Alpha move in pMarineViewer.
 
-When you finish, stop this demo:
+For a mission already running pLLMAgent, start `uMACView mission.moos` with the same MOOSDB settings as your map viewer. Open **Chat > Toggle Chat Pane** or press Ctrl+T. Match any renamed chat variables in the uMACView block to the agent and plan executor settings. Run one operator chat session at a time when testing approvals.
+
+Keep the source manifest, generated `alpha.moos`, operator inputs, and MOOSLog `.alog` files from both runs. Look for the proposal and `awaiting_confirm` state, the operator's answer, and the corresponding navigation updates.
+
+Stop the demo after each run.
 
 ```powershell
 .\scripts\wsl\Project.ps1 -Action Stop

@@ -3,6 +3,7 @@
 /*    ORGN: Dept of Mechanical Engineering, MIT, Cambridge MA    */
 /*    FILE: UMV_GUI.cpp                                          */
 /*    DATE: Aug 11th, 2012                                       */
+/*    MODIFIED: Timeo Williams, 2026-11-24                        */
 /*                                                               */
 /* This file is part of MOOS-IvP                                 */
 /*                                                               */
@@ -84,6 +85,7 @@ UMV_GUI::UMV_GUI(int g_w, int g_h, const char *g_l)
   m_rc_button_msk->callback((Fl_Callback*)UMV_GUI::cb_REALM_Button,(void*)29);
   m_rc_button_trc->callback((Fl_Callback*)UMV_GUI::cb_REALM_Button,(void*)30);
 
+  m_chat = new LLMChatPane([this]() {resizeWidgets(); redraw();});
   augmentMenu();
 
   this->resizable(this);
@@ -96,12 +98,19 @@ UMV_GUI::UMV_GUI(int g_w, int g_h, const char *g_l)
   resizeWidgets();
 }
 
+UMV_GUI::~UMV_GUI()
+{
+  delete m_chat;
+}
+
 //----------------------------------------------------------
 // Procedure: augmentMenu()
 
 void UMV_GUI::augmentMenu() 
 {
   m_menubar->add("File/Quit ", FL_CTRL+'q', (Fl_Callback*)UMV_GUI::cb_Quit, 0, 0);
+
+  m_chat->addMenu(*m_menubar, "Chat/");
 
   m_menubar->add("InfoCasting/content_mode=appcast", 0,
 		 (Fl_Callback*)UMV_GUI::cb_InfoCastSetting, (void*)45,
@@ -1376,7 +1385,8 @@ void UMV_GUI::resizeWidgets()
   // if show_full_screen is set to true).
   double bx = 0;
   double by = menu_hgt;
-  double bw = now_wid;
+  int chat_width = m_chat->reservedWidth(w(), w(), 220);
+  double bw = now_wid - chat_width;
   double bh = now_hgt - menu_hgt;
 
   double cast_wid = bw;
@@ -1535,6 +1545,8 @@ void UMV_GUI::resizeWidgets()
 
   m_rc_brw_casts->color(color_back);
   m_rc_brw_casts->textcolor(color_text);
+
+  m_chat->layout(w(), by, chat_width, bh, color_back, color_text);
   m_rc_brw_casts->position(0);  // mikerb june2225
   //m_rc_brw_casts->vposition(0);
 
@@ -1543,7 +1555,7 @@ void UMV_GUI::resizeWidgets()
   // Part 6: Handle the Button position and size
   // ================================================================
   int colsep = 10;
-  int buttons_wid = w() - (colsep * 7); // 6 buttons need 7 margins
+  int buttons_wid = bw - (colsep * 7); // 6 buttons need 7 margins
   int lft_buttons_wid = buttons_wid * 0.38;
   int rgt_buttons_wid = buttons_wid * 0.62;
   int bwid1 = lft_buttons_wid / 3;
@@ -1560,7 +1572,7 @@ void UMV_GUI::resizeWidgets()
   int fld_hgt = 22;
 
   int button_font_size = 12;
-  if(now_wid < 800)
+  if(bw < 800)
     button_font_size = 10;
   
   m_rc_button_src->labelsize(button_font_size);

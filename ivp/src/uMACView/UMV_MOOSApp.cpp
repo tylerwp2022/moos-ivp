@@ -3,6 +3,7 @@
 /*    ORGN: Dept of Mechanical Engineering, MIT, Cambridge MA    */
 /*    FILE: UMV_MOOSApp.cpp                                      */
 /*    DATE: Aug 11th, 2012                                       */
+/*    MODIFIED: Timeo Williams, 2026-11-24                        */
 /*                                                               */
 /* This file is part of MOOS-IvP                                 */
 /*                                                               */
@@ -48,6 +49,16 @@ UMV_MOOSApp::UMV_MOOSApp()
   string rand_str = intToString(rand_int);
 
   m_relcast_client_name = "umv_" + rand_str;
+}
+
+void UMV_MOOSApp::setGUI(UMV_GUI* gui)
+{
+  m_gui = gui;
+  m_gui->chat().setPost([this](LLMChatPane::Post post, const string& text) {
+    const string& var = post == LLMChatPane::Post::Message ?
+      m_chat_mail.inputVar() : m_chat_mail.interruptVar();
+    return !var.empty() && m_Comms.IsConnected() && Notify(var, text);
+  });
 }
 
 //----------------------------------------------------------------
@@ -152,6 +163,7 @@ void UMV_MOOSApp::registerVariables()
   Register("REALMCAST", 0);
   Register("WATCHCAST", 0);
   Register("REALMCAST_CHANNELS", 0);
+  m_chat_mail.registerVariables(m_Comms);
 }
 
 //----------------------------------------------------------------------
@@ -211,6 +223,8 @@ void UMV_MOOSApp::handleNewMail(const MOOS_event & e)
       if(!handled)
 	reportRunWarning("Unhandled RealmSummary:" + sval);
     }
+    else
+      m_chat_mail.handle(msg, GetAppName(), m_gui->chat());
   }
 
   unsigned int new_node_count    = m_appcast_repo->getNodeCount();
@@ -292,6 +306,9 @@ void UMV_MOOSApp::handleStartUp(const MOOS_event & e)
     bool handled = false;
     if(param == "watch_cluster")
       handled = handleConfigWatchCluster(value);
+    else if(strBegins(param, "chat_"))
+      handled = m_gui->chat().configure(param, value) ||
+        m_chat_mail.configure(param, value);
     else if(param == "content_mode") 
       handled = m_gui->setRadioCastAttrib(param, value);
     else if(param == "realmcast_channel")
@@ -305,6 +322,7 @@ void UMV_MOOSApp::handleStartUp(const MOOS_event & e)
       reportUnhandledConfigWarning(orig);
   }
 
+  m_chat_mail.registerVariables(m_Comms);
   bool changed = m_realm_repo->checkStartCluster();
   if(changed) {
     m_gui->updateRealmCastNodes(true);
@@ -314,6 +332,7 @@ void UMV_MOOSApp::handleStartUp(const MOOS_event & e)
   string key = GetAppName() + "startup";
   postAppCastRequest("all", "all", key, "any", 10);
  
+  m_gui->refreshLayout();
   m_gui->updateRadios();
   m_gui->setMenuItemColors();
   registerVariables();

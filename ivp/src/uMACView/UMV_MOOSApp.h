@@ -3,6 +3,7 @@
 /*    ORGN: Dept of Mechanical Engineering, MIT, Cambridge MA    */
 /*    FILE: UMV_MOOSApp.h                                        */
 /*    DATE: Aug 11th, 2012                                       */
+/*    MODIFIED: Timeo Williams, 2026-11-24                        */
 /*                                                               */
 /* This file is part of MOOS-IvP                                 */
 /*                                                               */
@@ -28,6 +29,7 @@
 #include "MOOS/libMOOS/Thirdparty/AppCasting/AppCastingMOOSApp.h"
 #include "UMV_GUI.h"
 #include "Threadsafe_pipe.h"
+#include "LLMChatMail.h"
 #include "VarDataPair.h"
 #include "AppCastRepo.h"
 #include "RealmRepo.h"
@@ -46,7 +48,7 @@ class UMV_MOOSApp : public AppCastingMOOSApp
 
   bool buildReport();
 
-  void setGUI(UMV_GUI* g_gui)            {m_gui=g_gui;}
+  void setGUI(UMV_GUI*);
   void setAppCastRepo(AppCastRepo* repo) {m_appcast_repo=repo;}
   void setRealmRepo(RealmRepo* repo)     {m_realm_repo=repo;}
   void setPendingEventsPipe(Threadsafe_pipe<MOOS_event>*); 
@@ -66,6 +68,7 @@ class UMV_MOOSApp : public AppCastingMOOSApp
 			  double duration);
   
  protected:
+  LLMChatMail m_chat_mail;
   Threadsafe_pipe<MOOS_event>* m_pending_moos_events;
 
   UMV_GUI*     m_gui;
