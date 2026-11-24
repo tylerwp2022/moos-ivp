@@ -23,6 +23,7 @@
 #include "ColorPack.h"
 #include "ColorParse.h"
 #include <algorithm>
+#include <FL/Fl_Window.H>
 
 using namespace std;
 

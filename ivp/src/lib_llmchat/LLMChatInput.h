@@ -28,6 +28,7 @@
 #include <FL/Fl.H>
 #include <FL/Fl_Text_Editor.H>
 #include <FL/Fl_Text_Buffer.H>
+#include <FL/Fl_Window.H>
 #include <FL/fl_draw.H>
 
 // The chat pane's text entry: a word-wrapping editor that grows with
