@@ -4,9 +4,14 @@ The tested Windows development path for this fork is Ubuntu 24.04 on WSL2,
 with WSLg displaying the viewer and button panel on the Windows desktop.
 The complete integrated stack has not been validated as native Windows binaries.
 
-See docs/development/windows-wsl.md for dependencies, private-submodule access,
-PowerShell build/run commands, a local scripted LLM demo, and verification.
+Start with docs/handbook/how-to/install-wsl.md for dependencies, submodule
+access, and the PowerShell build command. Use the dev branch for development.
 
-The integrated demo requires the llm-integration branch. The CMake option
-IVP_BUILD_SQUAD defaults to ON; users without that private submodule can pass
--WithoutSquad to scripts/wsl/Project.ps1 for the single-vehicle setup.
+After building, use docs/handbook/tutorials/first-command.md for the local
+verification and live Alpha commands. From the Windows repository root,
+with OPENAI_API_KEY set in PowerShell:
+
+  .\scripts\wsl\Project.ps1 -Action Live -ChatViewer umacview
+
+Use -ChatViewer pmarineviewer for chat in the map viewer. Reuse -InstallRoot
+or -Distribution if you supplied either option during the build.

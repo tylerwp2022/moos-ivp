@@ -38,7 +38,7 @@ git clone --branch dev https://github.com/tylerwp2022/moos-ivp.git
 cd moos-ivp
 ```
 
-For the recorded reference run, select its exact commit:
+To reproduce the dated November 20 reference run, select its exact commit. For the current live Alpha setup, stay on the branch you cloned.
 
 ```powershell
 git checkout --detach cf3a853835e72d126b6abf8cd5a29930a34a3e0f
@@ -97,6 +97,6 @@ Replace `your-user` with the Ubuntu account name. Retain the same `-InstallRoot`
 
 A successful build prints its Linux root. The root contains `source-manifest.json`, `moos-ivp/bin/`, and `moos-ivp/lib/`.
 
-Now complete [your first simulated command](../tutorials/first-command.md). A build alone does not establish that the runtime works.
+Run [your first simulated command](../tutorials/first-command.md), then use [live Alpha](../tutorials/first-command.md#run-live-alpha) to try OpenAI from either desktop viewer.
 
 For the optional MCTF build and full-match constraints, see [component status](../reference/versions.md#optional-mctf).

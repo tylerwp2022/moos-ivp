@@ -64,17 +64,24 @@ The behavior-tree check tests a delayed MOOS post. It does not test every plan n
 
 You have now run the command path, found its source identity, and identified the limits of its result.
 
-## Optional: submit the command in uMACView
+## Run live Alpha
 
-For a live Alpha session, open a Linux or WSL shell with the MOOS-IvP binaries on `PATH` and `OPENAI_API_KEY` set. From `ivp/missions/s1_alpha_llm`, choose the desktop chat window with the mission launcher.
+After the [WSL build](../how-to/install-wsl.md#build-on-the-linux-filesystem), open PowerShell in the repository root, the folder containing `scripts` and `ivp`. Set `OPENAI_API_KEY` in this PowerShell session and choose the desktop chat window.
 
-```bash
-bash launch.sh --chat-viewer=umacview
-# Or use pMarineViewer for both the map and chat.
-bash launch.sh --chat-viewer=pmarineviewer
+```powershell
+$env:OPENAI_API_KEY = [System.Net.NetworkCredential]::new('', (Read-Host 'OpenAI API key' -AsSecureString)).Password
+.\scripts\wsl\Project.ps1 -Action Live -ChatViewer umacview
 ```
 
-Both commands read the checked-in `alpha.moos`, which selects `gpt-6-luna` through the OpenAI Responses API. In uMACView mode, pMarineViewer opens with its chat pane closed. Press Ctrl+C in the launch terminal to stop the mission.
+Use `-ChatViewer pmarineviewer` to keep the map and chat in a single window. If you supplied `-InstallRoot` or `-Distribution` during the build, pass the same values to `Live`. WSLg must be running for the desktop windows to open.
+
+From the repository root in a Linux or WSL shell with the MOOS-IvP binaries on `PATH` and `OPENAI_API_KEY` exported, the same launch is:
+
+```bash
+bash ivp/missions/s1_alpha_llm/launch.sh --chat-viewer=umacview
+```
+
+Both launch paths read the checked-in `alpha.moos`, which selects `gpt-6-luna` through the OpenAI Responses API. Enter a plain-English request in the chosen viewer, review the proposed steps, and type `y` to approve or `n` to decline. Watch the boat in pMarineViewer. Press Ctrl+C in the launch terminal to stop the live mission.
 
 ### Scripted WSL smoke test
 
