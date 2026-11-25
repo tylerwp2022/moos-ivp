@@ -75,9 +75,20 @@ $env:OPENAI_API_KEY = [System.Net.NetworkCredential]::new('', (Read-Host 'OpenAI
 
 Use `-ChatViewer pmarineviewer` to keep the map and chat in a single window. If you supplied `-InstallRoot` or `-Distribution` during the build, pass the same values to `Live`. WSLg must be running for the desktop windows to open.
 
-From the repository root in a Linux or WSL shell with the MOOS-IvP binaries on `PATH` and `OPENAI_API_KEY` exported, the same launch is:
+To launch directly in WSL, open Bash in the repository root. Use the Linux install root printed by the build if you passed `-InstallRoot`. The default is `~/Projects/moos-ivp-wsl`. Sourcing `env.sh` adds the built binaries to `PATH` and sets the behavior library and map paths.
 
 ```bash
+export MOOS_IVP_WSL_ROOT="$HOME/Projects/moos-ivp-wsl"
+source scripts/wsl/env.sh
+command -v pAntler pLLMAgent pMarineViewer uMACView
+```
+
+The prompt below hides the key as you paste it. An existing OpenAI project key works if it has access to the configured model. If you did not save the key when it was created, create a new secret key from the [OpenAI Platform API keys page](https://platform.openai.com/api-keys).
+
+```bash
+IFS= read -r -s -p 'OpenAI API key: ' OPENAI_API_KEY
+printf '\n'
+export OPENAI_API_KEY
 bash ivp/missions/s1_alpha_llm/launch.sh --chat-viewer=umacview
 ```
 
