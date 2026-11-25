@@ -1,3 +1,4 @@
+# Modified by Timeo Williams on 2026-11-24.
 #--------------------------------------------------------
 # The CMakeLists.txt for:                   pMarineViewer
 # Author(s):                                Mike Benjamin
@@ -33,6 +34,7 @@ TARGET_LINK_LIBRARIES(pMarineViewer
   contacts
   geometry
   ucommand
+  llmchat
   realm
   apputil
   mbutil

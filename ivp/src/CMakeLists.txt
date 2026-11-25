@@ -1,3 +1,4 @@
+# Modified by Timeo Williams on 2026-11-24.
 CMAKE_MINIMUM_REQUIRED(VERSION 3.11)
 
 PROJECT(IVP)
@@ -206,7 +207,7 @@ SET(IVP_NON_GUI_LIBS
 )
 SET(IVP_GUI_LIBS
   lib_ipfview        lib_marineview
-  lib_zaicview       lib_ucommand
+  lib_zaicview       lib_ucommand      lib_llmchat
 )
 SET(ROBOT_APPS
   app_alogpick       app_nzero           app_projpt

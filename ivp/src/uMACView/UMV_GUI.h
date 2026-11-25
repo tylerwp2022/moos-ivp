@@ -3,6 +3,7 @@
 /*    ORGN: Dept of Mechanical Engineering, MIT, Cambridge MA    */
 /*    FILE: UMV_GUI.h                                            */
 /*    DATE: Aug 11th, 2012                                       */
+/*    MODIFIED: Timeo Williams, 2026-11-24                        */
 /*                                                               */
 /* This file is part of MOOS-IvP                                 */
 /*                                                               */
@@ -32,11 +33,15 @@
 #include "InfoCastSettings.h"
 #include "AppCastRepo.h"
 #include "RealmRepo.h"
+#include "LLMChatPane.h"
 
 class UMV_GUI : Fl_Window {
 public:
   UMV_GUI(int w, int h, const char *l=0);
-  ~UMV_GUI() {}
+  ~UMV_GUI();
+
+  LLMChatPane& chat() {return *m_chat;}
+  void refreshLayout() {resizeWidgets(); redraw();}
   
   void augmentMenu();
   void resize(int, int, int, int);
@@ -88,6 +93,7 @@ public:
 
  protected:
   Fl_Menu_Bar        *m_menubar;
+  LLMChatPane        *m_chat;
 
  protected: // Member variables added for AppCasting 
   MY_Fl_Hold_Browser *m_ac_brw_nodes;

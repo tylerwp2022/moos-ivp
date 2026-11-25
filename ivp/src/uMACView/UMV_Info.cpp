@@ -3,6 +3,7 @@
 /*    ORGN: Dept of Mechanical Engineering, MIT, Cambridge MA    */
 /*    FILE: UMV_Info.cpp                                         */
 /*    DATE: Aug 11th 2012                                        */
+/*    MODIFIED: Timeo Williams, 2026-11-24                        */
 /*                                                               */
 /* This file is part of MOOS-IvP                                 */
 /*                                                               */
@@ -113,6 +114,37 @@ void showExampleConfigAndExit()
   blk("  realmcast_wrap_content  = false;       // Default is false    ");
   blk("  realmcast_trunc_content = false;       // Default is false    ");
   blk("  realmcast_time_format_utc = false      // Default is false    ");
+  blk("  // LLM chat pane on the right edge (pairs with pLLMAgent)    ");
+  blk("  chat_viewable        = false   // {true, FALSE}               ");
+  blk("  chat_width           = 25      // pct of window, {15..60}     ");
+  blk("  chat_input_lines     = 6       // input lines max, {1..20}    ");
+  blk("  chat_interrupt_var   = LLM_INTERRUPT // Ctrl+C while thinking ");
+  blk("                                 // posts here; off to disable  ");
+  blk("  chat_plan_var        = BT_CHAT // plan> lines; off to hide;    ");
+  blk("                                 // BT_CHAT_* in a fleet: each   ");
+  blk("                                 // vehicle's lines, with its name,");
+  blk("                                 // and the bare BT_CHAT as well  ");
+  blk("  chat_color_you       = auto    // auto or a color name, also   ");
+  blk("  chat_color_llm       = auto    // chat_color_ask (a message    ");
+  blk("  chat_color_plan      = auto    // waiting on you) and          ");
+  blk("  chat_color_warn      = auto    // chat_color_warn (a WARNING   ");
+  blk("                                 // line inside a proposal),     ");
+  blk("  chat_color_note      = auto    // chat_color_note (a line that ");
+  blk("                                 // asks nothing of you, italic) ");
+  blk("  // resize live: drag the bar left of the pane, or Ctrl+] / Ctrl+[");
+  blk("  chat_in_var          = LLM_CHAT_IN // typed here; a line another");
+  blk("                                 // app posts shows as <app>>    ");
+  blk("  chat_out_var         = LLM_CHAT_OUT                           ");
+  blk("  chat_status_var      = LLM_STATUS                             ");
+  blk("  chat_font_size       = 12         // 8..32 points; Ctrl+= and ");
+  blk("                                    // Ctrl+- change it live     ");
+  blk("  chat_mode_var        = LLM_MODE   // the agent's mode beside   ");
+  blk("                                    // the status; planning tints");
+  blk("                                    // the line amber; off = none");
+  blk("  chat_console_var     = LLM_CONSOLE // the agent's / commands,  ");
+  blk("                                    // completed on Tab; off =  ");
+  blk("                                    // a built-in list          ");
+  blk("                                                                ");
   blk("}                                                               ");
   blk("                                                                ");
   exit(0);
@@ -135,9 +167,15 @@ void showInterfaceAndExit()
   blk("------------------------------------                            ");
   blk("  APPCAST = proc=pHostInfo!@#iter=48!@#node=shoreside!@#        ");
   blk("            iter=48!@#messages=...                              ");
+  blk("  LLM_CHAT_IN = operator input posted by another MOOS app       ");
+  blk("  LLM_CHAT_OUT = replies, questions, events, and proposals      ");
+  blk("  LLM_STATUS, LLM_MODE, LLM_CONSOLE = state and slash commands  ");
+  blk("  BT_CHAT = plan messages (optionally BT_CHAT_* for a fleet)    ");
   blk("                                                                ");
   blk("PUBLICATIONS:                                                   ");
   blk("------------------------------------                            ");
+  blk("  LLM_CHAT_IN = text typed in the chat pane                     ");
+  blk("  LLM_INTERRUPT = now, on Ctrl+C while the agent is thinking    ");
   blk("  APPACAST_REQ =       node=shoreside,app=any,duration=3.0,     ");
   blk("                       key=pMarineViewer,thresh=run_warning     ");
   blk("  APPACAST_REQ_HENRY = node=henry,app=pHelmIvP,duration=3.0,    ");

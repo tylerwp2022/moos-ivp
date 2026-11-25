@@ -3,6 +3,7 @@
 /*    ORGN: Dept of Mechanical Engineering, MIT, Cambridge MA    */
 /*    FILE: main.cpp                                             */
 /*    DATE: November, 2004                                       */
+/*    MODIFIED: Timeo Williams, 2026-11-25                        */
 /*                                                               */
 /* This file is part of MOOS-IvP                                 */
 /*                                                               */
@@ -71,6 +72,8 @@ int main(int argc, char *argv[])
       size_request = argi.substr(7);
     else if(strBegins(argi, "--alias="))
       run_command = argi.substr(8);
+    else if(argi == "--no-chat")
+      continue; // The MOOS app applies this after reading the mission.
     else if((argi == "-w") || (argi == "--web") || (argi == "-web"))
       openURLX("https://oceanai.mit.edu/ivpman/apps/pMarineViewer");
     else if(i==2)

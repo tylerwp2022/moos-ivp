@@ -1,0 +1,18 @@
+{
+  "base": "9ab39637c26e23cd77a60ed0e159e29da55c0f9e",
+  "squad": true,
+  "submodules": {
+    "ivp/src/moos-ivp-bt": "45c921f80ead76b2e41bf0ad2491e826580cbd73",
+    "ivp/src/moos-ivp-cap": "496a6672a1a6350b65559c83efed9eb5c766cfae",
+    "ivp/src/moos-ivp-dyn": "fdb02cf4b3a0433a6b70c280d2ca9bf9eced1c49",
+    "ivp/src/moos-ivp-history": "2c35071c51fd4b9df2d03b4b724e4cf9a635f712",
+    "ivp/src/moos-ivp-llm": "8fedcbd5e95911ad9c60a67e87942fa7d1e250c1",
+    "ivp/src/moos-ivp-panel": "b062a90f815120cf149200d941f8df6291f3da5b",
+    "ivp/src/moos-ivp-squad": "376ee8bde122516451dc0e7611365df557e6b30c",
+    "ivp/src/moos-ivp-tak": "77dec5f7a99885f3aab647b2c7c0e934ec1141f3",
+    "ivp/src/pRedirectWaypoint": "e48dd31958d7f0f6e490abbaa20fbb1762935bac",
+    "ivp/src/uGfxMask": "8425edb18b0ae47c24dc7cbe24125aa8fa8964b6",
+    "ivp/src/uXboxJoystick": "a283ea0b8dc5e8cdc9b74d03676846020c2271de"
+  },
+  "mctf": null
+}

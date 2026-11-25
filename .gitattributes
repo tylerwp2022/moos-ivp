@@ -1,2 +1,3 @@
 scripts/wsl/*.sh text eol=lf
 scripts/wsl/*.py text eol=lf
+ivp/missions/s1_alpha_llm/launch.sh text eol=lf

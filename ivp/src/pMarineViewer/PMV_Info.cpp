@@ -3,6 +3,7 @@
 /*    ORGN: Dept of Mechanical Engineering, MIT, Cambridge MA    */
 /*    FILE: PMV_Info.cpp                                         */
 /*    DATE: Dec 26th 2011                                        */
+/*    MODIFIED: Timeo Williams, 2026-11-25                        */
 /*                                                               */
 /* This file is part of MOOS-IvP                                 */
 /*                                                               */
@@ -66,6 +67,8 @@ void showHelpAndExit()
   blk("      Display this help message.                                ");
   mag("  --interface, -i                                               ");
   blk("      Display MOOS publications and subscriptions.              ");
+  mag("  --no-chat                                                     ");
+  blk("      Start with the chat pane closed.                          ");
   mag("  --version,-v                                                  ");
   blk("      Display the release version of pMarineViewer.             ");
   mag("  --verbose                                                     ");

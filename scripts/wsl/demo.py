@@ -1,4 +1,5 @@
 """Manage an isolated local simulator with a scripted LLM endpoint, no API key."""
+# Modified by Timeo Williams on 2026-11-25.
 import argparse
 import json
 import os
@@ -73,10 +74,12 @@ def stop():
     print(f"Stopped setup demo; logs retained in {state['directory']}")
 
 
-def query(directory, condition, seconds=15):
-    return subprocess.run(
-        [str(BASE / "bin/uQueryDB"), "alpha.moos", f"--condition={condition}",
-         f"--wait={seconds * 5}"], cwd=directory, env=env(),
+def query(directory, condition, seconds=15, unique=False):
+    command = [str(BASE / "bin/uQueryDB"), "alpha.moos", f"--condition={condition}",
+               f"--wait={seconds * 5}"]
+    if unique:
+        command.append("--unique")
+    return subprocess.run(command, cwd=directory, env=env(),
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=seconds + 15)
 
 
@@ -111,7 +114,7 @@ def configure_standin(text):
     return configured
 
 
-def start(headless=False):
+def start(headless=False, chat_viewer="pmarineviewer"):
     if current() and any(stamp(p["pid"]) == p["start"] for p in current()["processes"]):
         raise RuntimeError("A setup demo is already running. Stop it first.")
     for port in (PORT, API_PORT):
@@ -128,9 +131,31 @@ def start(headless=False):
     text = configure_standin(text)
     if headless:
         text = re.sub(r"(?m)^\s*Run\s*=\s*(pMarineViewer|uButtonPanel)\b.*$", "", text)
+    elif chat_viewer == "umacview":
+        text = re.sub(r"(?m)^(  Run\s*=\s*pMarineViewer\b[^\n]*)$",
+                      r"\1\n  Run = uMACView      @ NewConsole = false", text)
+        text = re.sub(r"(?ms)^(ProcessConfig = pMarineViewer\n\{[^}]*?^  chat_viewable\s*=\s*)true\b",
+                      r"\1false", text)
+        # Keep approval state even though Alpha excludes status variables from wildcard logging.
+        text = re.sub(r"(?m)^(  Log = LLM_CHAT_OUT[^\n]*)$",
+                      r"\1\n  Log = LLM_STATUS @ 0 NOSYNC", text)
+        if not re.search(r"(?m)^ProcessConfig\s*=\s*uMACView\s*$", text):
+            text += """
+
+//----------------------------------------------------
+ProcessConfig = uMACView
+{
+  AppTick = 4
+  CommsTick = 4
+  chat_viewable = true
+  chat_width = 45
+}
+"""
     mission.write_text(text)
     processes = []
-    state = {"directory": str(directory), "headless": headless, "ports": [PORT, API_PORT], "processes": processes}
+    state = {"directory": str(directory), "headless": headless,
+             "chat_viewer": None if headless else chat_viewer,
+             "ports": [PORT, API_PORT], "processes": processes}
     try:
         commands = [
             ("standin.log", [sys.executable, str(Path(__file__).with_name("standin.py")),
@@ -144,7 +169,8 @@ def start(headless=False):
             processes.append({"pid": process.pid, "start": stamp(process.pid)})
             STATE.parent.mkdir(parents=True, exist_ok=True)
             STATE.write_text(json.dumps(state, indent=2))
-        result = query(directory, "LLM_STATUS = idle", 25)
+        # Give the readiness probe a different MOOS client name from the next check.
+        result = query(directory, "LLM_STATUS = idle", 25, unique=True)
         (directory / "startup-query.log").write_text(result.stdout)
         if result.returncode:
             raise RuntimeError(f"Simulator did not become ready. See {directory}/antler.log")
@@ -211,10 +237,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("start", "stop", "status", "verify"))
     parser.add_argument("--headless", action="store_true")
+    parser.add_argument("--chat-viewer", choices=("pmarineviewer", "umacview"),
+                        default="pmarineviewer", help="Chat pane to open for start")
     parser.add_argument("--output", type=Path, default=ROOT / "verification")
     args = parser.parse_args()
     if args.action == "start":
-        start(args.headless)
+        if args.headless and args.chat_viewer == "umacview":
+            parser.error("--chat-viewer umacview requires the GUI demo")
+        start(args.headless, args.chat_viewer)
     elif args.action == "stop":
         stop()
     elif args.action == "status":

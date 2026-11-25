@@ -1,8 +1,9 @@
 /*****************************************************************/
 /*    NAME: Tyler Errico                                         */
 /*    ORGN: West Point Robotics Research Center                  */
-/*    FILE: PMV_ChatInput.h                                      */
+/*    FILE: LLMChatInput.h                                      */
 /*    DATE: September 15th, 2026                                 */
+/*    MODIFIED: Timeo Williams, 2026-11-24                           */
 /*                                                               */
 /* This file is part of MOOS-IvP                                 */
 /*                                                               */
@@ -17,8 +18,8 @@
 /* the GNU General Public License for more details.              */
 /*****************************************************************/
 
-#ifndef PMV_CHAT_INPUT_HEADER
-#define PMV_CHAT_INPUT_HEADER
+#ifndef LLM_CHAT_INPUT_HEADER
+#define LLM_CHAT_INPUT_HEADER
 
 #include <cstdlib>
 #include <string>
@@ -27,6 +28,7 @@
 #include <FL/Fl.H>
 #include <FL/Fl_Text_Editor.H>
 #include <FL/Fl_Text_Buffer.H>
+#include <FL/Fl_Window.H>
 #include <FL/fl_draw.H>
 
 // The chat pane's text entry: a word-wrapping editor that grows with
@@ -66,13 +68,13 @@
 //     blank already in the line, Tab shows the command's argument
 //     hint instead. Any other Tab is the editor's.
 
-class PMV_ChatInput : public Fl_Text_Editor {
+class LLMChatInput : public Fl_Text_Editor {
  public:
   typedef void (*GrowHook)(void*);
   typedef bool (*InterruptHook)(void*);   // true: Ctrl+C was taken as an interrupt
   typedef void (*HintHook)(void*, const std::string&);   // a line for the status row, briefly
 
-  PMV_ChatInput(int x, int y, int w, int h, const char* l=0)
+  LLMChatInput(int x, int y, int w, int h, const char* l=0)
     : Fl_Text_Editor(x, y, w, h, l), m_want_focus(false), m_max_lines(6),
       m_seen_len(0), m_grow_hook(0), m_grow_data(0),
       m_interrupt_hook(0), m_interrupt_data(0), m_hist_pos(0),
@@ -89,7 +91,7 @@ class PMV_ChatInput : public Fl_Text_Editor {
 		"/preview <play>, /test <play> <block> [on <boat>] [PORT=value] [limit=<s>], "
 		"/alerts [on|off|quiet], /mute <words>, /unmute <words>|all, /muted, /hull on|off");
   }
-  virtual ~PMV_ChatInput() {
+  virtual ~LLMChatInput() {
     buffer(0);
     delete(m_buff);
   }

@@ -1,5 +1,6 @@
 # 2026-11-20: Researcher handbook website.
 # Human contributor: Timeo Williams; acting agent: Cline/ChatGPT.
+# 2026-11-24: Added the uMACView evidence page (Timeo Williams).
 site_name: V2GPM Researcher Handbook
 site_description: Build, run, and interpret a MOOS-IvP simulation with operator-approved plans.
 site_url: https://tylerwp2022.github.io/moos-ivp/
@@ -58,3 +59,4 @@ nav:
       - ADR 001 — Handbook publication: decisions/001-handbook.md
       - 2026-11-20 — Dev validation: evidence/2026-11-20-dev.md
       - 2026-11-20 — Website validation: evidence/2026-11-20-site.md
+      - 2026-11-24 — uMACView validation: evidence/2026-11-24-umacview.md
