@@ -66,6 +66,18 @@ You have now run the command path, found its source identity, and identified the
 
 ## Optional: submit the command in uMACView
 
+For a live Alpha session, open a Linux or WSL shell with the MOOS-IvP binaries on `PATH` and `OPENAI_API_KEY` set. From `ivp/missions/s1_alpha_llm`, choose the desktop chat window with the mission launcher.
+
+```bash
+bash launch.sh --chat-viewer=umacview
+# Or use pMarineViewer for both the map and chat.
+bash launch.sh --chat-viewer=pmarineviewer
+```
+
+Both commands read the checked-in `alpha.moos`, which selects `gpt-6-luna` through the OpenAI Responses API. In uMACView mode, pMarineViewer opens with its chat pane closed. Press Ctrl+C in the launch terminal to stop the mission.
+
+### Scripted WSL smoke test
+
 This exercise opens pMarineViewer for the map and uMACView for appcasts and chat. Both viewers connect to the same MOOSDB. The Alpha profile opens chat in uMACView.
 
 In PowerShell, start the demo:

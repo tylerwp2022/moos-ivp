@@ -1,5 +1,5 @@
 """Manage an isolated local simulator with a scripted LLM endpoint, no API key."""
-# Modified by Timeo Williams on 2026-11-24.
+# Modified by Timeo Williams on 2026-11-25.
 import argparse
 import json
 import os
@@ -139,7 +139,8 @@ def start(headless=False, chat_viewer="pmarineviewer"):
         # Keep approval state even though Alpha excludes status variables from wildcard logging.
         text = re.sub(r"(?m)^(  Log = LLM_CHAT_OUT[^\n]*)$",
                       r"\1\n  Log = LLM_STATUS @ 0 NOSYNC", text)
-        text += """
+        if not re.search(r"(?m)^ProcessConfig\s*=\s*uMACView\s*$", text):
+            text += """
 
 //----------------------------------------------------
 ProcessConfig = uMACView

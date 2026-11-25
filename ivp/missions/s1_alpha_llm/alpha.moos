@@ -1,6 +1,7 @@
 //-------------------------------------------------
 // NAME: M. Benjamin, MIT CSAIL (s1_alpha), adapted for pLLMAgent
 // FILE: alpha.moos
+// Modified by Timeo Williams on 2026-11-25.
 //
 // Blank LLM mission: no pre-programmed route. The helm only follows
 // what the chat pane, the buttons or a map click posts. alpha.bhv
@@ -237,6 +238,14 @@ ProcessConfig = pMarineViewer
   action = MENU_KEY=return # BT_CMD=cancel # DEPLOY=true # RETURN=true # MOOS_MANUAL_OVERRIDE=false
 }
 
+ProcessConfig = uMACView
+{
+  AppTick       = 4
+  CommsTick     = 4
+  chat_viewable = true
+  chat_width    = 45
+}
+
 //------------------------------------------
 // pNodeReporter config block
 
@@ -272,8 +281,8 @@ ProcessConfig = uButtonPanel
 
 //------------------------------------------
 // pLLMAgent config block
-// The API key is read from the ANTHROPIC_API_KEY environment
-// variable of the shell that runs launch.sh; it is never stored here.
+// The API key is read from the OPENAI_API_KEY environment variable of
+// the shell that runs launch.sh.
 //
 // Every tool that moves the boat posts DEPLOY=true and releases
 // MOOS_MANUAL_OVERRIDE in the same line as its WPT_UPDATE. A tool's
@@ -288,7 +297,7 @@ ProcessConfig = pLLMAgent
   CommsTick = 4
 
   provider        = openai
-  model           = gpt-6.1-sol
+  model           = gpt-6-luna
   api_key_env     = OPENAI_API_KEY
   api_url         = "https://api.openai.com/v1/responses"
   effort          = low

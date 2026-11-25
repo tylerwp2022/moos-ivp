@@ -3,7 +3,7 @@
 /*    ORGN: Dept of Mechanical Engineering, MIT, Cambridge MA    */
 /*    FILE: PMV_MOOSApp.cpp                                      */
 /*    DATE: Early 2000's. Modified many times since....          */
-/*    MODIFIED: Timeo Williams, 2026-11-24                        */
+/*    MODIFIED: Timeo Williams, 2026-11-25                        */
 /*                                                               */
 /* This file is part of MOOS-IvP                                 */
 /*                                                               */
@@ -1013,6 +1013,9 @@ void PMV_MOOSApp::handleStartUp(const MOOS_event & e) {
   // If no images were specified, use the default images.
   if(m_gui->mviewer->getTiffFileCount() == 0)
     m_gui->mviewer->setParam("tiff_file", "Default.tif");
+
+  if(m_CommandLineParser.GetFlag("--no-chat"))
+    m_gui->chat().configure("chat_viewable", "false");
 
   bool changed = m_realm_repo->checkStartCluster();
   if(changed) {
