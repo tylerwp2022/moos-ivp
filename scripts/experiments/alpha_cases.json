@@ -1,0 +1,60 @@
+{
+  "cases": [
+    {
+      "id": "box-survey",
+      "request": "Survey the rectangle by visiting (40, -60), (80, -60), (80, -100), and (40, -100), in that order. Then return to launch.",
+      "reference": "box_goto.xml",
+      "expected": "plan",
+      "waypoints": [[40, -60], [80, -60], [80, -100], [40, -100]],
+      "answers": [null],
+      "timeout": 330
+    },
+    {
+      "id": "box-hold",
+      "request": "Run the box survey at 2 m/s: (40, -60), (80, -60), (80, -100), then (40, -100). Hold there for 15 seconds after arrival, then return to launch.",
+      "reference": "box_and_home.xml",
+      "expected": "plan",
+      "waypoints": [[40, -60], [80, -60], [80, -100], [40, -100]],
+      "hold": 15,
+      "answers": [null],
+      "timeout": 330
+    },
+    {
+      "id": "ask-then-home",
+      "request": "Go to (40, -60), then ask me whether to continue to (80, -60). Visit the second point only if I say yes. Return to launch whether I say yes or no.",
+      "reference": "ask_then_home.xml",
+      "expected": "plan",
+      "waypoints": [[40, -60], [80, -60]],
+      "answers": ["yes", "no"],
+      "timeout": 250
+    },
+    {
+      "id": "drivers-tour",
+      "request": "Run the helm demonstration. Loiter clockwise at 2 m/s around (40, -60) with a 20-meter radius for 60 seconds, station-keep at (0, -80) for 40 seconds, then hold heading 90 at 2 m/s for 20 seconds. Finish by returning to launch.",
+      "reference": "drivers_tour.xml",
+      "reference_loiter_attributes": {"clockwise": "true", "speed": "2"},
+      "expected": "plan",
+      "drivers": [["loiter", 60], ["station", 40], ["heading", 20]],
+      "driver_mail": {
+        "LOITER_UPDATE": ["x=40", "y=-60", "radius=20", "speed=2", "clockwise=true"],
+        "STATION_UPDATE": ["station_pt=0,-80"],
+        "HEADING_UPDATE": ["heading=90"],
+        "HEADING_SPEED_UPDATE": ["speed=2"]
+      },
+      "answers": [null],
+      "timeout": 330
+    },
+    {
+      "id": "missing-destination",
+      "request": "Go to the survey start point and then come home. I haven't provided its name or location yet.",
+      "expected": "clarify",
+      "message_terms": ["where", "coordinate", "location", "point", "waypoint"]
+    },
+    {
+      "id": "unsupported-capability",
+      "request": "Have the simulated boat collect a water sample using an onboard sampler at (40, -60), and then return to launch.",
+      "expected": "unsupported",
+      "message_terms": ["sampl"]
+    }
+  ]
+}
